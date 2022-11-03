@@ -1,0 +1,5 @@
+CJs_Rigger is a modular rigging plug-in, that is hopefully going to be compatible with multiple DCCs.
+
+It's going to use QT for the UI, and then probably a bunch of other stuff I haven't thought of yet.
+
+This README probably won't be read by anybody.
