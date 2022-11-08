@@ -9,6 +9,9 @@ from PySide2 import QtGui
 from PySide2 import QtCore
 from PySide2 import QtWidgets
 
+from .crig_maya import maya_controller
+from . crig_maya.modules import root_module
+
 LOG = logging.getLogger(__name__)
 
 def get_maya_window():
@@ -20,6 +23,16 @@ class ModularRigger(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent=parent)
 
         self.__class__.instance = self
+
+        self.controller = maya_controller.MayaController()
+        self.controller.modules = [root_module.RootModule.loadFromDict({
+            'name': 'root',
+            'prefix': 'C',
+            'children': [],
+            'controls': {},
+            'inputAttrs': [],
+            'outputAttrs' : [{'longName': 'OUT_WORLD', 'type': 'matrix'}]
+            })]
 
         self.maya_main_window = get_maya_window()
         self.setParent(self.maya_main_window)
@@ -79,6 +92,7 @@ class ModularRigger(QtWidgets.QMainWindow):
     def initBuildButtonWidgets(self):
         self.loc_button = QtWidgets.QPushButton('Generate Locators')
         self.joint_button = QtWidgets.QPushButton('Generate Joints')
+        self.joint_button.clicked.connect(self.controller.generateJoints)
         self.control_button = QtWidgets.QPushButton('Generate Controls')
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addWidget(self.loc_button)
