@@ -16,17 +16,8 @@ class MayaBaseModule(base_module.BaseModule):
         self._controls = {}
         self._inputAttrs = []
         self._outputAttrs = []
-
-    @classmethod
-    def loadFromDict(cls, data):
-        inst = cls()
-        inst.name = data['name']
-        inst.prefix = data['prefix']
-        inst.children = data['children']
-        inst.controls = data['controls']
-        inst.inputAttrs = data['inputAttrs']
-        inst.outputAttrs = data['outputAttrs']
-        return inst
+        self._baseGroups = {}
+        self._bindPositionData = {}
 
     @property
     def name(self):
@@ -84,10 +75,26 @@ class MayaBaseModule(base_module.BaseModule):
     def outputAttrs(self, o):
         self._outputNode = o
 
+    @property
+    def baseGroups(self):
+        return self._baseGroups
+
+    @baseGroups.setter
+    def baseGroups(self, bg):
+        self._baseGroups = bg
+
     def populateInputandOutputAttrs(self, output_group, input_group):
+        print(self.outputAttrs)
+        print(self.inputAttrs)
         cmds.select(output_group)
         for attr in self.outputAttrs:
-            cmds.addAttr(longName=attr['longName'], attributeType=attr['type'])
+            cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
+            input_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['inputAttr'])
+            new_attr = '{0}.{1}'.format(output_group, attr['attrName'])
+            cmds.connectAttr(input_attr, new_attr)
         cmds.select(input_group)
         for attr in self.inputAttrs:
-            cmds.addAttr(longName=attr['longName'], attributeType=attr['type'])
+            cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
+            new_attr = '{0}.{1}'.format(input_group, attr['attrName'])
+            output_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['inputAttr'])
+            cmds.connectAttr(new_attr, output_attr)

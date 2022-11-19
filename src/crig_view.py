@@ -9,8 +9,9 @@ from PySide2 import QtGui
 from PySide2 import QtCore
 from PySide2 import QtWidgets
 
+from . import constants
 from .crig_maya import maya_controller
-from . crig_maya.modules import root_module
+from .crig_maya.modules import root_module
 
 LOG = logging.getLogger(__name__)
 
@@ -25,15 +26,6 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.__class__.instance = self
 
         self.controller = maya_controller.MayaController()
-        self.controller.modules = [root_module.RootModule.loadFromDict({
-            'name': 'root',
-            'prefix': 'C',
-            'children': [],
-            'controls': {},
-            'inputAttrs': [],
-            'outputAttrs' : [{'longName': 'OUT_WORLD', 'type': 'matrix'}]
-            })]
-
         self.maya_main_window = get_maya_window()
         self.setParent(self.maya_main_window)
         self.setWindowFlags(QtCore.Qt.Window)
@@ -58,20 +50,27 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.template_label = QtWidgets.QLabel('Template:')
         self.template_pathbox = QtWidgets.QLineEdit()
         self.template_button = QtWidgets.QPushButton('Load Template')
+        self.template_button.clicked.connect(self.getTemplatePath)
+        self.template_save_button = QtWidgets.QPushButton('Save Template')
         self.template_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.template_layout)
         self.template_layout.addWidget(self.template_label)
         self.template_layout.addWidget(self.template_pathbox)
         self.template_layout.addWidget(self.template_button)
+        self.template_layout.addWidget(self.template_save_button)
 
-        self.position_label = QtWidgets.QLabel('Controls/Positions:')
+        self.position_label = QtWidgets.QLabel('Component Positions:')
         self.position_pathbox = QtWidgets.QLineEdit()
         self.position_button = QtWidgets.QPushButton('Load Positions')
+        self.position_button.clicked.connect(self.getPositionsPath)
+        self.position_save_button = QtWidgets.QPushButton('Save Positions')
+        self.position_save_button.clicked.connect(self.savePositionsPath)
         self.position_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.position_layout)
         self.position_layout.addWidget(self.position_label)
         self.position_layout.addWidget(self.position_pathbox)
         self.position_layout.addWidget(self.position_button)
+        self.position_layout.addWidget(self.position_save_button)
 
     def initMainPanelWidgets(self):
         self.component_list = QtWidgets.QListView()
@@ -90,8 +89,9 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.main_layout.addLayout(self.main_panel_layout)
 
     def initBuildButtonWidgets(self):
-        self.loc_button = QtWidgets.QPushButton('Generate Locators')
-        self.joint_button = QtWidgets.QPushButton('Generate Joints')
+        self.loc_button = QtWidgets.QPushButton('Generate Bind Joints')
+        self.loc_button.clicked.connect(self.controller.generateLocs)
+        self.joint_button = QtWidgets.QPushButton('Generate Components')
         self.joint_button.clicked.connect(self.controller.generateJoints)
         self.control_button = QtWidgets.QPushButton('Generate Controls')
         self.button_layout = QtWidgets.QHBoxLayout()
@@ -99,6 +99,33 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.button_layout.addWidget(self.joint_button)
         self.button_layout.addWidget(self.control_button)
         self.main_layout.addLayout(self.button_layout)
+
+    def getTemplatePath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Select Template',
+        constants.TEMPLATES_PATH,
+        'YAML files (*.yaml)'
+        )
+        self.template_pathbox.setText(filename)
+        self.controller.importModules(filename)
+
+    def getPositionsPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Select Position File',
+        constants.POSITIONS_PATH,
+        'JSON files (*.json)'
+        )
+        self.position_pathbox.setText(filename)
+        self.controller.importBindJointPositions(filename)
+
+    def savePositionsPath(self):
+        filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
+        'Select Position File',
+        self.position_pathbox.text(),
+        'JSON files (*.json)'
+        )
+        self.position_pathbox.setText(filename)
+        self.controller.saveBindJointPositions(filename)
         
 
 def run():

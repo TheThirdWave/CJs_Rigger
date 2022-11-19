@@ -1,0 +1,11 @@
+root:
+  componentType: RootModule
+  prefix: C
+  inputAttrs: []
+  outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      inputAttr: end_CTL_CRV.worldMatrix
+  children: []
+  controls: {}
+  bindGeometry: []

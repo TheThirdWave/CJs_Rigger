@@ -71,7 +71,22 @@ class BaseModule(ABC):
     @abstractmethod
     def outputAttrs(self, o):
         pass
+
+    @classmethod
+    def loadFromDict(cls, name, data):
+        inst = cls()
+        inst.name = name
+        inst.prefix = data['prefix']
+        inst.children = data['children']
+        inst.controls = data['controls']
+        inst.inputAttrs = data['inputAttrs']
+        inst.outputAttrs = data['outputAttrs']
+        return inst
     
+    @abstractmethod
+    def createBindJoints(self):
+        pass
+
     @abstractmethod
     def createControlRig(self):
         pass

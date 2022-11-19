@@ -1,6 +1,34 @@
+import os
+import sys
+import json
+import yaml
+import inspect
+import importlib.util
 from abc import ABC, abstractmethod
 
+from . import constants
+
 class BaseController(ABC):
+
+    @property
+    @abstractmethod
+    def modulePath(self):
+        return []
+
+    @modulePath.setter
+    @abstractmethod
+    def modulePath(self, m):
+        pass
+
+    @property
+    @abstractmethod
+    def dccPath(self):
+        return []
+
+    @dccPath.setter
+    @abstractmethod
+    def dccPath(self, dcc):
+        pass
 
     @property
     @abstractmethod
@@ -10,6 +38,16 @@ class BaseController(ABC):
     @modules.setter
     @abstractmethod
     def modules(self, m):
+        pass
+
+    @property
+    @abstractmethod
+    def bindPositionData(self):
+        return {}
+
+    @bindPositionData.setter
+    @abstractmethod
+    def bindPositionData(self, m):
         pass
 
     @abstractmethod
@@ -23,3 +61,58 @@ class BaseController(ABC):
     @abstractmethod
     def generateControls(self):
         pass
+
+    def importModules(self, template_path):
+        self.modules = []
+        module_files = os.listdir(self.modulePath)
+        templates = self.loadYaml(template_path)
+        for file in module_files:
+            if os.path.splitext(file)[1] != '.py' or file == '__init__.py':
+                continue
+            # First, import the file in the module path. I forget how we did it at brazen, so here I basically just
+            # have to recreate the whole import chain (as in, I can't do any relative import stuff here.)
+            # This is probably way overcomplicated.
+            src_module_name = __name__.rsplit('.', 1)[0]
+            dcc_code_root = os.path.splitext(os.path.basename(self.dccPath))[0]
+            module_code_root = os.path.splitext(os.path.basename(self.modulePath))[0]
+            file_base_name = os.path.splitext(file)[0]
+            python_module_name = '{0}.{1}.{2}.{3}'.format(src_module_name, dcc_code_root, module_code_root, file_base_name)
+            spec = importlib.util.spec_from_file_location(python_module_name, os.path.join(self.modulePath, file))
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[python_module_name] = module
+            print(sys.modules[python_module_name])
+            print(python_module_name)
+            spec.loader.exec_module(module)
+
+            # Then, find the class in that file
+            members = inspect.getmembers(module)
+            for name, obj in members:
+                if inspect.isclass(obj):
+                    for name, data in templates.items():
+                        if data['componentType'] == obj.__name__:
+                            self.modules.append(obj.loadFromDict(name, data))
+                            print(obj.__name__)
+
+    def importBindJointPositions(self, positions_path):
+        if not self.modules:
+            constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
+        self.bindPositionData = self.loadJSON(positions_path)
+
+    @abstractmethod
+    def saveBindJointPositions(self, positions_path):
+        return
+
+    def loadJSON(self, path):
+        with open(path, 'r') as file:
+            positions = json.load(file)
+        return positions
+
+    def saveJSON(self, path, data):
+        with open(path, 'w') as file:
+            json.dump(data, file, indent = 4)
+
+    def loadYaml(self, path):
+        templates = None
+        with open(path, 'r') as file:
+            templates = yaml.safe_load(file)
+        return templates
