@@ -1,10 +1,7 @@
 from ... import base_module
+from ... import constants
 from ..utilities import python_utils
 import maya.cmds as cmds
-
-import logging
-
-LOG = logging.getLogger(__name__)
 
 class MayaBaseModule(base_module.BaseModule):
 
@@ -83,18 +80,25 @@ class MayaBaseModule(base_module.BaseModule):
     def baseGroups(self, bg):
         self._baseGroups = bg
 
-    def populateInputandOutputAttrs(self, output_group, input_group):
-        print(self.outputAttrs)
-        print(self.inputAttrs)
+    def initializeInputandoutputAttrs(self, output_group, input_group):
         cmds.select(output_group)
         for attr in self.outputAttrs:
             cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
-            input_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['inputAttr'])
+        cmds.select(input_group)
+        for attr in self.inputAttrs:
+            cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
+
+    def connectInputandOutputAttrs(self, output_group, input_group):
+        cmds.select(output_group)
+        for attr in self.outputAttrs:
+            input_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
             new_attr = '{0}.{1}'.format(output_group, attr['attrName'])
             cmds.connectAttr(input_attr, new_attr)
         cmds.select(input_group)
         for attr in self.inputAttrs:
-            cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
             new_attr = '{0}.{1}'.format(input_group, attr['attrName'])
-            output_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['inputAttr'])
+            output_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
             cmds.connectAttr(new_attr, output_attr)
+
+    def getFullName(self):
+        return '{0}_{1}'.format(self.prefix, self.name)

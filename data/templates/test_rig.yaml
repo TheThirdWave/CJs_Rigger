@@ -5,7 +5,34 @@ root:
   outputAttrs:
     - attrName: END_OUT_WORLD
       attrType: matrix
-      inputAttr: end_CTL_CRV.worldMatrix
+      internalAttr: end_CTL_CRV.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: end_CTL_CRV.worldInverseMatrix
+  children:
+    - childName: spine
+      parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
+      childAttrs: [IN_WORLD, IN_INV_WORLD]
+  controls: {}
+  bindGeometry: []
+
+spine:
+  componentType: IKFKSpine
+  prefix: C
+  inputAttrs:
+    - attrName: IN_WORLD
+      attrType: matrix
+      internalAttr: ikfkspine_DAT_LOC.parentspace
+    - attrName: IN_INV_WORLD
+      attrType: matrix
+      internalAttr: ikfkspine_DAT_LOC.parentinvspace
+    - attrName: IKFK_SWITCH
+      attrType: double
+      internalAttr: ikfkspine_DAT_LOC.ikfkswitch
+  outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldMatrix
   children: []
   controls: {}
   bindGeometry: []

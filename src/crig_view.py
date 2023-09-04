@@ -1,4 +1,3 @@
-import logging
 import os
 import shiboken2
 
@@ -13,8 +12,6 @@ from . import constants
 from .crig_maya import maya_controller
 from .crig_maya.modules import root_module
 
-LOG = logging.getLogger(__name__)
-
 def get_maya_window():
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     return shiboken2.wrapInstance(int(ptr), QtWidgets.QWidget)
@@ -26,6 +23,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.__class__.instance = self
 
         self.controller = maya_controller.MayaController()
+        self.filepaths_dict = {}
         self.maya_main_window = get_maya_window()
         self.setParent(self.maya_main_window)
         self.setWindowFlags(QtCore.Qt.Window)
@@ -39,6 +37,7 @@ class ModularRigger(QtWidgets.QMainWindow):
 
         # Setup widgets that load the template/position files.
         self.initFileWidgets()
+        self.loadFilepathDicts()
         self.initMainPanelWidgets()
         self.initBuildButtonWidgets()
 
@@ -72,6 +71,19 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.position_layout.addWidget(self.position_button)
         self.position_layout.addWidget(self.position_save_button)
 
+        self.curves_label = QtWidgets.QLabel('Component curves:')
+        self.curves_pathbox = QtWidgets.QLineEdit()
+        self.curves_button = QtWidgets.QPushButton('Load curves')
+        self.curves_button.clicked.connect(self.getCurvesPath)
+        self.curves_save_button = QtWidgets.QPushButton('Save curves')
+        self.curves_save_button.clicked.connect(self.saveCurvesPath)
+        self.curves_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.curves_layout)
+        self.curves_layout.addWidget(self.curves_label)
+        self.curves_layout.addWidget(self.curves_pathbox)
+        self.curves_layout.addWidget(self.curves_button)
+        self.curves_layout.addWidget(self.curves_save_button)
+
     def initMainPanelWidgets(self):
         self.component_list = QtWidgets.QListView()
         self.placebo1 = QtWidgets.QLabel('placeholder 1')
@@ -100,14 +112,36 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.button_layout.addWidget(self.control_button)
         self.main_layout.addLayout(self.button_layout)
 
+    def loadFilepathDicts(self):
+        try:
+            self.filepaths_dict = self.controller.loadJSON(constants.PREV_RIG_DATA_PATH)
+            self.initTemplateStuff(self.filepaths_dict['template_path'])
+            self.initPositionsStuff(self.filepaths_dict['positions_path'])
+            self.initCurvesStuff(self.filepaths_dict['curves_path'])
+        except IOError:
+            constants.RIGGER_LOG.info('Previous rig data not found at {0}, leaving filepaths blank.'.format(constants.PREV_RIG_DATA_PATH))
+            self.filepaths_dict = {}
+
+    def saveFilepathDicts(self):
+        try:
+            self.controller.saveJSON(constants.PREV_RIG_DATA_PATH, self.filepaths_dict)
+        except IOError:
+            constants.RIGGER_LOG.error('Failed to save previous rig data at {0}'.format(constants.PREV_RIG_DATA_PATH))
+
     def getTemplatePath(self):
         filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
         'Select Template',
         constants.TEMPLATES_PATH,
         'YAML files (*.yaml)'
         )
+        self.filepaths_dict['template_path'] = filename
+        self.saveFilepathDicts()
+        self.initTemplateStuff(filename)
+
+    def initTemplateStuff(self, filename):
         self.template_pathbox.setText(filename)
         self.controller.importModules(filename)
+        self.controller.buildComponentGraph()
 
     def getPositionsPath(self):
         filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
@@ -115,6 +149,11 @@ class ModularRigger(QtWidgets.QMainWindow):
         constants.POSITIONS_PATH,
         'JSON files (*.json)'
         )
+        self.filepaths_dict['positions_path'] = filename
+        self.saveFilepathDicts()
+        self.initPositionsStuff(filename)
+
+    def initPositionsStuff(self, filename):
         self.position_pathbox.setText(filename)
         self.controller.importBindJointPositions(filename)
 
@@ -126,7 +165,29 @@ class ModularRigger(QtWidgets.QMainWindow):
         )
         self.position_pathbox.setText(filename)
         self.controller.saveBindJointPositions(filename)
-        
+
+    def getCurvesPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Select Curves File',
+        constants.CURVES_PATH,
+        'JSON files (*.json)'
+        )
+        self.filepaths_dict['curves_path'] = filename
+        self.saveFilepathDicts()
+        self.initCurvesStuff(filename)
+
+    def initCurvesStuff(self, filename):
+        self.curves_pathbox.setText(filename)
+        self.controller.importCurveData(filename)
+
+    def saveCurvesPath(self):
+        filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
+        'Select Curves File',
+        self.curves_pathbox.text(),
+        'JSON files (*.json)'
+        )
+        self.curves_pathbox.setText(filename)
+        self.controller.saveControlCurveData(filename)
 
 def run():
         win = ModularRigger()

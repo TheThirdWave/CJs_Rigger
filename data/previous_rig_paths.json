@@ -1,0 +1,5 @@
+{
+    "template_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/templates/test_rig.yaml",
+    "positions_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/positions/root_positions.json",
+    "curves_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/curves/custom_curves.json"
+}

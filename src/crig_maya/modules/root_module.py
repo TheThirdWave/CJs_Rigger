@@ -17,25 +17,28 @@ class RootModule(maya_base_module.MayaBaseModule):
         cmds.select(self.baseGroups['deform_group'])
         cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_end_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
 
+        # We have to initialize the components input/output custom attrs so they can be connected later, even if the component rig hasn't been created yet.
+        self.initializeInputandoutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
+
     def createControlRig(self):
         if not self.baseGroups:
             constants.RIGGER_LOG.warning('Base groups for component {0} not found, run "Generate Bind Joints" first.')
             return
 
         # Create the stuff that goes under the "controls_GRP", which is pretty much all of the logic and user interface curves.
-        base_control = cmds.curve(name='{0}_{1}_base_CTL_CRV'.format(self.prefix, self.name), degree=1, point=[(2,0,2), (-2,0,2),(-2,0,2),(-2,0,-2),(-2,0,-2),(2,0,-2),(2,0,-2),(2,0,2)])
-        base_placement = cmds.group(base_control, name='{0}_{1}_base_PLC_GRP'.format(self.prefix, self.name), parent=self.baseGroups['controls_group'])
+        base_control = python_utils.makeSquareControl('{0}_{1}_base_CTL_CRV'.format(self.prefix, self.name), 2)
+        base_placement = cmds.group(base_control, name='{0}_{1}_base_PLC_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'])
         cmds.matchTransform(base_placement, '{0}_{1}_end_BND_JNT'.format(self.prefix, self.name))
-        middle_control = cmds.curve(name='{0}_{1}_middle_CTL_CRV'.format(self.prefix, self.name), degree=1, point=[(1.5,0,1.5), (-1.5,0,1.5),(-1.5,0,1.5),(-1.5,0,-1.5),(-1.5,0,-1.5),(1.5,0,-1.5),(1.5,0,-1.5),(1.5,0,1.5)])
+        middle_control = python_utils.makeSquareControl('{0}_{1}_middle_CTL_CRV'.format(self.prefix, self.name), 1.5)
         middle_placement = cmds.group(middle_control, name='{0}_{1}_middle_PLC_GRP'.format(self.prefix, self.name), parent=base_control)
-        end_control = cmds.curve(name='{0}_{1}_end_CTL_CRV'.format(self.prefix, self.name), degree=1, point=[(1,0,1), (-1,0,1),(-1,0,1),(-1,0,-1),(-1,0,-1),(1,0,-1),(1,0,-1),(1,0,1)])
+        end_control = python_utils.makeSquareControl('{0}_{1}_end_CTL_CRV'.format(self.prefix, self.name), 1)
         end_placement = cmds.group(end_control, name='{0}_{1}_end_PLC_GRP'.format(self.prefix, self.name), parent=middle_control)
 
         # Move the middle control to where the placement group is.
         cmds.makeIdentity(middle_control)
 
         # Connect control to bind joint.
-        mult_matrix, matrix_decompose = python_utils.constrainByMatrix(end_control, '{0}_{1}_end_BND_JNT'.format(self.prefix, self.name))
+        mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(end_control, '{0}_{1}_end_BND_JNT'.format(self.prefix, self.name))
 
-        self.populateInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
+        self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
         return

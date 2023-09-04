@@ -7,6 +7,7 @@ import importlib.util
 from abc import ABC, abstractmethod
 
 from . import constants
+from . import graph_utils
 
 class BaseController(ABC):
 
@@ -32,12 +33,22 @@ class BaseController(ABC):
 
     @property
     @abstractmethod
-    def modules(self):
+    def components(self):
         return []
 
-    @modules.setter
+    @components.setter
     @abstractmethod
-    def modules(self, m):
+    def components(self, m):
+        pass
+
+    @property
+    @abstractmethod
+    def componentGraph(self):
+        return None
+    
+    @componentGraph.setter
+    @abstractmethod
+    def components(self, m):
         pass
 
     @property
@@ -48,6 +59,16 @@ class BaseController(ABC):
     @bindPositionData.setter
     @abstractmethod
     def bindPositionData(self, m):
+        pass
+
+    @property
+    @abstractmethod
+    def controlCurveData(self):
+        return {}
+    
+    @controlCurveData.setter
+    @abstractmethod
+    def controlCurveData(self, c):
         pass
 
     @abstractmethod
@@ -62,8 +83,11 @@ class BaseController(ABC):
     def generateControls(self):
         pass
 
+    def buildComponentGraph(self):
+        self.componentGraph = graph_utils.ComponentGraph.buildFromList(self.components)
+
     def importModules(self, template_path):
-        self.modules = []
+        self.components = []
         module_files = os.listdir(self.modulePath)
         templates = self.loadYaml(template_path)
         for file in module_files:
@@ -80,8 +104,6 @@ class BaseController(ABC):
             spec = importlib.util.spec_from_file_location(python_module_name, os.path.join(self.modulePath, file))
             module = importlib.util.module_from_spec(spec)
             sys.modules[python_module_name] = module
-            print(sys.modules[python_module_name])
-            print(python_module_name)
             spec.loader.exec_module(module)
 
             # Then, find the class in that file
@@ -90,16 +112,24 @@ class BaseController(ABC):
                 if inspect.isclass(obj):
                     for name, data in templates.items():
                         if data['componentType'] == obj.__name__:
-                            self.modules.append(obj.loadFromDict(name, data))
-                            print(obj.__name__)
+                            self.components.append(obj.loadFromDict(name, data))
 
     def importBindJointPositions(self, positions_path):
-        if not self.modules:
+        if not self.components:
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
         self.bindPositionData = self.loadJSON(positions_path)
 
+    def importCurveData(self, curves_path):
+        if not self.components:
+            constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
+        self.controlCurveData = self.loadJSON(curves_path)
+
     @abstractmethod
     def saveBindJointPositions(self, positions_path):
+        return
+
+    @abstractmethod
+    def saveControlCurveData(self, curves_path):
         return
 
     def loadJSON(self, path):
