@@ -9,7 +9,7 @@ from PySide2 import QtCore
 from PySide2 import QtWidgets
 
 from . import constants
-from .crig_maya import maya_controller
+from .crig_maya import maya_controller, maya_utils_controller
 from .crig_maya.modules import root_module
 
 def get_maya_window():
@@ -23,6 +23,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.__class__.instance = self
 
         self.controller = maya_controller.MayaController()
+        self.utils = maya_utils_controller.UtilsController()
         self.filepaths_dict = {}
         self.maya_main_window = get_maya_window()
         self.setParent(self.maya_main_window)
@@ -38,6 +39,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         # Setup widgets that load the template/position files.
         self.initFileWidgets()
         self.loadFilepathDicts()
+        self.initUtilsWidgets()
         self.initMainPanelWidgets()
         self.initBuildButtonWidgets()
 
@@ -83,6 +85,14 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.curves_layout.addWidget(self.curves_pathbox)
         self.curves_layout.addWidget(self.curves_button)
         self.curves_layout.addWidget(self.curves_save_button)
+
+    def initUtilsWidgets(self):
+        self.matrix_constraint_button = QtWidgets.QPushButton('Mat Const')
+        self.matrix_constraint_button.clicked.connect(self.utils.constrainByMatrix)
+        self.utils_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.utils_layout)
+        self.utils_layout.addWidget(self.matrix_constraint_button)
+
 
     def initMainPanelWidgets(self):
         self.component_list = QtWidgets.QListView()

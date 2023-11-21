@@ -71,6 +71,16 @@ class BaseController(ABC):
     def controlCurveData(self, c):
         pass
 
+    @property
+    @abstractmethod
+    def utils(self):
+        return None
+    
+    @utils.setter
+    @abstractmethod
+    def utils(self, u):
+        pass
+
     @abstractmethod
     def generateLocs(self):
         pass

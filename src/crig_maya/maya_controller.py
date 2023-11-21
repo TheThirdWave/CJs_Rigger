@@ -12,6 +12,7 @@ class MayaController(base_controller.BaseController):
         self._componentGraph = None
         self._bindPositionData = {}
         self._controlCurveData = {}
+        self._utils = python_utils
 
     @property
     def modulePath(self):
@@ -60,6 +61,14 @@ class MayaController(base_controller.BaseController):
     @controlCurveData.setter
     def controlCurveData(self, c):
         self._controlCurveData = c
+
+    @property
+    def utils(self):
+        return self._utils
+    
+    @utils.setter
+    def utils(self, u):
+        self._utils = u
 
     def generateLocs(self):
         # First, have the modules generate their bind/location joints.

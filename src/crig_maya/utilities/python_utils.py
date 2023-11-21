@@ -61,22 +61,27 @@ def createScalarBlend(attr1, attr2, child, weight=0.0):
     cmds.connectAttr('{0}.outputR'.format(blend_color), child)
     return blend_color
 
-def constrainTransformByMatrix(parent, child, maintain_offset=False,):
+def constrainTransformByMatrix(parent, child, maintain_offset=False, use_parent_offset=False):
     offset_matrix = getLocalOffset(parent, child)
-    mult_matrix, matrix_decompose = constrainByMatrix('{0}.worldMatrix'.format(parent), child)
+    mult_matrix, matrix_decompose = constrainByMatrix('{0}.worldMatrix'.format(parent), child, maintain_offset, use_parent_offset)
     
     if maintain_offset:
         cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), [offset_matrix(i, j) for i in range(4) for j in range(4)], type="matrix")
 
     return mult_matrix, matrix_decompose
 
-def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False):
+def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_parent_offset=False):
     mult_matrix = cmds.createNode('multMatrix', name='{0}_MCNST_MMULT'.format(childTransform))
+    child_parent = cmds.listRelatives(childTransform, parent=True)[0]
 
     cmds.connectAttr(parentMatrix, '{0}.matrixIn[1]'.format(mult_matrix))
-    cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(childTransform), '{0}.matrixIn[2]'.format(mult_matrix))
+    cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(child_parent), '{0}.matrixIn[2]'.format(mult_matrix))
     input_matrix = '{0}.matrixSum'.format(mult_matrix)
-    matrix_decompose = decomposeAndConnectMatrix(input_matrix, childTransform)
+    if not use_parent_offset:
+        matrix_decompose = decomposeAndConnectMatrix(input_matrix, childTransform)
+    else:
+        cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.offsetParentMatrix'.format(childTransform))
+        matrix_decompose = ''
 
     if maintain_offset:
         parent_mMatrix = getMMatrixFromList(cmds.getAttr(parentMatrix))
@@ -87,12 +92,14 @@ def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False):
         
     return mult_matrix, matrix_decompose
 
+
 def decomposeAndConnectMatrix(inputMatrix, childTransform):
     matrix_decompose = cmds.createNode('decomposeMatrix', name='{0}_MCNST_DCOMP'.format(childTransform))
     cmds.connectAttr(inputMatrix, '{0}.inputMatrix'.format(matrix_decompose))
     cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.rotate'.format(childTransform))
     cmds.connectAttr('{0}.outputScale'.format(matrix_decompose), '{0}.scale'.format(childTransform))
     cmds.connectAttr('{0}.outputTranslate'.format(matrix_decompose), '{0}.translate'.format(childTransform))
+    cmds.connectAttr('{0}.outputShear'.format(matrix_decompose), '{0}.shear'.format(childTransform))
     return matrix_decompose
 
 def copyOverMatrix(parentMatrix, childTransform):
@@ -101,7 +108,9 @@ def copyOverMatrix(parentMatrix, childTransform):
     cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.rotate'.format(childTransform))
     cmds.connectAttr('{0}.outputScale'.format(matrix_decompose), '{0}.scale'.format(childTransform))
     cmds.connectAttr('{0}.outputTranslate'.format(matrix_decompose), '{0}.translate'.format(childTransform))
+    cmds.connectAttr('{0}.outputShear'.format(matrix_decompose), '{0}.shear'.format(childTransform))
     cmds.disconnectAttr(parentMatrix, '{0}.inputMatrix'.format(matrix_decompose))
+    cmds.delete(matrix_decompose)
 
 def duplicateBindJoint(bind_joint, parent, new_purpose_suffix):
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(bind_joint)
@@ -133,10 +142,6 @@ def getDagPath(node=None):
     selection.getDagPath(0, dagPath)
     return dagPath
 
-def getMObject(node=None):
-    selection = om.MSelectionList()
-    selection.add(node)
-
 def getLocalOffset(parent, child):
     parentWorldMatrix = getDagPath(parent).inclusiveMatrix()
     childWorldMatrix = getDagPath(child).inclusiveMatrix()
@@ -149,6 +154,10 @@ def getMMatrixFromList(list_matrix):
     return m_mat
 
 def getTransformDistance(node1, node2):
+    diffVector = getTransformDiffVec(node1, node2)
+    return diffVector.length()
+
+def getTransformDiffVec(node1, node2):
     transformFuncs = om.MFnTransform()
     node1DAG = getDagPath(node1)
     transformFuncs.setObject(node1DAG)
@@ -158,9 +167,13 @@ def getTransformDistance(node1, node2):
     transformFuncs.setObject(node2DAG)
     node2Vector = transformFuncs.translation(om.MSpace.kWorld)
 
-    distVector = node1Vector - node2Vector
-    return distVector.length()
+    diffVector = node1Vector - node2Vector
+    return diffVector
 
+def getNumCVs(curve):
+    dagPath = getDagPath(curve)
+    fnNurbsCurve = om.MFnNurbsCurve(dagPath)
+    return fnNurbsCurve.numCVs()
 
 def  makeCircleControl(name, scale):
     curve_points = [[0.7836116248912245, 4.798237340988473e-17, -0.7836116248912246], [6.785732323110912e-17, 6.785732323110912e-17, -1.1081941875543877], [-0.7836116248912246, 4.798237340988472e-17, -0.7836116248912244], [-1.1081941875543881, 3.517735619006027e-33, -5.74489823752483e-17], [-0.7836116248912246, -4.7982373409884725e-17, 0.7836116248912245], [-1.1100856969603225e-16, -6.785732323110917e-17, 1.1081941875543884], [0.7836116248912245, -4.798237340988472e-17, 0.7836116248912244], [1.1081941875543881, -9.253679210110099e-33, 1.511240500779959e-16]]
@@ -176,16 +189,29 @@ def makeSquareControl(name, scale):
     cmds.closeCurve(name, ch=False, ps=False, rpo=True)
     return control
 
-def makeDirectControl(name, controlledNode, scale, curveType="circle"):
+def makeControl(name, scale, curveType="circle"):
     if curveType == "circle":
         control = makeCircleControl(name, scale)
     else:
         control = makeSquareControl(name, scale)
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(name)
-    parent = cmds.listRelatives(controlledNode, parent=True)
     position_group = cmds.group(control, name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PLC', 'GRP'))
+    return position_group, control
+
+def makeDirectControl(name, controlledNode, scale, curveType="circle"):
+    position_group, control = makeControl(name, scale, curveType)
+    parent = cmds.listRelatives(controlledNode, parent=True)
     cmds.matchTransform(position_group, controlledNode)
     cmds.parent(position_group, parent[0])
     cmds.parent(controlledNode, control)
     return position_group, control
-    
+
+def makeConstraintControl(name, parent, controlledNode, scale, curveType="circle", matchTransform='', maintainOffset=True, useParentOffset=True):
+    position_group, control = makeControl(name, scale, curveType)
+    if not matchTransform:
+        cmds.matchTransform(position_group, parent)
+    else:
+        cmds.matchTransform(position_group, matchTransform)
+    cmds.parent(position_group, parent)
+    mult_matrix, matrix_compose = constrainTransformByMatrix(control, controlledNode, maintainOffset, useParentOffset)
+    return position_group, control, mult_matrix, matrix_compose
