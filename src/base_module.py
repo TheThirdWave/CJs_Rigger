@@ -73,14 +73,32 @@ class BaseModule(ABC):
         pass
 
     @classmethod
-    def loadFromDict(cls, name, data):
+    def loadFromDict(cls, name, data, default_attrs):
         inst = cls()
         inst.name = name
         inst.prefix = data['prefix']
         inst.children = data['children']
         inst.controls = data['controls']
         inst.inputAttrs = data['inputAttrs']
+        for default in default_attrs['inputAttrs']:
+            found = False
+            for attr in inst.inputAttrs:
+                if attr['attrName'] == default['attrName']:
+                    found = True
+                    break
+            if found:
+                break
+            inst.inputAttrs.append(default)
         inst.outputAttrs = data['outputAttrs']
+        for default in default_attrs['outputAttrs']:
+            found = False
+            for attr in inst.outputAttrs:
+                if attr['attrName'] == default['attrName']:
+                    found = True
+                    break
+            if found:
+                break
+            inst.inputAttrs.append(default)
         return inst
     
     @abstractmethod

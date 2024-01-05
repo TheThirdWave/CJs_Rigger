@@ -1,0 +1,14 @@
+inputAttrs:
+  - attrName: IN_WORLD
+    attrType: matrix
+    internalAttr: parentSpace_PAR_GRP.offsetParentMatrix
+  - attrName: IN_INV_WORLD
+    attrType: matrix
+    internalAttr:
+outputAttrs:
+  - attrName: END_OUT_WORLD
+    attrType: matrix
+    internalAttr:
+  - attrName: END_OUT_INV_WORLD
+    attrType: matrix
+    internalAttr:

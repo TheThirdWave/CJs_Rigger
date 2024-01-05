@@ -16,6 +16,29 @@ root:
   controls: {}
   bindGeometry: []
 
+spineUtilities:
+  componentType: UtilityModule
+  prefix: C
+  inputAttrs:
+    - attrName: IN_WORLD
+      attrType: matrix
+      internalAttr: CTL_CRV.parentspace
+    - attrName: IN_INV_WORLD
+      attrType: matrix
+      internalAttr: CTL_CRV.parentinvspace
+  outputAttrs:
+    - attrName: IKFK_SWITCH
+      attrType: double
+      internalAttr: CTL_CRV.ikfkswitch
+  children:
+    - childName: spine
+      parentAttrs: [IKFK_SWITCH]
+      childAttrs: [IKFK_SWITCH]
+      childUpAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
+      parentUpAttrs: [IN_WORLD, IN_INV_WORLD]
+  controls: {}
+  bindGeometry: []
+
 spine:
   componentType: IKFKSpine
   prefix: C
@@ -33,6 +56,33 @@ spine:
     - attrName: END_OUT_WORLD
       attrType: matrix
       internalAttr: end_BND_JNT.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldInverseMatrix
+  children:
+    - childName: leftClavicle
+      parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
+      childAttrs: [IN_WORLD, IN_INV_WORLD]
+  controls: {}
+  bindGeometry: []
+
+leftClavicle:
+  componentType: SingleChainIK
+  prefix: L
+  inputAttrs:
+    - attrName: IN_WORLD
+      attrType: matrix
+      internalAttr: DAT_LOC.parentspace
+    - attrName: IN_INV_WORLD
+      attrType: matrix
+      internalAttr: DAT_LOC.parentinvspace
+  outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldInverseMatrix
   children: []
   controls: {}
   bindGeometry: []

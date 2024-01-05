@@ -23,6 +23,22 @@ def generate_component_base(component_name, component_prefix):
     groups['placement_group'] = cmds.group(name='{0}_{1}_placement_PLC_GRP'.format(component_prefix, component_name), parent=groups['parent_group'], empty=True)
     return groups
 
+def zeroJointOrient(joint):
+    # Get rotation and the joint orient.
+    orient_vec = cmds.getAttr('{0}.jointOrient'.format(joint))[0]
+    rotate_vec = cmds.getAttr('{0}.rotate'.format(joint))[0]
+    # Zero out the joint orient.
+    cmds.setAttr('{0}.jointOrient'.format(joint), 0,0,0)
+    # Add the joint orient to the rotation.
+    new_rot_vec = list(map(lambda x, y: x + y, orient_vec, rotate_vec))
+    cmds.setAttr('{0}.rotate'.format(joint), *new_rot_vec)
+
+def setOrientJoint(joint, orient_string, sao_string):
+    cmds.select(joint)
+    cmds.joint(edit=True, orientJoint=orient_string, secondaryAxisOrient=sao_string, zeroScaleOrient=True)
+    zeroJointOrient(joint)
+
+
 def connectTransforms(parent, child):
     cmds.connectAttr('{0}.translate'.format(parent), '{0}.translate'.format(child))
     cmds.connectAttr('{0}.rotate'.format(parent), '{0}.rotate'.format(child))

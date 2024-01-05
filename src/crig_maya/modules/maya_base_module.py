@@ -91,11 +91,15 @@ class MayaBaseModule(base_module.BaseModule):
     def connectInputandOutputAttrs(self, output_group, input_group):
         cmds.select(output_group)
         for attr in self.outputAttrs:
+            if not attr['internalAttr']:
+                continue
             input_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
             new_attr = '{0}.{1}'.format(output_group, attr['attrName'])
             cmds.connectAttr(input_attr, new_attr)
         cmds.select(input_group)
         for attr in self.inputAttrs:
+            if not attr['internalAttr']:
+                continue
             new_attr = '{0}.{1}'.format(input_group, attr['attrName'])
             output_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
             cmds.connectAttr(new_attr, output_attr)

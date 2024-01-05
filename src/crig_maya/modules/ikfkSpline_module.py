@@ -225,12 +225,12 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
 
         #Create joints for each rough control (3 by default probably) and skin them to the rough curve
         #TODO: change this section so there can be any number of rough controls.
-        rough_control_joints = []
+        ik_rough_control_joints = []
         idx = 0
         ik_rough_group = cmds.group(name='{0}_{1}_ik_rough_HOLD_GRP'.format(self.prefix, self.name), parent=ik_group, empty=True)
         base_rough_control_joint = python_utils.duplicateBindJoint(joint_objects[0]['ik_rough_joint'], ik_rough_group, 'CTL')
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(base_rough_control_joint)
-        rough_control_joints.append(base_rough_control_joint)
+        ik_rough_control_joints.append(base_rough_control_joint)
         base_joint_DAG = python_utils.getDagPath(base_rough_control_joint)
         transformFuncs = om.MFnTransform()
         transformFuncs.setObject(base_joint_DAG)
@@ -247,15 +247,15 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                 position=(new_transform_vec.x, new_transform_vec.y, new_transform_vec.z),
                 scaleCompensate=False
                 )
-            rough_control_joints.append(new_rough_control_joint)
-        rough_control_joints.append(end_rough_control_joint)
-        cmds.skinCluster(rough_control_joints, ik_rough_curve, toSelectedBones=True, bindMethod=0, maximumInfluences=2, obeyMaxInfluences=True, dropoffRate=7)
+            ik_rough_control_joints.append(new_rough_control_joint)
+        ik_rough_control_joints.append(end_rough_control_joint)
+        cmds.skinCluster(ik_rough_control_joints, ik_rough_curve, toSelectedBones=True, bindMethod=0, maximumInfluences=2, obeyMaxInfluences=True, dropoffRate=7)
 
         parent = joint_objects[idx]['ik_rough_joint']
 
         #Create rough controls (3 by default probably) and constrain the rough joints to them
-        rough_controls = []
-        for joint in rough_control_joints:
+        ik_rough_controls = []
+        for joint in ik_rough_control_joints:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(joint)
             control_place_group, rough_control, mult_matrix, matrix_compose = python_utils.makeConstraintControl(
                                                             '{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'CTL', 'CRV'),
@@ -266,12 +266,12 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                                                             joint,
                                                             False,
                                                             False)
-            rough_controls.append(rough_control)
+            ik_rough_controls.append(rough_control)
             
         #Add rough control twist to the fine controls, blending based on the dot product
         rough_idx = 0
-        prev_rough_control = rough_controls[rough_idx]
-        next_rough_control = rough_controls[rough_idx + 1]
+        prev_rough_control = ik_rough_controls[rough_idx]
+        next_rough_control = ik_rough_controls[rough_idx + 1]
         for joint in joint_objects:
             #Get the fine control's distance from the two rough controls bracketing it
             rough_diff_vec = python_utils.getTransformDiffVec(prev_rough_control, next_rough_control)
@@ -282,11 +282,11 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             if percent_along_rough_vec > 1:
                 rough_idx += 1
                 #...unless we're at the end of the rough controls for some reason, in which case we just 
-                if rough_idx >= len(rough_controls) - 1:
+                if rough_idx >= len(ik_rough_controls) - 1:
                     percent_along_rough_vec = 1
                 else:
-                    prev_rough_control = rough_controls[rough_idx]
-                    next_rough_control = rough_controls[rough_idx + 1]
+                    prev_rough_control = ik_rough_controls[rough_idx]
+                    next_rough_control = ik_rough_controls[rough_idx + 1]
                     rough_diff_vec = python_utils.getTransformDiffVec(prev_rough_control, next_rough_control)
                     base_diff_vec = python_utils.getTransformDiffVec(prev_rough_control, joint['ik_control'])
                     dot = rough_diff_vec * base_diff_vec
@@ -522,10 +522,27 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         # Connect constrain parent group to parent space matrix.
         python_utils.constrainByMatrix('{0}.parentspace'.format(data_locator), self.baseGroups['parent_group'], False)
 
-        # Connect ik/fk joints to bind joints.
+        # Connect ik/fk joints to bind joints and controls, except the last bind joint, that is attached to the rough control joint because I can't think
+        # of a better way to control the rotation of the final joint in the spine (having it just follow the ik doesn't seem intuitive).
         for idx in range(len(self.bind_joints)):
-            blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(joint_objects[idx]['ik_twist_joint'], fk_joints[idx], self.bind_joints[idx])
+            if idx < len(self.bind_joints) - 1:
+                blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(joint_objects[idx]['ik_twist_joint'], fk_joints[idx], self.bind_joints[idx])
+            else:
+                blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(ik_rough_control_joints[-1], fk_joints[idx], self.bind_joints[idx])
             cmds.connectAttr('{0}.ikfkswitch'.format(data_locator), '{0}.target[0].weight'.format(blend_matrix))
+            cmds.setDrivenKeyframe('{0}.visibility'.format(joint_objects[idx]['ik_control']), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(joint_objects[idx]['ik_control']), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(fk_base_controls[idx]), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(fk_base_controls[idx]), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
+
+        for control in ik_rough_controls:
+            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)
+
+        for control in fk_rough_controls_1:
+            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
+
 
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 

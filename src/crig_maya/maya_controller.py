@@ -109,7 +109,8 @@ class MayaController(base_controller.BaseController):
         for component in self.components:
             deform_group = component.baseGroups['deform_group']
             children = cmds.listRelatives(deform_group, allDescendents=True, type='transform')
-            position_dict['{0}_{1}'.format(component.prefix, component.name)] = python_utils.dictionizeAttrs(children, constants.POSITION_SAVE_ATTRS)
+            if children:
+                position_dict['{0}_{1}'.format(component.prefix, component.name)] = python_utils.dictionizeAttrs(children, constants.POSITION_SAVE_ATTRS)
         self.bindPositionData = position_dict
         self.saveJSON(positions_path, position_dict)
 
@@ -135,3 +136,8 @@ class MayaController(base_controller.BaseController):
                             pOutput = '{0}_output_GRP.{1}'.format(module.getFullName(), child['parentAttrs'][i])
                             cInput = '{0}_input_GRP.{1}'.format(ccomponent.getFullName(), child['childAttrs'][i])
                             cmds.connectAttr(pOutput, cInput)
+                        if 'parentUpAttrs' in child:
+                            for i in range(len(child['parentUpAttrs'])):
+                                pInput = '{0}_input_GRP.{1}'.format(module.getFullName(), child['parentUpAttrs'][i])
+                                cOutput = '{0}_output_GRP.{1}'.format(ccomponent.getFullName(), child['childUpAttrs'][i])
+                                cmds.connectAttr(cOutput, pInput)

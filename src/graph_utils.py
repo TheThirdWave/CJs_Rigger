@@ -4,7 +4,10 @@ import logging
 class ComponentGraph():
     
     def __init__(self):
+        #The actual graph of nodes.
         self.nodes = []
+        #A flat list of all the nodes.
+        self.components = []
 
     @classmethod
     def buildFromList(cls, componentList):
@@ -19,7 +22,9 @@ class ComponentGraph():
     def addToList(self, component):
         if self.checkInList(component.name):
             return
-        self.nodes.append(GraphNode(component))
+        newNode = GraphNode(component)
+        self.nodes.append(newNode)
+        self.components.append(newNode)
                 
 
     def checkInList(self, name):
@@ -70,11 +75,16 @@ class ComponentGraphIterator():
     
             # Call function to be used on component
             # remove it from queue
-            function(queue[0].component)
+            if not queue[0].read:
+                function(queue[0].component)
             node = queue.pop(0)
+            node.read = True
     
             for child in node.children:
-                queue.append(child)
+                if not child.read:
+                    queue.append(child)
+        for node in graph.components:
+            node.read = False
 
 
 class GraphNode():
@@ -83,3 +93,4 @@ class GraphNode():
         self.parent = []
         self.component = component
         self.children = []
+        self.read = False

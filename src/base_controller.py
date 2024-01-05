@@ -100,6 +100,7 @@ class BaseController(ABC):
         self.components = []
         module_files = os.listdir(self.modulePath)
         templates = self.loadYaml(template_path)
+        default_attrs = self.loadYaml(constants.DEFAULT_ATTRS_PATH)
         for file in module_files:
             if os.path.splitext(file)[1] != '.py' or file == '__init__.py':
                 continue
@@ -122,7 +123,7 @@ class BaseController(ABC):
                 if inspect.isclass(obj):
                     for name, data in templates.items():
                         if data['componentType'] == obj.__name__:
-                            self.components.append(obj.loadFromDict(name, data))
+                            self.components.append(obj.loadFromDict(name, data, default_attrs))
 
     def importBindJointPositions(self, positions_path):
         if not self.components:
