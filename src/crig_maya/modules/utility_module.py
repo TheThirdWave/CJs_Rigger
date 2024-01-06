@@ -31,13 +31,21 @@ class UtilityModule(maya_base_module.MayaBaseModule):
         for attr in self.outputAttrs:
             if attr['internalAttr']:
                 node = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
-                node, nodeAttr = node.split('.')
+                try:
+                    node, nodeAttr = node.split('.')
+                except:
+                    # If it ain't actually an attr we ignore it (yes this is silly)
+                    continue
                 cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True)
 
         for attr in self.inputAttrs:
             if attr['internalAttr']:
                 node = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
-                node, nodeAttr = node.split('.')
+                try:
+                    node, nodeAttr = node.split('.')
+                except:
+                    # If it ain't actually an attr we ignore it (yes this is silly)
+                    continue
                 cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True)
 
         # Connect constrain parent group to parent space matrix.

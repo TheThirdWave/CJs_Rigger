@@ -130,14 +130,64 @@ class MayaController(base_controller.BaseController):
 
     def connectModuleToChildren(self, module):
         for child in module.children:
-                for ccomponent in self.components:
-                    if child['childName'] == ccomponent.name:
-                        for i in range(len(child['parentAttrs'])):
-                            pOutput = '{0}_output_GRP.{1}'.format(module.getFullName(), child['parentAttrs'][i])
-                            cInput = '{0}_input_GRP.{1}'.format(ccomponent.getFullName(), child['childAttrs'][i])
-                            cmds.connectAttr(pOutput, cInput)
-                        if 'parentUpAttrs' in child:
-                            for i in range(len(child['parentUpAttrs'])):
-                                pInput = '{0}_input_GRP.{1}'.format(module.getFullName(), child['parentUpAttrs'][i])
-                                cOutput = '{0}_output_GRP.{1}'.format(ccomponent.getFullName(), child['childUpAttrs'][i])
-                                cmds.connectAttr(cOutput, pInput)
+                # First we connect up all the attributes.
+                self.connectModuleAttrs(child, module)
+                # Then we immediately change the IN_WORLD/END_OUT_WORLD connections because I've decided they're special and how I'm going
+                # to deal with component parent/child transformation stuff.
+                self.connectParentLogic(child, module)
+
+
+    def connectParentLogic(self, child, module):
+        if 'connectionType' not in child:
+            constants.RIGGER_LOG.info('{0} connection to child {1} not defined, skipping connection.'.format(module.getFullName(), child['childName']))
+            return
+        
+        # I'm not actually cleaning the inputs but I don't want nothing to work because I capitalized something.
+        connection_type = child['connectionType'].lower()
+
+        if connection_type == constants.CONNECTION_TYPES.parent:
+            # The default case is covered by "connectModuleAttrs()"
+            return
+        elif connection_type == constants.CONNECTION_TYPES.translateConstraint:
+            out_world = '{0}_output_GRP.{1}'.format(module.getFullName(), constants.DEFAULT_ATTRS.outWorld)
+            in_world = '{0}_input_GRP.{1}'.format(child['childName'], constants.DEFAULT_ATTRS.inWorld)
+            out_inv_world = '{0}_output_GRP.{1}'.format(module.getFullName(), constants.DEFAULT_ATTRS.outInverseWorld)
+            in_inv_world = '{0}_input_GRP.{1}'.format(child['childName'], constants.DEFAULT_ATTRS.inInverseWorld)
+            try:
+                cmds.disconnectAttr(out_world, in_world)
+            except:
+                constants.RIGGER_LOG.error('{0} and {1} could not be disconnected. This is weird and shouldn\'t happen here.(connectParentLogic)'.format(out_world, in_world))
+            python_utils.decomposeAndRecompose(out_world, in_world, ['translate'])
+            try:
+                cmds.disconnectAttr(out_inv_world, in_inv_world)
+            except:
+                constants.RIGGER_LOG.error('{0} and {1} could not be disconnected. This is weird and shouldn\'t happen here.(connectParentLogic)'.format(out_world, in_world))
+            python_utils.decomposeAndRecompose(out_inv_world, in_inv_world, ['translate'])
+        else:
+            constants.RIGGER_LOG.info('{0} connection to child {1} not defined, skipping connection.'.format(module.getFullName(), child['childName']))
+        
+        return
+
+
+    def connectModuleAttrs(self, child, module):
+        for ccomponent in self.components:
+            if child['childName'] == ccomponent.name:
+                for i in range(len(child['parentAttrs'])):
+                    pOutput = '{0}_output_GRP.{1}'.format(module.getFullName(), child['parentAttrs'][i])
+                    cInput = '{0}_input_GRP.{1}'.format(ccomponent.getFullName(), child['childAttrs'][i])
+                    try:
+                        cmds.connectAttr(pOutput, cInput)
+                    except:
+                        # If there's multiple incoming connections we let "connectParentLogic()" sort it out.
+                        constants.RIGGER_LOG.warning('{0} and {1} are already connected! (This could be fine)'.format(pOutput, cInput))
+                        continue
+                if 'parentUpAttrs' in child:
+                    for i in range(len(child['parentUpAttrs'])):
+                        pInput = '{0}_input_GRP.{1}'.format(module.getFullName(), child['parentUpAttrs'][i])
+                        cOutput = '{0}_output_GRP.{1}'.format(ccomponent.getFullName(), child['childUpAttrs'][i])
+                        try:
+                            cmds.connectAttr(cOutput, pInput)
+                        except:
+                            # If there's multiple incoming connections we let "connectParentLogic()" sort it out.
+                            constants.RIGGER_LOG.warning('{0} and {1} are already connected! (This could be fine)'.format(cOutput, pInput))
+                            continue

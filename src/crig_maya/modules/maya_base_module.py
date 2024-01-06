@@ -95,14 +95,37 @@ class MayaBaseModule(base_module.BaseModule):
                 continue
             input_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
             new_attr = '{0}.{1}'.format(output_group, attr['attrName'])
-            cmds.connectAttr(input_attr, new_attr)
+            self.connectAttributes(input_attr, new_attr, constants.ATTR_CONNECTION_TYPES.direct)
         cmds.select(input_group)
         for attr in self.inputAttrs:
             if not attr['internalAttr']:
                 continue
             new_attr = '{0}.{1}'.format(input_group, attr['attrName'])
             output_attr = '{0}_{1}_{2}'.format(self.prefix, self.name, attr['internalAttr'])
-            cmds.connectAttr(new_attr, output_attr)
+
+            if 'attrConnection' in attr:
+                self.connectAttributes(new_attr, output_attr, attr['attrConnection'])
+            else:
+                self.connectAttributes(new_attr, output_attr, constants.ATTR_CONNECTION_TYPES.direct)
+
+    def connectAttributes(self, source_attr, dest_attr, connection_type):
+        
+        lower_connection_type = connection_type.lower()
+
+        if lower_connection_type == constants.ATTR_CONNECTION_TYPES.direct:
+            cmds.connectAttr(source_attr, dest_attr)
+        elif lower_connection_type == constants.ATTR_CONNECTION_TYPES.copy:
+            source_node_name, source_attr_name = source_attr.split('.')
+            dest_node_name, dest_attr_name = dest_attr.split('.')
+            cmds.copyAttr(source_node_name, dest_node_name, values='True', attribute=[source_attr_name, dest_attr_name])
+        elif lower_connection_type == constants.ATTR_CONNECTION_TYPES.copyTransform:
+            python_utils.copyOverMatrix(source_attr, dest_attr)
+        else:
+            constants.RIGGER_LOG.warning('{0} connection with {1} has an undefined type!'.format(source_attr, dest_attr))
+
+
+
+
 
     def getFullName(self):
         return '{0}_{1}'.format(self.prefix, self.name)

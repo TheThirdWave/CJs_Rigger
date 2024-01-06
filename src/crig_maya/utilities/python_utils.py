@@ -118,6 +118,21 @@ def decomposeAndConnectMatrix(inputMatrix, childTransform):
     cmds.connectAttr('{0}.outputShear'.format(matrix_decompose), '{0}.shear'.format(childTransform))
     return matrix_decompose
 
+def decomposeAndRecompose(inputMatrix, outputMatrix, keepList=['rotate', 'scale', 'translate', 'shear']):
+    matrix_decompose = cmds.createNode('decomposeMatrix', name='{0}_MCNST_DCOMP'.format(inputMatrix))
+    matrix_recompose = cmds.createNode('composeMatrix', name='{0}_MCNST_RCOMP'.format(outputMatrix))
+    cmds.connectAttr(inputMatrix, '{0}.inputMatrix'.format(matrix_decompose))
+    if 'rotate' in keepList:
+        cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.inputRotate'.format(matrix_recompose))
+    if 'scale' in keepList:
+        cmds.connectAttr('{0}.outputScale'.format(matrix_decompose), '{0}.inputScale'.format(matrix_recompose))
+    if 'translate' in keepList:
+        cmds.connectAttr('{0}.outputTranslate'.format(matrix_decompose), '{0}.inputTranslate'.format(matrix_recompose))
+    if 'shear' in keepList:
+        cmds.connectAttr('{0}.outputShear'.format(matrix_decompose), '{0}.inputShear'.format(matrix_recompose))
+    cmds.connectAttr('{0}.outputMatrix'.format(matrix_recompose), outputMatrix)
+    return matrix_decompose, matrix_recompose
+
 def copyOverMatrix(parentMatrix, childTransform):
     matrix_decompose = cmds.createNode('decomposeMatrix', name='{0}_MCNST_DCOMP'.format(childTransform))
     cmds.connectAttr(parentMatrix, '{0}.inputMatrix'.format(matrix_decompose))

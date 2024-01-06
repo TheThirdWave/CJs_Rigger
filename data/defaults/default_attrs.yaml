@@ -1,10 +1,13 @@
+# These default attrs are assumed to exist and are treated differently by the autorigger.
+# The default attrNames are also kept in "constants.py", so update that too if you're changing this.
 inputAttrs:
   - attrName: IN_WORLD
     attrType: matrix
     internalAttr: parentSpace_PAR_GRP.offsetParentMatrix
   - attrName: IN_INV_WORLD
     attrType: matrix
-    internalAttr:
+    internalAttr: placement_PLC_GRP
+    attrConnection: copytransform
 outputAttrs:
   - attrName: END_OUT_WORLD
     attrType: matrix

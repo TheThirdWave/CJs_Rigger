@@ -133,12 +133,6 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
         cmds.addAttr(longName='parentspace', attributeType='matrix')
         cmds.addAttr(longName='parentinvspace', attributeType='matrix')
 
-        # Connect constrain parent group to parent space matrix.
-        python_utils.constrainByMatrix('{0}.parentspace'.format(data_locator), self.baseGroups['parent_group'], False)
-
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
-
-        # Copy inv world space to placement_GRP to keep the offset around.
-        python_utils.copyOverMatrix('{0}.parentinvspace'.format(data_locator), self.baseGroups['placement_group'])
 
         return

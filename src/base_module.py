@@ -80,15 +80,16 @@ class BaseModule(ABC):
         inst.children = data['children']
         inst.controls = data['controls']
         inst.inputAttrs = data['inputAttrs']
+
+        # Add default attributes if they haven't been overridden.
         for default in default_attrs['inputAttrs']:
             found = False
             for attr in inst.inputAttrs:
                 if attr['attrName'] == default['attrName']:
                     found = True
                     break
-            if found:
-                break
-            inst.inputAttrs.append(default)
+            if not found:
+                inst.inputAttrs.append(default)
         inst.outputAttrs = data['outputAttrs']
         for default in default_attrs['outputAttrs']:
             found = False
@@ -96,9 +97,18 @@ class BaseModule(ABC):
                 if attr['attrName'] == default['attrName']:
                     found = True
                     break
-            if found:
-                break
-            inst.inputAttrs.append(default)
+            if not found:
+                inst.outputAttrs.append(default)
+
+        # Add default attrs to child data if they're not there.
+        for child in inst.children:
+            for default in default_attrs['inputAttrs']:
+                if default['attrName'] not in child['childAttrs']:
+                    child['childAttrs'].append(default['attrName'])
+            for default in default_attrs['outputAttrs']:
+                if default['attrName'] not in child['parentAttrs']:
+                    child['parentAttrs'].append(default['attrName'])
+
         return inst
     
     @abstractmethod
