@@ -6,3 +6,7 @@ class UtilsController(ABC):
     @abstractmethod
     def constrainByMatrix(self):
         pass
+
+    @abstractmethod
+    def makeRLMatch(self):
+        pass

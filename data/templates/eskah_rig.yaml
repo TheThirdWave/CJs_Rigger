@@ -76,6 +76,26 @@ clavicle:
   componentType: SingleChainIK
   prefix: LR
   inputAttrs: []
+  outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldInverseMatrix
+  children:
+    - childName: arm_limb
+      childPrefix: LR
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
+  controls: {}
+  bindGeometry: []
+
+arm_limb:
+  componentType: IKFKLimb
+  prefix: LR
+  inputAttrs: []
   outputAttrs: []
   children: []
   controls: {}

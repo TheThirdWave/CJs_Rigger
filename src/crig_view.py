@@ -87,11 +87,16 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.curves_layout.addWidget(self.curves_save_button)
 
     def initUtilsWidgets(self):
+        # Init buttons
         self.matrix_constraint_button = QtWidgets.QPushButton('Mat Const')
         self.matrix_constraint_button.clicked.connect(self.utils.constrainByMatrix)
+        self.match_RL_button = QtWidgets.QPushButton('Match RL')
+        self.match_RL_button.clicked.connect(self.utils.makeRLMatch)
+        # Add to layout
         self.utils_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.utils_layout)
         self.utils_layout.addWidget(self.matrix_constraint_button)
+        self.utils_layout.addWidget(self.match_RL_button)
 
 
     def initMainPanelWidgets(self):
@@ -151,6 +156,7 @@ class ModularRigger(QtWidgets.QMainWindow):
     def initTemplateStuff(self, filename):
         self.template_pathbox.setText(filename)
         self.controller.importModules(filename)
+        self.controller.duplicateLRComponents()
         self.controller.buildComponentGraph()
 
     def getPositionsPath(self):

@@ -1,0 +1,218 @@
+{
+    "L_arm_limb": {
+        "L_arm_limb_end_BND_JNT": {
+            "translateX": 11.37880659138527,
+            "translateZ": 3.021897810218972,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": -9.789001010092477,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": 0.0,
+            "rotateX": 0.0
+        },
+        "L_arm_limb_middle_BND_JNT": {
+            "translateX": 10.328852141299894,
+            "translateZ": -0.6121011800561846,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": -8.289652261894346,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": 0.0,
+            "rotateX": 0.0
+        },
+        "L_arm_limb_start_BND_JNT": {
+            "translateX": 6.428988017625045,
+            "translateZ": -3.250974814914816,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 58.11278298008621,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": 0.0,
+            "rotateX": 0.0
+        }
+    },
+    "C_spine": {
+        "C_spine_end_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": -2.7762141474596547e-08,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 3.881754841088153,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        },
+        "C_spine_4_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 3.3191311359405518,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        },
+        "C_spine_3_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 3.2173564434051443,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        },
+        "C_spine_2_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 3.1963887214660787,
+            "scaleY": 1.0000000000000002,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        },
+        "C_spine_1_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 3.8653972148895193,
+            "scaleY": 0.9999999999999999,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        },
+        "C_spine_base_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": -0.5797016620635986,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 41.016502380371094,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        }
+    },
+    "C_root": {
+        "C_root_end_BND_JNT": {
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 0.0,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        }
+    },
+    "L_clavicle": {
+        "L_clavicle_end_BND_JNT": {
+            "translateX": 0.5435843750404237,
+            "translateZ": 0.05402545553233562,
+            "rotateZ": 1.5902773407317584e-15,
+            "radius": 1.0,
+            "translateY": 4.584531051977027,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        },
+        "L_clavicle_start_BND_JNT": {
+            "translateX": 2.0759971545960343,
+            "translateZ": -3.3050002704471515,
+            "rotateZ": -102.69525332041287,
+            "radius": 1.0,
+            "translateY": 59.650599446936404,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": -0.0,
+            "rotateX": 0.0
+        }
+    },
+    "R_arm_limb": {
+        "R_arm_limb_end_BND_JNT": {
+            "translateX": -11.37880659138527,
+            "translateZ": 3.021897810218972,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": -9.789001010092477,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": 0.0,
+            "rotateX": 0.0
+        },
+        "R_arm_limb_middle_BND_JNT": {
+            "translateX": -10.328852141299894,
+            "translateZ": -0.6121011800561846,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": -8.289652261894346,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": 0.0,
+            "rotateX": 0.0
+        },
+        "R_arm_limb_start_BND_JNT": {
+            "translateX": -6.428988017625045,
+            "translateZ": -3.250974814914816,
+            "rotateZ": 0.0,
+            "radius": 1.0,
+            "translateY": 58.11278298008621,
+            "scaleY": 1.0,
+            "scaleX": 1.0,
+            "scaleZ": 1.0,
+            "rotateY": 0.0,
+            "rotateX": 0.0
+        }
+    },
+    "R_clavicle": {
+        "R_clavicle_end_BND_JNT": {
+            "translateX": 0.5435843750405169,
+            "translateZ": 0.054025455532336064,
+            "rotateZ": 25.390506640824583,
+            "radius": 1.0,
+            "translateY": 4.5845310519770175,
+            "scaleY": 1.000000000000001,
+            "scaleX": 1.0,
+            "scaleZ": -1.0,
+            "rotateY": 180.0,
+            "rotateX": 0.0
+        },
+        "R_clavicle_start_BND_JNT": {
+            "translateX": -2.0759971545960343,
+            "translateZ": -3.3050002704471515,
+            "rotateZ": -77.30474667958828,
+            "radius": 1.0,
+            "translateY": 59.650599446936404,
+            "scaleY": 0.9999999999999999,
+            "scaleX": 0.9999999999999999,
+            "scaleZ": -1.0,
+            "rotateY": -0.0,
+            "rotateX": 180.0
+        }
+    }
+}

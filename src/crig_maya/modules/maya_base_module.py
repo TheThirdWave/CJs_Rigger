@@ -5,9 +5,9 @@ import maya.cmds as cmds
 
 class MayaBaseModule(base_module.BaseModule):
 
-    def __init__(self):
-        self._name = None
-        self._prefix = None
+    def __init__(self, name, prefix):
+        self._name = name
+        self._prefix = prefix
         self._parent = None
         self._children = []
         self._controls = {}

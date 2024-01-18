@@ -20,25 +20,25 @@ class ComponentGraph():
         return inst
 
     def addToList(self, component):
-        if self.checkInList(component.name):
+        if self.checkInList(component):
             return
         newNode = GraphNode(component)
         self.nodes.append(newNode)
         self.components.append(newNode)
                 
 
-    def checkInList(self, name):
+    def checkInList(self, component):
         for node in self.nodes:
-            result = self.checkInTree(name, node)
+            result = self.checkInTree(component, node)
             if result:
                 return result
         return False
 
-    def checkInTree(self, name, node):
-        if node.component.name == name:
+    def checkInTree(self, component, node):
+        if self.isComponent(component.name, component.prefix, node.component):
             return node.component
         for child in node.children: 
-            result = self.checkInTree(name, child)
+            result = self.checkInTree(component, child)
             if result:
                 return result
         return False
@@ -46,7 +46,7 @@ class ComponentGraph():
     def findChildren(self, curnode):
         for child in curnode.component.children:
             for node in self.nodes:
-                if child['childName'] == node.component.name:
+                if self.isComponent(child['childName'], child['childPrefix'], node.component):
                     node.parent.append(curnode)
                     curnode.children.append(node)
 
@@ -54,6 +54,11 @@ class ComponentGraph():
         for node in list(self.nodes):
             if node.parent:
                 self.nodes.remove(node)
+
+    def isComponent(self, cName, cPrefix, checkNodeData):
+        if cName == checkNodeData.name and checkNodeData.prefix in cPrefix:
+            return True
+        return False
 
 
 class ComponentGraphIterator():

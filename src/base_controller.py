@@ -3,6 +3,7 @@ import sys
 import json
 import yaml
 import inspect
+import copy
 import importlib.util
 from abc import ABC, abstractmethod
 
@@ -125,6 +126,30 @@ class BaseController(ABC):
                         if data['componentType'] == obj.__name__:
                             self.components.append(obj.loadFromDict(name, data, default_attrs))
 
+    def duplicateLRComponents(self):
+        for component in self.components:
+            if component.prefix == 'LR' or component.prefix == 'RL':
+                new_component = None
+                if component.prefix == 'LR':
+                    component.prefix = 'L'
+                    new_component = copy.deepcopy(component)
+                    new_component.prefix = 'R'
+                    self.components.append(new_component)
+                if component.prefix == 'RL':
+                    component.prefix = 'R'
+                    new_component = copy.deepcopy(component)
+                    new_component.prefix = 'L'
+                    self.components.append(new_component)
+                for child in component.children:
+                    if child['childPrefix'] == 'LR' or child['childPrefix'] == 'RL':
+                        child['childPrefix'] = component.prefix
+                for child in new_component.children:
+                    if child['childPrefix'] == 'LR' or child['childPrefix'] == 'RL':
+                        child['childPrefix'] = new_component.prefix
+
+
+            
+
     def importBindJointPositions(self, positions_path):
         if not self.components:
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
@@ -157,3 +182,8 @@ class BaseController(ABC):
         with open(path, 'r') as file:
             templates = yaml.safe_load(file)
         return templates
+    
+    def isComponent(self, cName, cPrefix, checkNodeData):
+        if cName == checkNodeData.name and checkNodeData.prefix in cPrefix:
+            return True
+        return False

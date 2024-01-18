@@ -171,7 +171,7 @@ class MayaController(base_controller.BaseController):
 
     def connectModuleAttrs(self, child, module):
         for ccomponent in self.components:
-            if child['childName'] == ccomponent.name:
+            if self.isComponent(child['childName'], child['childPrefix'], ccomponent):
                 for i in range(len(child['parentAttrs'])):
                     pOutput = '{0}_output_GRP.{1}'.format(module.getFullName(), child['parentAttrs'][i])
                     cInput = '{0}_input_GRP.{1}'.format(ccomponent.getFullName(), child['childAttrs'][i])

@@ -5,9 +5,6 @@ import maya.cmds as cmds
 
 class RootModule(maya_base_module.MayaBaseModule):
 
-    def __init__(self):
-        super().__init__()
-
     def createBindJoints(self):
         # Create the common groups that all components share if they don't exist already.
         if not self.baseGroups:

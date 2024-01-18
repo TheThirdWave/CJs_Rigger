@@ -74,9 +74,7 @@ class BaseModule(ABC):
 
     @classmethod
     def loadFromDict(cls, name, data, default_attrs):
-        inst = cls()
-        inst.name = name
-        inst.prefix = data['prefix']
+        inst = cls(name, data['prefix'])
         inst.children = data['children']
         inst.controls = data['controls']
         inst.inputAttrs = data['inputAttrs']

@@ -1,116 +1,142 @@
 {
     "C_spine": {
         "C_spine_end_BND_JNT": {
-            "translateX": 0.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 1.0,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": 4.930380657631324e-32
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": -3.3306690738754775e-16,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         },
         "C_spine_4_BND_JNT": {
-            "translateX": 0.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 1.0,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 0.0,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         },
         "C_spine_3_BND_JNT": {
-            "translateX": 0.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 1.0,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 0.0,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         },
         "C_spine_2_BND_JNT": {
-            "translateX": 0.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 1.0,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 0.0,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         },
         "C_spine_1_BND_JNT": {
-            "translateX": 0.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 1.0,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 0.0,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         },
         "C_spine_base_BND_JNT": {
-            "translateX": 0.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 0.0,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": -2.220446049250313e-16
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": -4.440892098500626e-16,
+            "translateY": 0.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         }
     },
     "C_root": {
         "C_root_end_BND_JNT": {
-            "translateX": -3.5173301855274657,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 2.1135777141412184,
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": -0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 0.0,
+            "translateY": 2.1135777141412184,
+            "translateX": -3.5173301855274657,
+            "scaleY": 1.0
         }
     },
-    "L_leftClavicle": {
-        "L_leftClavicle_end_BND_JNT": {
-            "translateX": 1.0,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 0.0,
+    "L_clavicle": {
+        "L_clavicle_end_BND_JNT": {
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": 0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 0.0,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
         },
-        "L_leftClavicle_start_BND_JNT": {
-            "translateX": 1.373102548073986,
-            "scaleY": 1.0,
-            "rotateZ": 0.0,
-            "scaleZ": 1.0,
-            "translateY": 5.608881332072353,
+        "L_clavicle_start_BND_JNT": {
             "rotateX": 0.0,
-            "radius": 1.0,
-            "rotateY": 0.0,
             "scaleX": 1.0,
-            "translateZ": 0.0
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": -90.0,
+            "translateZ": 0.0,
+            "translateY": 5.993809469607946,
+            "translateX": 1.376630494818683,
+            "scaleY": 1.0
+        }
+    },
+    "R_clavicle": {
+        "R_clavicle_end_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleX": 1.0,
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 0.0,
+            "translateZ": 1.2246467991473532e-16,
+            "translateY": 1.0,
+            "translateX": 0.0,
+            "scaleY": 1.0
+        },
+        "R_clavicle_start_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleX": 1.0,
+            "rotateY": -0.0,
+            "radius": 1.0,
+            "scaleZ": 1.0,
+            "rotateZ": 90.0,
+            "translateZ": 0.0,
+            "translateY": 5.993809469607946,
+            "translateX": -1.376630494818683,
+            "scaleY": 1.0
         }
     }
 }

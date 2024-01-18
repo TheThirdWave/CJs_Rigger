@@ -2,14 +2,11 @@ from . import maya_base_module
 from ..utilities import python_utils
 from ... import constants
 import maya.cmds as cmds
-import maya.OpenMaya as om
+import maya.api.OpenMaya as om2
 
 import math
 
 class IKFKSpine(maya_base_module.MayaBaseModule):
-
-    def __init__(self):
-        super().__init__()
 
     def createBindJoints(self):
         # Create the common groups that all components share if they don't exist already.
@@ -232,9 +229,9 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(base_rough_control_joint)
         ik_rough_control_joints.append(base_rough_control_joint)
         base_joint_DAG = python_utils.getDagPath(base_rough_control_joint)
-        transformFuncs = om.MFnTransform()
+        transformFuncs = om2.MFnTransform()
         transformFuncs.setObject(base_joint_DAG)
-        base_joint_vec = transformFuncs.translation(om.MSpace.kWorld)
+        base_joint_vec = transformFuncs.translation(om2.MSpace.kWorld)
         end_rough_control_joint = python_utils.duplicateBindJoint(joint_objects[-1]['ik_rough_joint'], ik_rough_group, 'CTL')
         start_to_end_vec = python_utils.getTransformDiffVec(end_rough_control_joint, base_rough_control_joint)
         num_segments = 2
@@ -419,7 +416,7 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
 
             # Now move on to the X and Z scaling stuff.
             addToStartLen = cmds.shadingNode('floatMath', name='{0}_{1}_{2}_{3}'.format(prefix, component_name, joint_name, '5_SAS_CMATH'), asUtility=True)
-            cmds.setAttr('{0}.operation'.format(addPrevJointDisplacement), 0)
+            cmds.setAttr('{0}.operation'.format(addToStartLen), 0)
             cmds.connectAttr('{0}.outColorB'.format(multByScaleFactorNode), '{0}.floatA'.format(addToStartLen))
             cmds.setAttr('{0}.floatB'.format(addToStartLen), totalDistance)
 
