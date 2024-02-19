@@ -7,18 +7,11 @@ import maya.api.OpenMaya as om2
 class IKFKLimb(maya_base_module.MayaBaseModule):
 
     def createBindJoints(self):
-        # Create the common groups that all components share if they don't exist already.
-        if not self.baseGroups:
-            self.baseGroups = python_utils.generate_component_base(self.name, self.prefix)
-
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
         cmds.select(self.baseGroups['deform_group'])
         self.start_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_start_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.middle_joint = cmds.joint(self.start_joint, name='{0}_{1}_middle_BND_JNT'.format(self.prefix, self.name), position=(1, 0, 0), relative=True, scaleCompensate=False)
         self.end_joint = cmds.joint(self.middle_joint, name='{0}_{1}_end_BND_JNT'.format(self.prefix, self.name), position=(1, 0, 0), relative=True, scaleCompensate=False)
-
-        # We have to initialize the components input/output custom attrs so they can be connected later, even if the component rig hasn't been created yet.
-        self.initializeInputandoutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 
     def createControlRig(self):
         if not self.baseGroups:
@@ -55,10 +48,13 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         for joint in upper_arm_fk_joints:
             cmds.select(joint)
             python_utils.setOrientJoint(joint, 'yzx', 'zup')
+            python_utils.zeroJointOrient(joint)
         for joint in lower_arm_fk_joints:
             cmds.select(joint)
             python_utils.setOrientJoint(joint, 'yzx', 'zup')
+            python_utils.zeroJointOrient(joint)
         python_utils.setOrientJoint(end_fk_joint, 'none', 'zup')
+        python_utils.zeroJointOrient(end_fk_joint)
 
         # Reverse the right joint chain so things are mirrored properly.
         if self.prefix =='R':
@@ -98,6 +94,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         for joint in upper_arm_fk_joints:
             cmds.addAttr(longName='SASScale_{0}'.format(i), attributeType='float', defaultValue=default_scale_factor, minValue=0.0, keyable=True, hidden=False)
             default_scale_factor += 1.0/len(upper_arm_fk_joints)
+            python_utils.zeroJointOrient(joint)
             i += 1
         cmds.select(middle_fk_control)
         cmds.addAttr(longName='length', attributeType='float', defaultValue=1.0, minValue=0.0, keyable=True, hidden=False)
@@ -109,11 +106,12 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         for joint in lower_arm_fk_joints:
             cmds.addAttr(longName='SASScale_{0}'.format(i), attributeType='float', defaultValue=default_scale_factor, minValue=0.0, keyable=True, hidden=False)
             default_scale_factor -= 1.0/len(lower_arm_fk_joints)
+            python_utils.zeroJointOrient(joint)
             i += 1
 
         # Handle FK Squash and Stretch
-        self.makeFKSASNodes(start_fk_control, start_fk_control, upper_arm_fk_joints, middle_fk_placement, middle_fk_control, middle_fk_joint)
-        self.makeFKSASNodes(middle_fk_control, middle_fk_control, lower_arm_fk_joints, end_fk_placement, end_fk_control, end_fk_joint)
+        self.makeSASNodes(start_fk_control, start_fk_control, upper_arm_fk_joints, middle_fk_placement, middle_fk_control, middle_fk_joint)
+        self.makeSASNodes(middle_fk_control, middle_fk_control, lower_arm_fk_joints, end_fk_placement, end_fk_control, end_fk_joint)
 
         # Handle FK Twist
         # We do some quaternion stuff to get the twist angle between the main joints
@@ -125,22 +123,27 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         # First we set the current start/mid joint rotations as the "preferred angle"s, otherwise the ik will keep the bend stiff.
         cmds.setAttr('{0}.preferredAngle'.format(start_ik_joint), *cmds.getAttr('{0}.rotate'.format(start_ik_joint))[0])
         cmds.setAttr('{0}.preferredAngle'.format(middle_ik_joint), *cmds.getAttr('{0}.rotate'.format(middle_ik_joint))[0])
+        two_bone_solver = cmds.createNode('ik2Bsolver')
         ik_handle, ik_effector = cmds.ikHandle( name='{0}_{1}_base_IKRP_HDL'.format(self.prefix, self.name),
                                                 startJoint=start_ik_joint,
                                                 endEffector=end_ik_joint,
-                                                solver='ikRPsolver' )
+                                                solver=two_bone_solver )
         ik_effector = cmds.rename(ik_effector, '{0}_{1}_base_IKRP_EFF'.format(self.prefix, self.name))
-
+        #cmds.parent(ik_handle, msc_group)
         # Create IK Controls
         ik_control_group = cmds.group(name='{0}_{1}_ik_ctls_HOLD_GRP'.format(self.prefix, self.name), parent=ik_group, empty=True)
-        cmds.parent(ik_handle, ik_control_group)
         end_ik_control_place, end_ik_control = python_utils.makeControl('{0}_{1}_ik_end_CTL_CRV'.format(self.prefix, self.name), 2.0, "circle",)
         cmds.matchTransform(end_ik_control_place, end_ik_joint)
         cmds.parent(end_ik_control_place, ik_control_group)
         if self.prefix == 'R':
             cmds.setAttr('{0}.scale'.format(end_ik_control_place), -1, -1, -1)
-        cmds.parent(ik_handle, end_ik_control)
-        cmds.connectAttr('{0}.rotate'.format(end_ik_control), '{0}.rotate'.format(end_ik_joint))
+        #python_utils.constrainTransformByMatrix(end_ik_control, ik_handle, True, False, ['translate'])
+        ik_handle_group = cmds.group(name='{0}_{1}_base_IKRP_PAR_GRP'.format(self.prefix, self.name), parent=end_ik_control, empty=True)
+        cmds.matchTransform(ik_handle_group, ik_handle)
+        cmds.parent(ik_handle, ik_handle_group)
+        cmds.orientConstraint(end_ik_control, end_ik_joint)
+        #python_utils.constrainTransformByMatrix(end_ik_control, end_ik_joint, True, False, ['rotate'])
+        cmds.connectAttr('{0}.scale'.format(end_ik_control), '{0}.scale'.format(end_ik_joint))
         
         # We create the orient/knee/elbow control and offset it in the direction of the chain bend.
         ik_orient_control_place, ik_orient_control = python_utils.makeControlMatchTransform('{0}_{1}_orient_CTL_CRV'.format(self.prefix, self.name), middle_ik_joint, 2.0, "circle")
@@ -157,7 +160,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
 
         # Add necessary attrs and create measurement nodes for squash and stretch
         cmds.select(ik_orient_control)
-        cmds.addAttr(longName='ElbowSnap', attributeType='float', defaultValue=0.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
+        cmds.addAttr(longName='elbowSnap', attributeType='float', defaultValue=0.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
         i = 0
         default_scale_factor = 0
         for joint in upper_arm_fk_joints:
@@ -185,9 +188,9 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         cmds.matchTransform(start_joint_locator, start_ik_joint)
 
         # Create nodes to get the length values that can be put into the squash and stretch math.
-        self.createIKLengthNodes(start_joint_locator, upper_arm_ik_joints, lower_arm_ik_joints, ik_orient_control, end_ik_joint, end_ik_control)
-        self.makeFKSASNodes(start_ik_joint, ik_orient_control, upper_arm_ik_joints, middle_ik_joint, ik_orient_control, middle_ik_joint, False)
-        self.makeFKSASNodes(middle_ik_joint, end_ik_control, lower_arm_ik_joints, end_ik_joint, end_ik_control, end_ik_joint, False)
+        self.createIKLengthNodes(start_joint_locator, upper_arm_ik_joints, lower_arm_ik_joints, ik_orient_control, end_ik_joint, end_ik_control, ik_handle_group)
+        self.makeSASNodes(start_ik_joint, ik_orient_control, upper_arm_ik_joints, middle_ik_joint, ik_orient_control, middle_ik_joint, False)
+        self.makeSASNodes(middle_ik_joint, end_ik_control, lower_arm_ik_joints, end_ik_joint, end_ik_control, end_ik_joint, False)
 
         # Make twist nodes
         self.makeFKTwistNodes('{0}.twistScale'.format(end_ik_control), lower_arm_ik_joints, end_ik_joint)
@@ -197,10 +200,17 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         cmds.parent(data_locator, start_fk_joint, relative=True)
         cmds.select(data_locator)
         cmds.addAttr(longName='ikfkswitch', defaultValue=0.0, minValue=0.0, maxValue=1.0)
-        cmds.setDrivenKeyframe('{0}.visibility'.format(ik_control_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
-        cmds.setDrivenKeyframe('{0}.visibility'.format(ik_control_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
+        cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
+        cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
         cmds.setDrivenKeyframe('{0}.visibility'.format(fk_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
         cmds.setDrivenKeyframe('{0}.visibility'.format(fk_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)
+
+        # Proxy the ikfkswitch to all the controls for funsies.
+        cmds.addAttr('{0}'.format(start_fk_control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
+        cmds.addAttr('{0}'.format(middle_fk_control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
+        cmds.addAttr('{0}'.format(end_fk_control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
+        cmds.addAttr('{0}'.format(ik_orient_control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
+        cmds.addAttr('{0}'.format(end_ik_control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
 
         # Connect control to bind joint.
         for idx in range(len(self.upper_arm_bind_joints)):
@@ -230,7 +240,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
     #   S = distance between current joint and next joint
     #   b = Scale factor
     #   p = parent X or Z squash and stretch value
-    def makeFKSASNodes(self, length_node, sasscale_node, joint_list, end_place_group, end_control, end_joint, add_sas_node=True):
+    def makeSASNodes(self, length_node, sasscale_node, joint_list, end_place_group, end_control, end_joint, add_sas_node=True):
 
         og_distance = python_utils.getTransformDistance(joint_list[0], end_joint)
         parent_scale = None
@@ -353,16 +363,13 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
     # Ym = the rotation between the main joints about the Y axis
     # N = number of twist joints + 1 (assumed to be the length of the joint_list)
     def makeFKTwistNodes(self, twist_attr, joint_list, end_joint):
-        mult_matrix, matrix_decompose, quat_to_euler = python_utils.createRotDiffNodes('{0}.worldInverseMatrix[0]'.format(end_joint), '{0}.worldMatrix[0]'.format(joint_list[0]), ['X'])
+        mult_matrix, matrix_decompose, quat_to_euler = python_utils.createRotDiffNodes('{0}.worldMatrix[0]'.format(end_joint), '{0}.worldInverseMatrix[0]'.format(joint_list[0]), ['Y'])
         for joint in joint_list[1:]:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(joint)
             rotationIncrement = cmds.shadingNode('floatMath', name='{0}_{1}_{2}_{3}'.format(prefix, component_name, joint_name, '0_TWST_CMATH'), asUtility=True)
             cmds.setAttr('{0}.operation'.format(rotationIncrement), 3)
-            cmds.connectAttr('{0}.outputRotateX'.format(quat_to_euler), '{0}.floatA'.format(rotationIncrement))
-            if self.prefix == 'R':
-                cmds.setAttr('{0}.floatB'.format(rotationIncrement), -len(joint_list))
-            else:
-                cmds.setAttr('{0}.floatB'.format(rotationIncrement), len(joint_list))
+            cmds.connectAttr('{0}.outputRotateY'.format(quat_to_euler), '{0}.floatA'.format(rotationIncrement))
+            cmds.setAttr('{0}.floatB'.format(rotationIncrement), len(joint_list))
 
             scaledRotation = cmds.shadingNode('floatMath', name='{0}_{1}_{2}_{3}'.format(prefix, component_name, joint_name, '1_TWST_CMATH'), asUtility=True)
             cmds.setAttr('{0}.operation'.format(scaledRotation), 2)
@@ -385,12 +392,12 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
     #   BL = the bendLength attribute on the end control (defaults to 1)
     #
     #
-    def createIKLengthNodes(self, start_joint_loc, upper_joints, lower_joints, middle_control, end_ik_joint, end_control):
+    def createIKLengthNodes(self, start_joint_loc, upper_joints, lower_joints, middle_control, end_ik_joint, end_control, handle_parent):
         start_ik_joint = upper_joints[0]
         middle_ik_joint = lower_joints[0]
         start_end_dist, start_ik_decomp, end_ctl_decomp = python_utils.createDistNode(
             start_joint_loc,
-            end_control,
+            handle_parent,
             space_matrix='{0}.parentInverseMatrix[0]'.format(start_joint_loc)
             )
         start_orient_dist, start_ik_decomp, middle_control_decomp = python_utils.createDistNode(
@@ -401,7 +408,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
             )
         orient_end_dist, middle_control_decomp, end_ik_decomp = python_utils.createDistNode(
             middle_control,
-            end_control,
+            handle_parent,
             decompose_1=middle_control_decomp,
             decompose_2=end_ctl_decomp,
             space_matrix='{0}.parentInverseMatrix[0]'.format(start_joint_loc)
@@ -449,5 +456,5 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         cmds.connectAttr('{0}.outFloat'.format(divideMidEndLen), '{0}.color1G'.format(length_color_blend_2))
         cmds.connectAttr('{0}.outputR'.format(length_color_blend_2), '{0}.length'.format(start_ik_joint))
         cmds.connectAttr('{0}.outputG'.format(length_color_blend_2), '{0}.length'.format(middle_ik_joint))
-        cmds.connectAttr('{0}.ElbowSnap'.format(middle_control), '{0}.blender'.format(length_color_blend_2))
+        cmds.connectAttr('{0}.elbowSnap'.format(middle_control), '{0}.blender'.format(length_color_blend_2))
 

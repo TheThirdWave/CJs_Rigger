@@ -6,16 +6,9 @@ import maya.cmds as cmds
 class RootModule(maya_base_module.MayaBaseModule):
 
     def createBindJoints(self):
-        # Create the common groups that all components share if they don't exist already.
-        if not self.baseGroups:
-            self.baseGroups = python_utils.generate_component_base(self.name, self.prefix)
-
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
         cmds.select(self.baseGroups['deform_group'])
         cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_end_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
-
-        # We have to initialize the components input/output custom attrs so they can be connected later, even if the component rig hasn't been created yet.
-        self.initializeInputandoutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 
     def createControlRig(self):
         if not self.baseGroups:

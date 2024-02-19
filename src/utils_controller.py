@@ -10,3 +10,11 @@ class UtilsController(ABC):
     @abstractmethod
     def makeRLMatch(self):
         pass
+
+    @abstractmethod
+    def selectBindJoints(self):
+        pass
+
+    @abstractmethod
+    def mirrorDrivenKeys(self):
+        pass

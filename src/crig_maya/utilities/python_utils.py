@@ -14,21 +14,8 @@ def setNodesFromDict(node_dict):
             except:
                 constants.RIGGER_LOG.info('attr {0}.{1} could not be set from saved positions.'.format(name, attr))
 
-
-def generate_component_base(component_name, component_prefix):
-    groups = {}
-    groups['component_group'] = cmds.group(name='{0}_{1}_GRP'.format(component_prefix, component_name), parent='rig_GRP', empty=True)
-    groups['output_group'] = cmds.group(name='{0}_{1}_output_GRP'.format(component_prefix, component_name), parent=groups['component_group'], empty=True)
-    groups['input_group'] = cmds.group(name='{0}_{1}_input_GRP'.format(component_prefix, component_name), parent=groups['component_group'], empty=True)
-    groups['controls_group'] = cmds.group(name='{0}_{1}_controls_GRP'.format(component_prefix, component_name), parent=groups['component_group'], empty=True)
-    groups['deform_group'] = cmds.group(name='{0}_{1}_deform_GRP'.format(component_prefix, component_name), parent=groups['component_group'], empty=True)
-    # Create parent space group
-    groups['parent_group'] = cmds.group(name='{0}_{1}_parentSpace_PAR_GRP'.format(component_prefix, component_name), parent=groups['controls_group'], empty=True)
-    # Turn off transform inheritance because it's getting it's parent transform from the input group.
-    cmds.inheritTransform(groups['parent_group'], off=True)
-    # Create placement group to hold the initial offset.
-    groups['placement_group'] = cmds.group(name='{0}_{1}_placement_PLC_GRP'.format(component_prefix, component_name), parent=groups['parent_group'], empty=True)
-    return groups
+def getRigGeo():
+        return [x for x in cmds.listRelatives(constants.DEFAULT_GROUPS.geometry, allDescendents=True, type='transform') if cmds.listRelatives(x, shapes=True)]
 
 def zeroJointOrient(joint):
     # Get rotation and the joint orient.
@@ -92,7 +79,7 @@ def reverseJointChainOnX(joint):
     flip_quatZ = om2.MQuaternion(1, 0, 0, 0)
     flipped_quat = flip_quatZ * rot_quat
     jnt_transform.setRotation(flipped_quat, om2.MSpace.kWorld)
-    children = cmds.listRelatives(joint, type='joint', allDescendents=True)
+    children = cmds.listRelatives(joint, type='joint', allDescendents=True) if cmds.listRelatives else []
     for child in children:
         child_jnt_dag = getDagPath(child)
         jnt_transform = om2.MFnTransform(child_jnt_dag)
@@ -162,6 +149,8 @@ def createRotDiffNodes(child_matrix, parent_matrix, rot_axis=['Y']):
 
     quat_to_euler = cmds.shadingNode('quatToEuler', name='{0}_BLND_BLNDC'.format(child_node_name), asUtility=True)
     rot_axis.append('W')
+    # TODO: Make this not a hack
+    cmds.setAttr('{0}.inputRotateOrder'.format(quat_to_euler), 1)
     for axis in rot_axis:
         cmds.connectAttr('{0}.outputQuat{1}'.format(matrix_decompose, axis), '{0}.inputQuat{1}'.format(quat_to_euler, axis))
     
@@ -175,17 +164,16 @@ def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_p
     cmds.connectAttr(parentMatrix, '{0}.matrixIn[1]'.format(mult_matrix))
     cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(child_parent), '{0}.matrixIn[2]'.format(mult_matrix))
     input_matrix = '{0}.matrixSum'.format(mult_matrix)
-    if not use_parent_offset:
-        matrix_decompose = decomposeAndConnectMatrix(input_matrix, childTransform, connectAttrs)
-    else:
-        cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.offsetParentMatrix'.format(childTransform))
-        matrix_decompose = ''
-
     if maintain_offset:
         parent_mMatrix = om2.MMatrix(cmds.getAttr(parentMatrix))
         child_mMatrix = om2.MMatrix(cmds.getAttr('{0}.worldMatrix'.format(childTransform)))
         offset_matrix = child_mMatrix * parent_mMatrix.inverse()
         cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), [offset_matrix.getElement(i, j) for i in range(4) for j in range(4)], type="matrix")
+    if not use_parent_offset:
+        matrix_decompose = decomposeAndConnectMatrix(input_matrix, childTransform, connectAttrs)
+    else:
+        cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.offsetParentMatrix'.format(childTransform))
+        matrix_decompose = ''
 
         
     return mult_matrix, matrix_decompose
@@ -250,6 +238,26 @@ def duplicateBindJoint(bind_joint, parent, new_purpose_suffix):
     new_joint = cmds.joint(parent, name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, new_purpose_suffix, node_type), position=world_position, radius=cmds.getAttr('{0}.radius'.format(bind_joint)))
     return new_joint
 
+def duplicateBindChain(bind_joint, parent, new_purpose_suffix):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(bind_joint)
+    dupe_joints = cmds.duplicate(bind_joint, name=bind_joint.replace(node_purpose, new_purpose_suffix))
+    children = cmds.listRelatives(dupe_joints[0], allDescendents=True, fullPath=True, type='transform')
+    for child in children:
+        short_name = child.split('|')[-1]
+        cmds.rename(child, short_name.replace(node_purpose, new_purpose_suffix))
+    for i in range(len(dupe_joints)):
+        short_name = dupe_joints[i].split('|')[-1]
+        dupe_joints[i] = short_name.replace(node_purpose, new_purpose_suffix)
+    cmds.parent(dupe_joints[0], parent)
+    return dupe_joints
+
+def createLocAt(joint, parent, loc_purpose_suffix):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(joint)
+    new_locator = cmds.spaceLocator(name='{0}_{1}_{2}_{3}_LOC'.format(prefix, component_name, joint_name, loc_purpose_suffix))[0]
+    cmds.parent(new_locator, parent)
+    cmds.matchTransform(new_locator, joint, pos=True, rot=False, scale=False)
+    return new_locator
+
 def getNodeNameParts(node):
     component_part = node.split('_', 2)
     prefix = component_part[0]
@@ -274,6 +282,12 @@ def getDagPath(node=None):
     dagPath = selection.getDagPath(0)
     return dagPath
 
+def getDependNode(node=None):
+    selection = om2.MSelectionList()
+    selection.add(node)
+    dagPath = selection.getDependNode(0)
+    return dagPath
+
 def getLocalOffset(parent, child):
     parentWorldMatrix = getDagPath(parent).inclusiveMatrix()
     childWorldMatrix = getDagPath(child).inclusiveMatrix()
@@ -283,6 +297,16 @@ def getLocalOffset(parent, child):
 def getTransformDistance(node1, node2):
     diffVector = getTransformDiffVec(node1, node2)
     return diffVector.length()
+
+def getIsProxyAttr(node, attribute):
+    dependNode = om2.MFnDependencyNode(getDependNode(node))
+    attr = om2.MFnAttribute(dependNode.attribute(attribute))
+    return attr.isProxyAttribute
+
+def setIsProxyAttr(node, attribute, isProxy):
+    dependNode = om2.MFnDependencyNode(getDependNode(node))
+    attr = om2.MFnAttribute(dependNode.attribute(attribute))
+    attr.isProxyAttribute = isProxy
 
 def getTransformDiffVec(node1, node2):
     transformFuncs = om2.MFnTransform()
@@ -313,7 +337,35 @@ def getPoleVec(lineNode1, lineNode2, poleNode):
 def getNumCVs(curve):
     dagPath = getDagPath(curve)
     fnNurbsCurve = om2.MFnNurbsCurve(dagPath)
-    return fnNurbsCurve.numCVs()
+    return fnNurbsCurve.numCVs
+
+def getDrivenKeys(node):
+    keys_dict = {}
+    driven_attrs = cmds.setDrivenKeyframe(node, query=True, driven=True)
+    if driven_attrs:
+        for attr in cmds.setDrivenKeyframe(node, query=True, driven=True):
+            keys_dict[attr] = {}
+    for attr, dict in keys_dict.items():
+        dict['driver'] = cmds.setDrivenKeyframe(attr, query=True, driver=True)[0]
+        dict['keyframes'] = cmds.keyframe(attr, query=True, floatChange=True, valueChange=True, absolute=True, index=())
+        dict['keytangents'] = cmds.keyTangent(attr, query=True, inAngle=True, inTangentType=True, outAngle=True, outTangentType=True, index=())
+        dict['infinites'] = cmds.setInfinity(attr, query=True, preInfinite=True, postInfinite=True)
+    return keys_dict
+
+def getCurveData(node):
+    curve = om2.MFnNurbsCurve(getDagPath(node))
+    point_array = curve.cvPositions()
+    knot_array = curve.knots()
+    out_dict = {
+        'points': [],
+        'knots': []
+    }
+    for point in point_array:
+        out_dict['points'].append([point[0], point[1], point[2]])
+    for knot in knot_array:
+        out_dict['knots'].append(knot)
+    return out_dict
+
 
 def invertQuatAxis(object, rotateAxis):
     transform = om2.MFnTransform(getDagPath(object))

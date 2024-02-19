@@ -9,21 +9,19 @@ import math
 class IKFKSpine(maya_base_module.MayaBaseModule):
 
     def createBindJoints(self):
-        # Create the common groups that all components share if they don't exist already.
-        if not self.baseGroups:
-            self.baseGroups = python_utils.generate_component_base(self.name, self.prefix)
 
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
         cmds.select(self.baseGroups['deform_group'])
-        num_joints = 6
+        # TODO: replace these if statements with some kind of default component vars thing at the data layer.
+        if 'numJoints' in self.componentVars:
+            num_joints = self.componentVars['numJoints']
+        else:
+            num_joints = 6
         self.bind_joints = [cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_base_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0), scaleCompensate=False)]
         cmds.xform(self.bind_joints[0], rotation=(0, 0, 90))
         for joint_idx in range(num_joints - 1):
             self.bind_joints.append(cmds.joint(self.bind_joints[joint_idx], name='{0}_{1}_{2}_BND_JNT'.format(self.prefix, self.name, joint_idx + 1), position=(1, 0, 0), relative=True, scaleCompensate=False))
         self.bind_joints[-1] = cmds.rename(self.bind_joints[-1], '{0}_{1}_end_BND_JNT'.format(self.prefix, self.name))
-
-        # We have to initialize the components input/output custom attrs so they can be connected later, even if the component rig hasn't been created yet.
-        self.initializeInputandoutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 
     def createControlRig(self):
         if not self.baseGroups:
@@ -85,15 +83,6 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             python_utils.constrainTransformByMatrix(joint_objects[idx]['ik_joint'], position_group, False, False)
             idx += 1
 
-        #parent = ik_group
-        #for object in joint_objects:
-            #prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['ik_joint'])
-            #position_group = cmds.group(name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PLC', 'GRP'), empty=True)
-            #cmds.matchTransform(position_group, object['ik_joint'])
-            #cmds.parent(position_group, parent)
-            #cmds.parent(object['ik_joint'], parent)
-            #parent = object['ik_joint']
-            #object['ik_joint_place_group'] = position_group
         
         ik_handle, ik_effector, ik_curve = cmds.ikHandle(name='{0}_{1}_base_IKS_HDL'.format(self.prefix, self.name),
                                                         startJoint=joint_objects[0]['ik_joint'],
@@ -196,6 +185,7 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                                                         solver='ikSplineSolver',
                                                         simplifyCurve=False,
                                                         )
+        ik_effector = cmds.rename(ik_rough_effector, '{0}_{1}_rough_IKS_EFF'.format(self.prefix, self.name))
         # This curve should be the same as the fine curve because the joints are in the same place (hopefully!)
         ik_rough_curve = cmds.rename(ik_rough_curve, '{0}_{1}_rough_IKS_CRV'.format(self.prefix, self.name))
         
@@ -211,14 +201,17 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         self.create_ik_math_nodes(rough_curve_info, baseline_curve_info, joint_objects, 'ik_rough_joint')
 
         #Put new group on top of the fine controls that's driven by the new joint
+        i = 0
         for object in joint_objects:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['ik_control'])
             base_control_parent = cmds.listRelatives(object['ik_control'], parent=True)[0]
-            new_parent_group = cmds.group(name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PAR', 'GRP'), empty=True)
-            cmds.matchTransform(new_parent_group, object['ik_control'])
-            cmds.parent(new_parent_group, base_control_parent)
-            cmds.parent(object['ik_control'], new_parent_group)
-            python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(object['ik_rough_joint']), new_parent_group, False)
+            object['ik_control_parent'] = cmds.group(name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PAR', 'GRP'), empty=True)
+            cmds.matchTransform(object['ik_control_parent'], object['ik_control'])
+            cmds.parent(object['ik_control_parent'], base_control_parent)
+            cmds.parent(object['ik_control'], object['ik_control_parent'])
+            if i > 0:
+                python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(object['ik_rough_joint']), object['ik_control_parent'], False)
+            i += 1
 
         #Create joints for each rough control (3 by default probably) and skin them to the rough curve
         #TODO: change this section so there can be any number of rough controls.
@@ -234,7 +227,11 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         base_joint_vec = transformFuncs.translation(om2.MSpace.kWorld)
         end_rough_control_joint = python_utils.duplicateBindJoint(joint_objects[-1]['ik_rough_joint'], ik_rough_group, 'CTL')
         start_to_end_vec = python_utils.getTransformDiffVec(end_rough_control_joint, base_rough_control_joint)
-        num_segments = 2
+        # TODO: replace the if statements with some kind of default component vars thing at the data layer.
+        if 'numRoughIKSegments' in self.componentVars:
+            num_segments = self.componentVars['numRoughIKSegments']
+        else:
+            num_segments = 2
         segment_vec = start_to_end_vec / num_segments
         for seg_num in range(num_segments - 1):
             new_transform_vec = base_joint_vec + (segment_vec * (seg_num + 1))
@@ -265,6 +262,9 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                                                             False)
             ik_rough_controls.append(rough_control)
             
+        #Constrain base control parent group to base rough control so we have greater control over the base control's rotation.
+        python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(ik_rough_controls[0]),  joint_objects[0]['ik_control_parent'], False)
+
         #Add rough control twist to the fine controls, blending based on the dot product
         rough_idx = 0
         prev_rough_control = ik_rough_controls[rough_idx]
@@ -447,7 +447,11 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         # Get the number of rough controls (half the regular controls rounded up.)
         rough_control_group = cmds.group(name='{0}_{1}_RC1_HOLD_GRP'.format(self.prefix, self.name), parent=fk_group, empty=True)
         parent = rough_control_group
-        num_higher_controls = int((len(fk_base_place_groups) / 2)) + 1
+        # TODO: replace the if statements with some kind of default component vars thing at the data layer.
+        if 'numRoughFKControls' in self.componentVars:
+            num_higher_controls = self.componentVars['numRoughFKControls']
+        else:
+            num_higher_controls = int((len(fk_base_place_groups) / 2)) + 1
         fk_rough_controls_1 = []
         control_placement_indicies = []
 
@@ -522,7 +526,9 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         # Connect ik/fk joints to bind joints and controls, except the last bind joint, that is attached to the rough control joint because I can't think
         # of a better way to control the rotation of the final joint in the spine (having it just follow the ik doesn't seem intuitive).
         for idx in range(len(self.bind_joints)):
-            if idx < len(self.bind_joints) - 1:
+            if idx == 0:
+                blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(joint_objects[idx]['ik_control'], fk_joints[idx], self.bind_joints[idx])
+            elif idx < len(self.bind_joints) - 1:
                 blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(joint_objects[idx]['ik_twist_joint'], fk_joints[idx], self.bind_joints[idx])
             else:
                 blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(ik_rough_control_joints[-1], fk_joints[idx], self.bind_joints[idx])
@@ -567,7 +573,11 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                 constants.RIGGER_LOG.info('control curve already has ScaleA attribute, skipping.')
             
             try:
-                cmds.addAttr(longName='ScaleB', attributeType='float', defaultValue=1.0, hidden=False, keyable=True)
+                # The start joint shouldn't squash or stretch 'cause that'll propagate down to any component parented to it's worldspace.
+                if i == 0:
+                    cmds.addAttr(longName='ScaleB', attributeType='float', defaultValue=0.0, hidden=False, keyable=True)
+                else:
+                    cmds.addAttr(longName='ScaleB', attributeType='float', defaultValue=1.0, hidden=False, keyable=True)
             except:
                 constants.RIGGER_LOG.info('control curve already has ScaleB attribute, skipping.')
 

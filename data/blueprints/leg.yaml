@@ -1,0 +1,179 @@
+variables:
+  inputComponents:
+    - limb
+components:
+  limb:
+    componentType: IKFKLimb
+    prefix: LR
+    componentVars: {}
+    inputAttrs:
+      - attrName: IN_IK_WORLD
+        attrType: matrix
+        internalAttr: base_IKRP_PAR_GRP
+        attrConnection: parent
+    outputAttrs:
+      - attrName: END_OUT_FK_WORLD
+        attrType: matrix
+        internalAttr: end_FK_JNT.worldMatrix
+      - attrName: END_OUT_FK_INV_WORLD
+        attrType: matrix
+        internalAttr: end_FK_JNT.worldInverseMatrix
+      - attrName: END_OUT_IK_CTL_WORLD
+        attrType: matrix
+        internalAttr: ik_end_CTL_CRV.worldMatrix
+      - attrName: END_OUT_IK_CTL_INV_WORLD
+        attrType: matrix
+        internalAttr: ik_end_CTL_CRV.worldInverseMatrix
+      - attrName: END_OUT_IK_HDL_WORLD
+        attrType: matrix
+        internalAttr: base_IKRP_HDL.worldMatrix
+      - attrName: IKFK_SWITCH
+        attrType: double
+        proxy: True
+        internalAttr: ikfklimbs_DAT_LOC.ikfkswitch
+      - attrName: IK_VISIBILITY
+        attrType: bool
+        internalAttr: ik_HOLD_GRP.visibility
+    children:
+      - childName: foot
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: [END_OUT_FK_WORLD, END_OUT_IK_CTL_WORLD, END_OUT_IK_HDL_WORLD, IKFK_SWITCH]
+        childAttrs: [IN_FK_WORLD, IN_IK_WORLD, IN_IK_2_WORLD, IKFK_SWITCH]
+        childUpAttrs: [END_OUT_IK_WORLD]
+        parentUpAttrs: [IN_IK_WORLD]
+      - childName: smartControl
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: [IKFK_SWITCH, IK_VISIBILITY]
+        childAttrs: [IKFK_SWITCH, IK_VISIBILITY]
+    controls: {}
+    bindGeometry: []
+
+  smartControl:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs:
+      - attrName: IN_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.parentspace
+      - attrName: IN_INV_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.parentinvspace
+      - attrName: IKFK_SWITCH
+        attrType: double
+        proxy: True
+        attrConnection: proxy
+        internalAttr: base_CTL_CRV.ikfkswitch
+      - attrName: IK_VISIBILITY
+        attrType: bool
+        internalAttr: base_CTL_CRV.visibility
+    outputAttrs:
+      - attrName: FOOT_ROLL
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.footRoll
+      - attrName: FOOT_TILT
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.footTilt
+      - attrName: BEND_LIMIT_ANGLE
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.bendLimitAngle
+      - attrName: TOE_STRAIGHT_ANGLE
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.toeStraightAngle
+      - attrName: BALL_LEAN
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.ballLean
+      - attrName: TOE_SPIN
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.toeSpin
+      - attrName: TOE_WIGGLE
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.toeWiggle
+    children:
+      - childName: foot
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: [FOOT_ROLL, BEND_LIMIT_ANGLE, TOE_STRAIGHT_ANGLE, FOOT_TILT, BALL_LEAN, TOE_SPIN, TOE_WIGGLE]
+        childAttrs: [FOOT_ROLL, BEND_LIMIT_ANGLE, TOE_STRAIGHT_ANGLE, FOOT_TILT, BALL_LEAN, TOE_SPIN, TOE_WIGGLE]
+    controls: {}
+    bindGeometry: []
+
+  foot:
+    componentType: FootControlModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs:
+      - attrName: IN_FK_WORLD
+        attrType: matrix
+        internalAttr: ankle_FK_JNT
+        attrConnection: parent
+      - attrName: IN_FK_INV_WORLD
+        attrType: matrix
+        internalAttr: 
+      - attrName: IN_IK_WORLD
+        attrType: matrix
+        internalAttr: ankle_IK_LOC
+        attrConnection: parent
+      - attrName: IN_IK_2_WORLD
+        attrType: matrix
+        internalAttr: ankle_IK_JNT
+        attrConnection: parent
+      - attrName: IN_IK_INV_WORLD
+        attrType: matrix
+        internalAttr:
+      - attrName: IKFK_SWITCH
+        attrType: double
+        proxy: True
+        attrConnection: proxy
+        internalAttr: ball_IK_LOC.ikfkswitch
+      - attrName: FOOT_ROLL
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.footRoll
+      - attrName: BEND_LIMIT_ANGLE
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.bendLimitAngle
+      - attrName: TOE_STRAIGHT_ANGLE
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.toeStraightAngle
+      - attrName: FOOT_TILT
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.footTilt
+      - attrName: BALL_LEAN
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.ballLean
+      - attrName: TOE_SPIN
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.toeSpin
+      - attrName: TOE_WIGGLE
+        attrType: double
+        attrConnection: proxy
+        proxy: True
+        internalAttr: ball_IK_LOC.toeWiggle
+    outputAttrs:
+      - attrName: END_OUT_IK_WORLD
+        attrType: matrix
+        internalAttr: ball_IK_LOC.worldMatrix
+    children: []
+    controls: {}
+    bindGeometry: []

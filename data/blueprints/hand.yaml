@@ -1,0 +1,239 @@
+variables:
+  inputComponents:
+    - util
+    - thumb
+    - index
+    - pinky
+components:
+  util:
+    componentType: UtilityModule
+    prefix:
+    componentVars: {}
+    inputAttrs:
+      - attrName: IN_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.parentspace
+      - attrName: IN_INV_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.parentinvspace
+    outputAttrs:
+      - attrName: THUMB_IKFK_SWITCH
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.ikfkswitchThumb
+      - attrName: INDEX_IKFK_SWITCH
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.ikfkswitchIndex
+      - attrName: PINKY_IKFK_SWITCH
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.ikfkswitchPinky
+      - attrName: THUMB_RELAXED
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.relaxedThumb
+      - attrName: INDEX_RELAXED
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.relaxedIndex
+      - attrName: PINKY_RELAXED
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.relaxedPinky
+      - attrName: THUMB_CURL
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.curlThumb
+      - attrName: INDEX_CURL
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.curlIndex
+      - attrName: PINKY_CURL
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.curlPinky
+      - attrName: THUMB_SCRUNCH
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.scrunchThumb
+      - attrName: INDEX_SCRUNCH
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.scrunchIndex
+      - attrName: PINKY_SCRUNCH
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.scrunchPinky
+      - attrName: THUMB_LEAN
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.leanThumb
+      - attrName: INDEX_LEAN
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.leanIndex
+      - attrName: PINKY_LEAN
+        attrType: double
+        proxy: True
+        internalAttr: base_CTL_CRV.leanPinky
+    children:
+      - childName: thumb
+        childPrefix: 
+        connectionType: none
+        parentAttrs: [THUMB_IKFK_SWITCH, THUMB_RELAXED, THUMB_CURL, THUMB_SCRUNCH, THUMB_LEAN]
+        childAttrs: [IKFK_SWITCH, RELAXED, CURL, SCRUNCH, LEAN]
+      - childName: index
+        childPrefix: 
+        connectionType: none
+        parentAttrs: [INDEX_IKFK_SWITCH, INDEX_RELAXED, INDEX_CURL, INDEX_SCRUNCH, INDEX_LEAN]
+        childAttrs: [IKFK_SWITCH, RELAXED, CURL, SCRUNCH, LEAN]
+      - childName: pinky
+        childPrefix: 
+        connectionType: none
+        parentAttrs: [PINKY_IKFK_SWITCH, PINKY_RELAXED, PINKY_CURL, PINKY_SCRUNCH, PINKY_LEAN]
+        childAttrs: [IKFK_SWITCH, RELAXED, CURL, SCRUNCH, LEAN]
+    controls: {}
+    bindGeometry: []
+
+  thumb:
+    componentType: IKFK4Joint
+    prefix:
+    componentVars: {}
+    inputAttrs:
+      - attrName: IKFK_SWITCH
+        attrType: double
+        proxy: True
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.ikfkswitch
+      - attrName: RELAXED
+        attrType: double
+        proxy: True
+        min: 0.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.relaxed
+      - attrName: CURL
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.curl
+      - attrName: SCRUNCH
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.scrunch
+      - attrName: LEAN
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.lean
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  index:
+    componentType: IKFK4Joint
+    prefix:
+    componentVars: {}
+    inputAttrs:
+      - attrName: IKFK_SWITCH
+        attrType: double
+        proxy: True
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.ikfkswitch
+      - attrName: RELAXED
+        attrType: double
+        proxy: True
+        min: 0.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.relaxed
+      - attrName: CURL
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.curl
+      - attrName: SCRUNCH
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.scrunch
+      - attrName: LEAN
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.lean
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+
+  pinky:
+    componentType: IKFK4Joint
+    prefix: 
+    componentVars: {}
+    inputAttrs:
+      - attrName: IKFK_SWITCH
+        attrType: double
+        proxy: True
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.ikfkswitch
+      - attrName: RELAXED
+        attrType: double
+        proxy: True
+        min: 0.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.relaxed
+      - attrName: CURL
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.curl
+      - attrName: SCRUNCH
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.scrunch
+      - attrName: LEAN
+        attrType: double
+        proxy: True
+        min: -10.0
+        max: 10.0
+        internalProxyNodes: ['start_CTL_CRV', 'upper_CTL_CRV', 'lower_CTL_CRV', 'end_CTL_CRV']
+        attrConnection: proxy
+        internalAttr: 4joint_DAT_LOC.lean
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []

@@ -73,11 +73,11 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.position_layout.addWidget(self.position_button)
         self.position_layout.addWidget(self.position_save_button)
 
-        self.curves_label = QtWidgets.QLabel('Component curves:')
+        self.curves_label = QtWidgets.QLabel('Component Control Data:')
         self.curves_pathbox = QtWidgets.QLineEdit()
-        self.curves_button = QtWidgets.QPushButton('Load curves')
+        self.curves_button = QtWidgets.QPushButton('Load Data')
         self.curves_button.clicked.connect(self.getCurvesPath)
-        self.curves_save_button = QtWidgets.QPushButton('Save curves')
+        self.curves_save_button = QtWidgets.QPushButton('Save Data')
         self.curves_save_button.clicked.connect(self.saveCurvesPath)
         self.curves_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.curves_layout)
@@ -86,17 +86,36 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.curves_layout.addWidget(self.curves_button)
         self.curves_layout.addWidget(self.curves_save_button)
 
+        self.bind_label = QtWidgets.QLabel('Skin Bind Data:')
+        self.bind_pathbox = QtWidgets.QLineEdit()
+        self.bind_button = QtWidgets.QPushButton('Load skin data')
+        self.bind_button.clicked.connect(self.getSkinPath)
+        self.bind_save_button = QtWidgets.QPushButton('Save skin data')
+        self.bind_save_button.clicked.connect(self.saveSkinPath)
+        self.bind_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.bind_layout)
+        self.bind_layout.addWidget(self.bind_label)
+        self.bind_layout.addWidget(self.bind_pathbox)
+        self.bind_layout.addWidget(self.bind_button)
+        self.bind_layout.addWidget(self.bind_save_button)
+
     def initUtilsWidgets(self):
         # Init buttons
         self.matrix_constraint_button = QtWidgets.QPushButton('Mat Const')
         self.matrix_constraint_button.clicked.connect(self.utils.constrainByMatrix)
         self.match_RL_button = QtWidgets.QPushButton('Match RL')
         self.match_RL_button.clicked.connect(self.utils.makeRLMatch)
+        self.select_bind_joints_button = QtWidgets.QPushButton('Sel Bind Jnts')
+        self.select_bind_joints_button.clicked.connect(self.utils.selectBindJoints)
+        self.mirror_driven_keys_button = QtWidgets.QPushButton('Mirror DKeys')
+        self.mirror_driven_keys_button.clicked.connect(self.utils.mirrorDrivenKeys)
         # Add to layout
         self.utils_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.utils_layout)
         self.utils_layout.addWidget(self.matrix_constraint_button)
         self.utils_layout.addWidget(self.match_RL_button)
+        self.utils_layout.addWidget(self.select_bind_joints_button)
+        self.utils_layout.addWidget(self.mirror_driven_keys_button)
 
 
     def initMainPanelWidgets(self):
@@ -120,11 +139,12 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.loc_button.clicked.connect(self.controller.generateLocs)
         self.joint_button = QtWidgets.QPushButton('Generate Components')
         self.joint_button.clicked.connect(self.controller.generateJoints)
-        self.control_button = QtWidgets.QPushButton('Generate Controls')
+        self.skin_button = QtWidgets.QPushButton('Bind Skin')
+        self.skin_button.clicked.connect(self.callBindSkin)
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addWidget(self.loc_button)
         self.button_layout.addWidget(self.joint_button)
-        self.button_layout.addWidget(self.control_button)
+        self.button_layout.addWidget(self.skin_button)
         self.main_layout.addLayout(self.button_layout)
 
     def loadFilepathDicts(self):
@@ -133,7 +153,8 @@ class ModularRigger(QtWidgets.QMainWindow):
             self.initTemplateStuff(self.filepaths_dict['template_path'])
             self.initPositionsStuff(self.filepaths_dict['positions_path'])
             self.initCurvesStuff(self.filepaths_dict['curves_path'])
-        except IOError:
+            self.initSkinStuff(self.filepaths_dict['skin_path'])
+        except:
             constants.RIGGER_LOG.info('Previous rig data not found at {0}, leaving filepaths blank.'.format(constants.PREV_RIG_DATA_PATH))
             self.filepaths_dict = {}
 
@@ -185,7 +206,7 @@ class ModularRigger(QtWidgets.QMainWindow):
     def getCurvesPath(self):
         filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
         'Select Curves File',
-        constants.CURVES_PATH,
+        constants.CONTROLS_PATH,
         'JSON files (*.json)'
         )
         self.filepaths_dict['curves_path'] = filename
@@ -194,7 +215,7 @@ class ModularRigger(QtWidgets.QMainWindow):
 
     def initCurvesStuff(self, filename):
         self.curves_pathbox.setText(filename)
-        self.controller.importCurveData(filename)
+        self.controller.importControlData(filename)
 
     def saveCurvesPath(self):
         filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
@@ -203,7 +224,32 @@ class ModularRigger(QtWidgets.QMainWindow):
         'JSON files (*.json)'
         )
         self.curves_pathbox.setText(filename)
-        self.controller.saveControlCurveData(filename)
+        self.controller.saveControlData(filename)
+
+    def getSkinPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Select Bind Data File',
+        constants.SKIN_DATA_PATH,
+        'JSON files (*.json)'
+        )
+        self.filepaths_dict['skin_path'] = filename
+        self.saveFilepathDicts()
+        self.initSkinStuff(filename)
+
+    def initSkinStuff(self, filename):
+        self.bind_pathbox.setText(filename)
+
+    def saveSkinPath(self):
+        filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
+        'Select Bind Data File',
+        self.bind_pathbox.text(),
+        'JSON files (*.json)'
+        )
+        self.bind_pathbox.setText(filename)
+        self.controller.saveBindSkinData(filename)
+
+    def callBindSkin(self):
+        self.controller.bindSkin(self.bind_pathbox.text())
 
 def run():
         win = ModularRigger()

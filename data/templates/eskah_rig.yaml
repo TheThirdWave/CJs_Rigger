@@ -1,6 +1,7 @@
 root:
   componentType: RootModule
   prefix: C
+  componentVars: {}
   inputAttrs: []
   outputAttrs:
     - attrName: END_OUT_WORLD
@@ -10,7 +11,7 @@ root:
       attrType: matrix
       internalAttr: end_CTL_CRV.worldInverseMatrix
   children:
-    - childName: spine
+    - childName: torso
       childPrefix: C
       connectionType: none
       parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
@@ -18,20 +19,43 @@ root:
   controls: {}
   bindGeometry: []
 
+torso:
+  componentType: SingleJointModule
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      internalAttr: base_BND_JNT.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: base_BND_JNT.worldInverseMatrix
+  children:
+    - childName: spine
+      childPrefix: C
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
+  controls: {}
+  bindGeometry: []
+
 spineUtilities:
   componentType: UtilityModule
   prefix: C
+  componentVars: {}
   inputAttrs:
     - attrName: IN_WORLD
       attrType: matrix
-      internalAttr: CTL_CRV.parentspace
+      internalAttr: base_CTL_CRV.parentspace
     - attrName: IN_INV_WORLD
       attrType: matrix
-      internalAttr: CTL_CRV.parentinvspace
+      internalAttr: base_CTL_CRV.parentinvspace
   outputAttrs:
     - attrName: IKFK_SWITCH
       attrType: double
-      internalAttr: CTL_CRV.ikfkswitch
+      proxy: True
+      internalAttr: base_CTL_CRV.ikfkswitch
   children:
     - childName: spine
       childPrefix: C
@@ -46,6 +70,10 @@ spineUtilities:
 spine:
   componentType: IKFKSpine
   prefix: C
+  componentVars:
+    numJoints: 6
+    numRoughIKSegments: 2
+    numRoughFKControls: 4
   inputAttrs:
     - attrName: IN_WORLD
       attrType: matrix
@@ -55,6 +83,8 @@ spine:
       internalAttr: ikfkspine_DAT_LOC.parentinvspace
     - attrName: IKFK_SWITCH
       attrType: double
+      proxy: True
+      attrConnection: proxy
       internalAttr: ikfkspine_DAT_LOC.ikfkswitch
   outputAttrs:
     - attrName: END_OUT_WORLD
@@ -63,18 +93,30 @@ spine:
     - attrName: END_OUT_INV_WORLD
       attrType: matrix
       internalAttr: end_BND_JNT.worldInverseMatrix
+    - attrName: BASE_OUT_WORLD
+      attrType: matrix
+      internalAttr: base_BND_JNT.worldMatrix
+    - attrName: BASE_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: base_BND_JNT.worldInverseMatrix
   children:
     - childName: clavicle
       childPrefix: LR
       connectionType: parent
       parentAttrs: []
       childAttrs: []
+    - childName: leg
+      childPrefix: LR
+      connectionType: parent
+      parentAttrs: [BASE_OUT_WORLD, BASE_OUT_INV_WORLD]
+      childAttrs: [IN_WORLD, IN_INV_WORLD]
   controls: {}
   bindGeometry: []
 
 clavicle: 
   componentType: SingleChainIK
   prefix: LR
+  componentVars: {}
   inputAttrs: []
   outputAttrs:
     - attrName: END_OUT_WORLD
@@ -84,7 +126,7 @@ clavicle:
       attrType: matrix
       internalAttr: end_BND_JNT.worldInverseMatrix
   children:
-    - childName: arm_limb
+    - childName: armLimb
       childPrefix: LR
       connectionType: parent
       parentAttrs: []
@@ -92,9 +134,41 @@ clavicle:
   controls: {}
   bindGeometry: []
 
-arm_limb:
+armLimb:
   componentType: IKFKLimb
   prefix: LR
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldInverseMatrix
+  children:
+    - childName: hands
+      childPrefix: LR
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
+  controls: {}
+  bindGeometry: []
+
+hands:
+  componentType: hand
+  prefix: LR
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+leg:
+  componentType: leg
+  prefix: LR
+  componentVars: {}
   inputAttrs: []
   outputAttrs: []
   children: []

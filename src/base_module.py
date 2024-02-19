@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from . import constants
 
 class BaseModule(ABC):
 
@@ -44,6 +45,16 @@ class BaseModule(ABC):
 
     @property
     @abstractmethod
+    def componentVars(self):
+        return {}
+
+    @componentVars.setter
+    @abstractmethod
+    def componentVars(self, c):
+        pass
+
+    @property
+    @abstractmethod
     def prefix(self):
         return None
 
@@ -77,6 +88,7 @@ class BaseModule(ABC):
         inst = cls(name, data['prefix'])
         inst.children = data['children']
         inst.controls = data['controls']
+        inst.componentVars = data['componentVars']
         inst.inputAttrs = data['inputAttrs']
 
         # Add default attributes if they haven't been overridden.
@@ -100,12 +112,11 @@ class BaseModule(ABC):
 
         # Add default attrs to child data if they're not there.
         for child in inst.children:
-            for default in default_attrs['inputAttrs']:
-                if default['attrName'] not in child['childAttrs']:
-                    child['childAttrs'].append(default['attrName'])
-            for default in default_attrs['outputAttrs']:
-                if default['attrName'] not in child['parentAttrs']:
-                    child['parentAttrs'].append(default['attrName'])
+            if child['connectionType'] == constants.CONNECTION_TYPES.parent:
+                for i in range(len(default_attrs['inputAttrs'])):
+                    if default_attrs['inputAttrs'][i]['attrName'] not in child['childAttrs'] and default_attrs['outputAttrs'][i]['attrName'] not in child['parentAttrs']:
+                        child['childAttrs'].append(default_attrs['inputAttrs'][i]['attrName'])
+                        child['parentAttrs'].append(default_attrs['outputAttrs'][i]['attrName'])
 
         return inst
     

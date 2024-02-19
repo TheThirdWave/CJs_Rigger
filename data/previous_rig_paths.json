@@ -1,5 +1,6 @@
 {
-    "template_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/templates/eskah_rig.yaml",
     "positions_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/positions/eskah_root_positions.json",
-    "curves_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/curves/custom_curves.json"
+    "curves_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/controls/custom_curves.json",
+    "skin_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/weights/eskah_weights_1.json",
+    "template_path": "E:/Movies_n_such/Code_Stuff/CJs_Rigger/data/templates/eskah_rig.yaml"
 }

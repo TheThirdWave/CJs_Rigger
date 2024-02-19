@@ -44,12 +44,22 @@ class BaseController(ABC):
 
     @property
     @abstractmethod
+    def loadedBlueprints(self):
+        return {}
+
+    @loadedBlueprints.setter
+    @abstractmethod
+    def loadedBlueprints(self, m):
+        pass
+
+    @property
+    @abstractmethod
     def componentGraph(self):
         return None
     
     @componentGraph.setter
     @abstractmethod
-    def components(self, m):
+    def componentGraph(self, m):
         pass
 
     @property
@@ -64,12 +74,12 @@ class BaseController(ABC):
 
     @property
     @abstractmethod
-    def controlCurveData(self):
+    def controlsData(self):
         return {}
     
-    @controlCurveData.setter
+    @controlsData.setter
     @abstractmethod
-    def controlCurveData(self, c):
+    def controlsData(self, c):
         pass
 
     @property
@@ -91,7 +101,7 @@ class BaseController(ABC):
         pass
 
     @abstractmethod
-    def generateControls(self):
+    def bindSkin(self):
         pass
 
     def buildComponentGraph(self):
@@ -99,15 +109,19 @@ class BaseController(ABC):
 
     def importModules(self, template_path):
         self.components = []
+        self.loadedBlueprints = {}
         module_files = os.listdir(self.modulePath)
+        blueprint_files = os.listdir(constants.BLUEPRINTS_PATH)
         templates = self.loadYaml(template_path)
+        self.unrollBlueprints(templates, blueprint_files)
+        self.hookUpBlueprintComponents(templates)
         default_attrs = self.loadYaml(constants.DEFAULT_ATTRS_PATH)
         for file in module_files:
             if os.path.splitext(file)[1] != '.py' or file == '__init__.py':
                 continue
             # First, import the file in the module path. I forget how we did it at brazen, so here I basically just
             # have to recreate the whole import chain (as in, I can't do any relative import stuff here.)
-            # This is probably way overcomplicated.
+            # This is probably way overcomplicated.  Also it breaks importlib so if anyone knows how to avoid that lmk.
             src_module_name = __name__.rsplit('.', 1)[0]
             dcc_code_root = os.path.splitext(os.path.basename(self.dccPath))[0]
             module_code_root = os.path.splitext(os.path.basename(self.modulePath))[0]
@@ -125,6 +139,48 @@ class BaseController(ABC):
                     for name, data in templates.items():
                         if data['componentType'] == obj.__name__:
                             self.components.append(obj.loadFromDict(name, data, default_attrs))
+                            continue
+
+
+    # If the component type of a component in the templates file matches a blueprint type, then we load the blueprint
+    # and add its templates to the template list, giving them unique names by mashing them up with the name of the bluprint
+    # component, as well as giving them it's prefix.
+    def unrollBlueprints(self, templates, blueprint_files):
+        new_components = {}
+        for name, data in templates.items():
+            # If template is a blueprint, we load that instead.
+            for file in blueprint_files:
+                blueprint_type = os.path.splitext(file)[0]
+                if data['componentType'] == blueprint_type:
+                    if blueprint_type not in self.loadedBlueprints:
+                        self.loadedBlueprints[blueprint_type] = self.loadYaml(os.path.join(constants.BLUEPRINTS_PATH, file))
+                        self.loadedBlueprints[blueprint_type]['blueprintAliases'] = []
+                    self.loadedBlueprints[blueprint_type]['blueprintAliases'].append(name)
+                    for blueprint_component_name, blueprint_component_data in self.loadedBlueprints[blueprint_type]['components'].items():
+                        blueprint_component_data['prefix'] = data['prefix']
+                        for child in blueprint_component_data['children']:
+                            child['childName'] = '{0}{1}'.format(name, child['childName'])
+                            child['childPrefix'] = data['prefix']
+                        new_components['{0}{1}'.format(name, blueprint_component_name)] = blueprint_component_data
+        templates.update(new_components)
+
+
+
+    # We check the children of each component.  If a child name matches a blueprint alias, we replace that child
+    # with child elements that correspond to the blueprint's input components.
+    def hookUpBlueprintComponents(self, templates):
+        for name, data in templates.items():
+            for i in range(len(data['children'])):
+                for blueprint_type, blueprint_data in self.loadedBlueprints.items():
+                    for alias in blueprint_data['blueprintAliases']:
+                        if data['children'][i]['childName'] == alias:
+                            for input_component_name in blueprint_data['variables']['inputComponents']:
+                                new_child = copy.deepcopy(data['children'][i])
+                                new_child['childName'] = '{0}{1}'.format(alias, input_component_name)
+                                data['children'].append(new_child)
+                            data['children'].pop(i)
+
+
 
     def duplicateLRComponents(self):
         for component in self.components:
@@ -155,17 +211,17 @@ class BaseController(ABC):
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
         self.bindPositionData = self.loadJSON(positions_path)
 
-    def importCurveData(self, curves_path):
+    def importControlData(self, control_data_path):
         if not self.components:
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
-        self.controlCurveData = self.loadJSON(curves_path)
+        self.controlsData = self.loadJSON(control_data_path)
 
     @abstractmethod
     def saveBindJointPositions(self, positions_path):
         return
 
     @abstractmethod
-    def saveControlCurveData(self, curves_path):
+    def saveControlData(self, control_data_path):
         return
 
     def loadJSON(self, path):

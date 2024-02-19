@@ -6,17 +6,11 @@ import maya.cmds as cmds
 class SingleChainIK(maya_base_module.MayaBaseModule):
 
     def createBindJoints(self):
-        # Create the common groups that all components share if they don't exist already.
-        if not self.baseGroups:
-            self.baseGroups = python_utils.generate_component_base(self.name, self.prefix)
 
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
         cmds.select(self.baseGroups['deform_group'])
         self.start_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_start_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.end_joint = cmds.joint(self.start_joint, name='{0}_{1}_end_BND_JNT'.format(self.prefix, self.name), position=(1, 0, 0), relative=True, scaleCompensate=False)
-
-        # We have to initialize the components input/output custom attrs so they can be connected later, even if the component rig hasn't been created yet.
-        self.initializeInputandoutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 
     def createControlRig(self):
         if not self.baseGroups:
@@ -154,7 +148,7 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
         mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(end_ik_joint, self.end_joint)
 
         # Create a locator to hold the parent space stuff if it exists.
-        data_locator = cmds.spaceLocator(name='{0}_{1}_DAT_LOC'.format(self.prefix, self.name))[0]
+        data_locator = cmds.spaceLocator(name='{0}_{1}_start_DAT_LOC'.format(self.prefix, self.name))[0]
         data_locator = cmds.parent(data_locator, base_control, relative=True)[0]
         cmds.select(data_locator)
         cmds.addAttr(longName='parentspace', attributeType='matrix')

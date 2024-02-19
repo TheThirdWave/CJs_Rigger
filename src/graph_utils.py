@@ -91,6 +91,10 @@ class ComponentGraphIterator():
         for node in graph.components:
             node.read = False
 
+    def listIteration(self, graph, function):
+        for node in graph.components:
+            function(node.component)
+
 
 class GraphNode():
 

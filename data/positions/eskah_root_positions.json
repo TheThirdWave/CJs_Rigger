@@ -1,218 +1,826 @@
 {
-    "L_arm_limb": {
-        "L_arm_limb_end_BND_JNT": {
-            "translateX": 11.37880659138527,
-            "translateZ": 3.021897810218972,
-            "rotateZ": 0.0,
-            "radius": 1.0,
-            "translateY": -9.789001010092477,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
+    "L_legfoot": {
+        "L_legfoot_toe_BND_JNT": {
+            "rotateX": 0.0,
             "scaleZ": 1.0,
+            "translateY": 5.395770617728309,
+            "scaleX": 1.0,
+            "translateX": 3.643452930308065e-16,
+            "translateZ": 1.5543122344752192e-15,
+            "radius": 1.0,
             "rotateY": 0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
-        "L_arm_limb_middle_BND_JNT": {
-            "translateX": 10.328852141299894,
-            "translateZ": -0.6121011800561846,
-            "rotateZ": 0.0,
-            "radius": 1.0,
-            "translateY": -8.289652261894346,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
+        "L_legfoot_ball_BND_JNT": {
+            "rotateX": 28.877,
             "scaleZ": 1.0,
+            "translateY": 3.5047631347148704,
+            "scaleX": 1.0,
+            "translateX": -1.6489317439141553e-16,
+            "translateZ": 1.1102230246251565e-15,
+            "radius": 1.0,
             "rotateY": 0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
-        "L_arm_limb_start_BND_JNT": {
-            "translateX": 6.428988017625045,
-            "translateZ": -3.250974814914816,
-            "rotateZ": 0.0,
-            "radius": 1.0,
-            "translateY": 58.11278298008621,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
+        "L_legfoot_ankle_BND_JNT": {
+            "rotateX": 45.784913292142306,
             "scaleZ": 1.0,
+            "translateY": 4.195761899398539,
+            "scaleX": 1.0,
+            "translateX": 5.014280993579702,
+            "translateZ": -2.0331711555132284,
+            "radius": 1.0,
+            "rotateY": -9.336281590767118e-05,
+            "scaleY": 1.0,
+            "rotateZ": 179.9999323087489
+        },
+        "L_legfoot_heel_PLC_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 0.27867323802627414,
+            "scaleX": 1.0,
+            "translateX": 5.014280993579702,
+            "translateZ": -4.75237926140067,
+            "radius": 1.0,
             "rotateY": 0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        },
+        "L_legfoot_outer_PLC_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 0.2976284897560814,
+            "scaleX": 1.0,
+            "translateX": 7.77500787301832,
+            "translateZ": -0.6855748221249799,
+            "radius": 1.0,
+            "rotateY": 0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        },
+        "L_legfoot_inner_PLC_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 0.2976284897560814,
+            "scaleX": 1.0,
+            "translateX": 2.6945931002555437,
+            "translateZ": -0.6855748221249799,
+            "radius": 1.0,
+            "rotateY": 0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        }
+    },
+    "L_handsthumb": {
+        "L_handsthumb_end_BND_JNT": {
+            "rotateX": 3.863876976309196e-15,
+            "scaleZ": 0.9999999999999999,
+            "translateY": 4.569756984710696,
+            "scaleX": 0.9999999999999999,
+            "translateX": -7.105427357601002e-15,
+            "translateZ": 0.0,
+            "radius": 1.0,
+            "rotateY": -9.541664044390553e-15,
+            "scaleY": 0.9999999999999996,
+            "rotateZ": 1.8486974086006694e-14
+        },
+        "L_handsthumb_lower_BND_JNT": {
+            "rotateX": 37.67465025280043,
+            "scaleZ": 0.9999999999999997,
+            "translateY": 4.258690357208248,
+            "scaleX": 1.0000000000000002,
+            "translateX": 0.0,
+            "translateZ": -3.552713678800501e-15,
+            "radius": 1.0,
+            "rotateY": -1.749305074804934e-14,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": 6.361109362927032e-15
+        },
+        "L_handsthumb_upper_BND_JNT": {
+            "rotateX": 23.220756364350294,
+            "scaleZ": 0.9999999999999994,
+            "translateY": 3.0135443210601736,
+            "scaleX": 0.9999999999999997,
+            "translateX": 0.0,
+            "translateZ": 7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": -2.226388277024463e-14,
+            "scaleY": 0.9999999999999996,
+            "rotateZ": 1.5902773407317592e-15
+        },
+        "L_handsthumb_start_BND_JNT": {
+            "rotateX": 117.62466825257881,
+            "scaleZ": 1.0,
+            "translateY": 37.77895975074515,
+            "scaleX": 1.0,
+            "translateX": 27.72479590613779,
+            "translateZ": 0.23399613392423088,
+            "radius": 1.0,
+            "rotateY": -74.86172519569884,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": 49.37522944825515
+        }
+    },
+    "L_handsindex": {
+        "L_handsindex_end_BND_JNT": {
+            "rotateX": 9.64105637818628e-15,
+            "scaleZ": 1.0,
+            "translateY": 3.1571710109710613,
+            "scaleX": 1.0000000000000004,
+            "translateX": -1.7763568394002505e-15,
+            "translateZ": 3.552713678800501e-14,
+            "radius": 1.0,
+            "rotateY": -1.908332808878109e-14,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": -3.578124016646455e-15
+        },
+        "L_handsindex_lower_BND_JNT": {
+            "rotateX": 3.019547561957006,
+            "scaleZ": 0.9999999999999996,
+            "translateY": 2.400305986404426,
+            "scaleX": 0.9999999999999994,
+            "translateX": 5.329070518200751e-15,
+            "translateZ": -1.4210854715202004e-14,
+            "radius": 1.0,
+            "rotateY": -9.541664044390557e-15,
+            "scaleY": 0.9999999999999996,
+            "rotateZ": -5.5659706925611575e-15
+        },
+        "L_handsindex_upper_BND_JNT": {
+            "rotateX": 1.9231020213576595,
+            "scaleZ": 1.0,
+            "translateY": 3.733664274215698,
+            "scaleX": 1.0,
+            "translateX": 1.7763568394002505e-15,
+            "translateZ": -1.4210854715202004e-14,
+            "radius": 1.0,
+            "rotateY": -6.3611093629270335e-15,
+            "scaleY": 1.0,
+            "rotateZ": -8.74652537402467e-15
+        },
+        "L_handsindex_start_BND_JNT": {
+            "rotateX": 169.74942569085815,
+            "scaleZ": 1.0,
+            "translateY": 36.43188649927347,
+            "scaleX": 1.0,
+            "translateX": 31.85230348174957,
+            "translateZ": 1.4296622660372846,
+            "radius": 1.0,
+            "rotateY": 72.79138567970449,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": 30.34400194281662
+        }
+    },
+    "L_handspinky": {
+        "L_handspinky_end_BND_JNT": {
+            "rotateX": 7.63333123551244e-14,
+            "scaleZ": 1.000000000000001,
+            "translateY": 3.1571710109710756,
+            "scaleX": 0.9999999999999994,
+            "translateX": 1.7763568394002505e-15,
+            "translateZ": -2.1316282072803006e-14,
+            "radius": 1.0,
+            "rotateY": 167.48561518997218,
+            "scaleY": 1.0000000000000007,
+            "rotateZ": 5.088887490341627e-14
+        },
+        "L_handspinky_lower_BND_JNT": {
+            "rotateX": 3.0195475619572316,
+            "scaleZ": 1.0000000000000007,
+            "translateY": 2.479017496108988,
+            "scaleX": 1.0,
+            "translateX": -8.881784197001252e-16,
+            "translateZ": -6.394884621840902e-14,
+            "radius": 1.0,
+            "rotateY": 1.033680271475643e-14,
+            "scaleY": 1.0,
+            "rotateZ": 7.156248033292914e-15
+        },
+        "L_handspinky_upper_BND_JNT": {
+            "rotateX": 1.9231020213578132,
+            "scaleZ": 0.9999999999999999,
+            "translateY": 4.021811962127684,
+            "scaleX": 0.9999999999999998,
+            "translateX": 1.7763568394002505e-15,
+            "translateZ": -7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": 1.7493050748049344e-14,
+            "scaleY": 0.9999999999999997,
+            "rotateZ": 1.7493050748049344e-14
+        },
+        "L_handspinky_start_BND_JNT": {
+            "rotateX": 125.43915583638757,
+            "scaleZ": 1.0,
+            "translateY": 36.51343371496064,
+            "scaleX": 1.0,
+            "translateX": 32.16801698119039,
+            "translateZ": -2.688893586747601,
+            "radius": 1.0,
+            "rotateY": 84.38820187604388,
+            "scaleY": 0.9999999999999999,
+            "rotateZ": -16.0164453815086
+        }
+    },
+    "L_armLimb": {
+        "L_armLimb_end_BND_JNT": {
+            "rotateX": -4.7708320221952736e-15,
+            "scaleZ": 1.0000000000000007,
+            "translateY": 15.767339615483618,
+            "scaleX": 1.0000000000000007,
+            "translateX": -2.070565940925917e-14,
+            "translateZ": 9.797718192317006e-15,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": -3.180554681463515e-15
+        },
+        "L_armLimb_middle_BND_JNT": {
+            "rotateX": 14.027536156377163,
+            "scaleZ": 1.0000000000000002,
+            "translateY": 13.164915336365253,
+            "scaleX": 1.0000000000000004,
+            "translateX": -3.710920459809586e-14,
+            "translateZ": -3.0982161280945775e-15,
+            "radius": 1.0,
+            "rotateY": 0.09025488425241339,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": -1.953219859018309
+        },
+        "L_armLimb_start_BND_JNT": {
+            "rotateX": -2.646170105095882,
+            "scaleZ": 0.9999999999999997,
+            "translateY": 58.112782980086195,
+            "scaleX": 0.9999999999999997,
+            "translateX": 6.428988017625057,
+            "translateZ": -3.250974814914815,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 0.9999999999999997,
+            "rotateZ": -128.74956813295293
+        }
+    },
+    "L_leglimb": {
+        "L_leglimb_end_BND_JNT": {
+            "rotateX": -5.196018591556416e-05,
+            "scaleZ": 1.0000000000000002,
+            "translateY": 14.092047388379468,
+            "scaleX": 0.9999999999999999,
+            "translateX": 0.0,
+            "translateZ": -2.220446049250313e-15,
+            "radius": 1.0,
+            "rotateY": -1.3763205401554785e-17,
+            "scaleY": 1.0,
+            "rotateZ": 3.426180788287024e-16
+        },
+        "L_leglimb_middle_BND_JNT": {
+            "rotateX": -3.508699866783407,
+            "scaleZ": 0.9999999999999999,
+            "translateY": 19.27789735150586,
+            "scaleX": 1.0000000000000004,
+            "translateX": 1.8649861074937902e-08,
+            "translateZ": 0.03884656778832792,
+            "radius": 1.0,
+            "rotateY": 2.7507172336547494e-05,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": 0.0
+        },
+        "L_leglimb_start_BND_JNT": {
+            "rotateX": 1.187755206334914,
+            "scaleZ": 1.0,
+            "translateY": 37.54721622746939,
+            "scaleX": 1.0,
+            "translateX": 4.650606281203989,
+            "translateZ": -1.9009298459449013,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0,
+            "rotateZ": -179.37525430026122
         }
     },
     "C_spine": {
         "C_spine_end_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0000001192093038,
+            "translateY": 3.8817529678344798,
+            "scaleX": 1.0000001192093038,
             "translateX": 0.0,
-            "translateZ": -2.7762141474596547e-08,
-            "rotateZ": 0.0,
+            "translateZ": -2.7762144916287923e-08,
             "radius": 1.0,
-            "translateY": 3.881754841088153,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
         "C_spine_4_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 3.319131612777703,
+            "scaleX": 1.0,
             "translateX": 0.0,
             "translateZ": 0.0,
-            "rotateZ": 0.0,
             "radius": 1.0,
-            "translateY": 3.3191311359405518,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
         "C_spine_3_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 3.2173569202423096,
+            "scaleX": 1.0,
             "translateX": 0.0,
             "translateZ": 0.0,
-            "rotateZ": 0.0,
             "radius": 1.0,
-            "translateY": 3.2173564434051443,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
         "C_spine_2_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 3.1963891983032227,
+            "scaleX": 1.0,
             "translateX": 0.0,
             "translateZ": 0.0,
-            "rotateZ": 0.0,
             "radius": 1.0,
-            "translateY": 3.1963887214660787,
-            "scaleY": 1.0000000000000002,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
         "C_spine_1_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 3.8653976917266846,
+            "scaleX": 1.0,
             "translateX": 0.0,
             "translateZ": 0.0,
-            "rotateZ": 0.0,
             "radius": 1.0,
-            "translateY": 3.8653972148895193,
-            "scaleY": 0.9999999999999999,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         },
         "C_spine_base_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 0.9999998807907104,
+            "translateY": 41.016502380371094,
+            "scaleX": 0.9999998807907104,
             "translateX": 0.0,
             "translateZ": -0.5797016620635986,
-            "rotateZ": 0.0,
             "radius": 1.0,
-            "translateY": 41.016502380371094,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         }
     },
     "C_root": {
         "C_root_end_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 0.0,
+            "scaleX": 1.0,
             "translateX": 0.0,
             "translateZ": 0.0,
-            "rotateZ": 0.0,
             "radius": 1.0,
-            "translateY": 0.0,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
             "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleY": 1.0,
+            "rotateZ": 0.0
         }
     },
     "L_clavicle": {
         "L_clavicle_end_BND_JNT": {
-            "translateX": 0.5435843750404237,
-            "translateZ": 0.05402545553233562,
-            "rotateZ": 1.5902773407317584e-15,
-            "radius": 1.0,
-            "translateY": 4.584531051977027,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
+            "rotateX": 0.0,
             "scaleZ": 1.0,
-            "rotateY": -0.0,
-            "rotateX": 0.0
+            "translateY": 4.616961002349852,
+            "scaleX": 1.0000000000000002,
+            "translateX": 0.0,
+            "translateZ": 4.440892098500626e-16,
+            "radius": 1.0,
+            "rotateY": -2.8158301205723045e-16,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": -1.5901804474575468e-14
         },
         "L_clavicle_start_BND_JNT": {
-            "translateX": 2.0759971545960343,
-            "translateZ": -3.3050002704471515,
-            "rotateZ": -102.69525332041287,
-            "radius": 1.0,
+            "rotateX": 0.6704629559042883,
+            "scaleZ": 0.9999999999999998,
             "translateY": 59.650599446936404,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
-            "scaleZ": 1.0,
-            "rotateY": -0.0,
-            "rotateX": 0.0
+            "scaleX": 0.9999999999999999,
+            "translateX": 2.0759971545960285,
+            "translateZ": -3.305000270447151,
+            "radius": 1.0,
+            "rotateY": -8.280401365229524e-17,
+            "scaleY": 0.9999999999999999,
+            "rotateZ": -109.45720045480765
         }
     },
-    "R_arm_limb": {
-        "R_arm_limb_end_BND_JNT": {
-            "translateX": -11.37880659138527,
-            "translateZ": 3.021897810218972,
-            "rotateZ": 0.0,
-            "radius": 1.0,
-            "translateY": -9.789001010092477,
-            "scaleY": 1.0,
-            "scaleX": 1.0,
+    "C_torso": {
+        "C_torso_base_BND_JNT": {
+            "rotateX": 0.0,
             "scaleZ": 1.0,
-            "rotateY": 0.0,
-            "rotateX": 0.0
-        },
-        "R_arm_limb_middle_BND_JNT": {
-            "translateX": -10.328852141299894,
-            "translateZ": -0.6121011800561846,
-            "rotateZ": 0.0,
-            "radius": 1.0,
-            "translateY": -8.289652261894346,
-            "scaleY": 1.0,
+            "translateY": 41.016502380371094,
             "scaleX": 1.0,
-            "scaleZ": 1.0,
-            "rotateY": 0.0,
-            "rotateX": 0.0
-        },
-        "R_arm_limb_start_BND_JNT": {
-            "translateX": -6.428988017625045,
-            "translateZ": -3.250974814914816,
-            "rotateZ": 0.0,
+            "translateX": 0.0,
+            "translateZ": -0.5797016620635986,
             "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        }
+    },
+    "C_spineUtilities": {
+        "C_spineUtilities_control_PLC_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 0.0,
+            "scaleX": 1.0,
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "radius": 1.0,
+            "rotateY": 0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        }
+    },
+    "L_handsutil": {
+        "L_handsutil_control_PLC_JNT": {
+            "rotateX": 2.928001915518609,
+            "scaleZ": 1.0000000000000004,
+            "translateY": 44.42700974046147,
+            "scaleX": 1.0000000000000004,
+            "translateX": 33.66958787892017,
+            "translateZ": -0.5504694742202939,
+            "radius": 1.0,
+            "rotateY": 1.178387582085076,
+            "scaleY": 1.0,
+            "rotateZ": -137.65394153616242
+        }
+    },
+    "L_legsmartControl": {
+        "L_legsmartControl_control_PLC_JNT": {
+            "rotateX": -34.750073067829604,
+            "scaleZ": 1.0,
+            "translateY": 5.114880067944171,
+            "scaleX": 1.0000000000000002,
+            "translateX": 5.004255446596998,
+            "translateZ": 4.625177275839096,
+            "radius": 1.0,
+            "rotateY": 2.7501262043527027e-05,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": -179.37525373007182
+        }
+    },
+    "R_legfoot": {
+        "R_legfoot_toe_BND_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": -5.395770617728309,
+            "scaleX": 1.0,
+            "translateX": 3.643452930308065e-16,
+            "translateZ": 1.5543122344752192e-15,
+            "radius": 1.0,
+            "rotateY": 0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        },
+        "R_legfoot_ball_BND_JNT": {
+            "rotateX": 28.876508832458065,
+            "scaleZ": 1.0,
+            "translateY": -3.5047631347148704,
+            "scaleX": 1.0,
+            "translateX": -1.6489317439141553e-16,
+            "translateZ": 1.1102230246251565e-15,
+            "radius": 1.0,
+            "rotateY": -1.174304025153625e-05,
+            "scaleY": 1.0,
+            "rotateZ": 4.5609678925244335e-05
+        },
+        "R_legfoot_ankle_BND_JNT": {
+            "rotateX": 45.784913292142306,
+            "scaleZ": 1.0,
+            "translateY": 4.195761899398539,
+            "scaleX": 1.0,
+            "translateX": -5.014280993579702,
+            "translateZ": -2.0331711555132284,
+            "radius": 1.0,
+            "rotateY": 179.9999066371841,
+            "scaleY": 1.0,
+            "rotateZ": 6.769125110372385e-05
+        },
+        "R_legfoot_heel_PLC_JNT": {
+            "rotateX": 0.0,
+            "scaleZ": 1.0,
+            "translateY": 0.0,
+            "scaleX": 1.0,
+            "translateX": 0.0,
+            "translateZ": 0.0,
+            "radius": 1.0,
+            "rotateY": 0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        },
+        "R_legfoot_outer_PLC_JNT": {
+            "rotateX": 180.0,
+            "scaleZ": 1.0,
+            "translateY": 0.2976284897560814,
+            "scaleX": 1.0,
+            "translateX": -7.77500787301832,
+            "translateZ": -0.6855748221249799,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        },
+        "R_legfoot_inner_PLC_JNT": {
+            "rotateX": 180.0,
+            "scaleZ": 1.0,
+            "translateY": 0.2976284897560814,
+            "scaleX": 1.0,
+            "translateX": -2.6945931002555437,
+            "translateZ": -0.6855748221249799,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0,
+            "rotateZ": 0.0
+        }
+    },
+    "R_handsthumb": {
+        "R_handsthumb_end_BND_JNT": {
+            "rotateX": -3.1805546814635176e-15,
+            "scaleZ": 0.9999999999999998,
+            "translateY": -4.569756984710702,
+            "scaleX": 1.0000000000000004,
+            "translateX": -1.7763568394002505e-15,
+            "translateZ": 0.0,
+            "radius": 1.0,
+            "rotateY": 2.0425124595023514e-14,
+            "scaleY": 0.9999999999999998,
+            "rotateZ": -90.0
+        },
+        "R_handsthumb_lower_BND_JNT": {
+            "rotateX": 37.67465025280029,
+            "scaleZ": 1.0000000000000004,
+            "translateY": -4.258690357208234,
+            "scaleX": 1.0000000000000002,
+            "translateX": 1.7763568394002505e-15,
+            "translateZ": 7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": 1.1131941385122306e-14,
+            "scaleY": 1.0,
+            "rotateZ": -6.361109362927032e-15
+        },
+        "R_handsthumb_upper_BND_JNT": {
+            "rotateX": 23.220756364350223,
+            "scaleZ": 0.9999999999999998,
+            "translateY": -3.0135443210601736,
+            "scaleX": 1.0,
+            "translateX": -5.329070518200751e-15,
+            "translateZ": 7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": -1.5902773407317584e-15,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": -1.1131941385122309e-14
+        },
+        "R_handsthumb_start_BND_JNT": {
+            "rotateX": -65.96900070988217,
+            "scaleZ": 1.0000000000000002,
+            "translateY": 37.778959750745166,
+            "scaleX": 1.0,
+            "translateX": -27.724795906137796,
+            "translateZ": 0.23399613392422725,
+            "radius": 1.0,
+            "rotateY": 76.34290181727167,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": -52.7690394947454
+        }
+    },
+    "R_handsindex": {
+        "R_handsindex_end_BND_JNT": {
+            "rotateX": -3.7272125173400585e-15,
+            "scaleZ": 1.0000000000000002,
+            "translateY": -3.1571710109710676,
+            "scaleX": 1.0,
+            "translateX": 1.7763568394002505e-15,
+            "translateZ": 0.0,
+            "radius": 1.0,
+            "rotateY": 1.749305074804934e-14,
+            "scaleY": 1.0,
+            "rotateZ": 1.888454342118963e-14
+        },
+        "R_handsindex_lower_BND_JNT": {
+            "rotateX": 3.0195475619569834,
+            "scaleZ": 1.0000000000000002,
+            "translateY": -2.4003059864044105,
+            "scaleX": 0.9999999999999998,
+            "translateX": 3.552713678800501e-15,
+            "translateZ": -2.1316282072803006e-14,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 0.9999999999999998,
+            "rotateZ": 1.6300342742500527e-14
+        },
+        "R_handsindex_upper_BND_JNT": {
+            "rotateX": 1.923102021357711,
+            "scaleZ": 0.9999999999999998,
+            "translateY": -3.7336642742157022,
+            "scaleX": 1.0000000000000004,
+            "translateX": 0.0,
+            "translateZ": 7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": -4.770832022195273e-15,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": 2.7829853462805756e-15
+        },
+        "R_handsindex_start_BND_JNT": {
+            "rotateX": -12.514384810025343,
+            "scaleZ": 1.0,
+            "translateY": 36.43188649927345,
+            "scaleX": 0.9999999999999999,
+            "translateX": -31.852303481749562,
+            "translateZ": 1.4296622660372824,
+            "radius": 1.0,
+            "rotateY": -77.83076533196613,
+            "scaleY": 1.0,
+            "rotateZ": -27.519651185249803
+        }
+    },
+    "R_handspinky": {
+        "R_handspinky_end_BND_JNT": {
+            "rotateX": 1.3914926731402871e-14,
+            "scaleZ": 1.0000000000000022,
+            "translateY": -3.157171010971079,
+            "scaleX": 0.9999999999999997,
+            "translateX": 3.552713678800501e-15,
+            "translateZ": -7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": -3.180554681463518e-14,
+            "scaleY": 1.000000000000001,
+            "rotateZ": -1.1927080055488193e-14
+        },
+        "R_handspinky_lower_BND_JNT": {
+            "rotateX": 3.0195475619571006,
+            "scaleZ": 1.0000000000000004,
+            "translateY": -2.4790174961090123,
+            "scaleX": 1.0,
+            "translateX": 8.881784197001252e-16,
+            "translateZ": -5.684341886080802e-14,
+            "radius": 1.0,
+            "rotateY": -1.6697912077683464e-14,
+            "scaleY": 0.9999999999999999,
+            "rotateZ": -7.156248033292914e-15
+        },
+        "R_handspinky_upper_BND_JNT": {
+            "rotateX": 1.9231020213575207,
+            "scaleZ": 0.9999999999999996,
+            "translateY": -4.021811962127684,
+            "scaleX": 0.9999999999999999,
+            "translateX": 1.7763568394002505e-15,
+            "translateZ": 7.105427357601002e-15,
+            "radius": 1.0,
+            "rotateY": -7.951386703658793e-15,
+            "scaleY": 0.9999999999999993,
+            "rotateZ": -1.1131941385122312e-14
+        },
+        "R_handspinky_start_BND_JNT": {
+            "rotateX": -40.490909399514415,
+            "scaleZ": 1.0000000000000002,
+            "translateY": 36.51343371496068,
+            "scaleX": 1.0000000000000002,
+            "translateX": -32.1680169811904,
+            "translateZ": -2.6888935867476014,
+            "radius": 1.0,
+            "rotateY": -83.69854957220305,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": 2.0944499445997082
+        }
+    },
+    "R_armLimb": {
+        "R_armLimb_end_BND_JNT": {
+            "rotateX": -3.180554681463516e-15,
+            "scaleZ": 1.0,
+            "translateY": -15.767,
+            "scaleX": 1.0,
+            "translateX": -7.105427357601002e-15,
+            "translateZ": -1.3600232051658168e-15,
+            "radius": 1.0,
+            "rotateY": -4.2241741863187335e-15,
+            "scaleY": 1.0000000000000002,
+            "rotateZ": -2.3965976486496578e-14
+        },
+        "R_armLimb_middle_BND_JNT": {
+            "rotateX": 14.022619866186787,
+            "scaleZ": 0.9999999999999998,
+            "translateY": -13.165,
+            "scaleX": 1.0,
+            "translateX": 3.552713678800501e-14,
+            "translateZ": -1.7763568394002505e-15,
+            "radius": 1.0,
+            "rotateY": 0.3858361318666287,
+            "scaleY": 1.0,
+            "rotateZ": -1.916871574239792
+        },
+        "R_armLimb_start_BND_JNT": {
+            "rotateX": 177.35382989490412,
+            "scaleZ": 0.9999999999999998,
             "translateY": 58.11278298008621,
+            "scaleX": 0.9999999999999992,
+            "translateX": -6.428988017625021,
+            "translateZ": -3.2509748149148106,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0000000000000009,
+            "rotateZ": 128.74956813295293
+        }
+    },
+    "R_leglimb": {
+        "R_leglimb_end_BND_JNT": {
+            "rotateX": -5.196018591556414e-05,
+            "scaleZ": 1.0000000000000002,
+            "translateY": -14.092047388379468,
+            "scaleX": 0.9999999999999999,
+            "translateX": 0.0,
+            "translateZ": -2.220446049250313e-15,
+            "radius": 1.0,
+            "rotateY": -0.0,
             "scaleY": 1.0,
-            "scaleX": 1.0,
+            "rotateZ": -0.0
+        },
+        "R_leglimb_middle_BND_JNT": {
+            "rotateX": -3.508699866783811,
+            "scaleZ": 0.9999999999999998,
+            "translateY": -19.27789735150586,
+            "scaleX": 1.0000000000000004,
+            "translateX": 1.8649861074937902e-08,
+            "translateZ": 0.03884656778832792,
+            "radius": 1.0,
+            "rotateY": 2.745561061580525e-05,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": -1.6834416134238247e-06
+        },
+        "R_leglimb_start_BND_JNT": {
+            "rotateX": -178.8122447936651,
             "scaleZ": 1.0,
-            "rotateY": 0.0,
-            "rotateX": 0.0
+            "translateY": 37.54721622746939,
+            "scaleX": 1.0,
+            "translateX": -4.650606281203989,
+            "translateZ": -1.9009298459449013,
+            "radius": 1.0,
+            "rotateY": -0.0,
+            "scaleY": 1.0,
+            "rotateZ": 179.37525430026122
         }
     },
     "R_clavicle": {
         "R_clavicle_end_BND_JNT": {
-            "translateX": 0.5435843750405169,
-            "translateZ": 0.054025455532336064,
-            "rotateZ": 25.390506640824583,
+            "rotateX": -1.013940567044336e-14,
+            "scaleZ": 0.9999999999999997,
+            "translateY": 4.616961002349852,
+            "scaleX": 0.9999999999999976,
+            "translateX": 0.0,
+            "translateZ": -1.3322676295501878e-15,
             "radius": 1.0,
-            "translateY": 4.5845310519770175,
-            "scaleY": 1.000000000000001,
-            "scaleX": 1.0,
-            "scaleZ": -1.0,
-            "rotateY": 180.0,
-            "rotateX": 0.0
+            "rotateY": 0.9479209508538639,
+            "scaleY": 1.0,
+            "rotateZ": -6.044811587468049e-14
         },
         "R_clavicle_start_BND_JNT": {
-            "translateX": -2.0759971545960343,
-            "translateZ": -3.3050002704471515,
-            "rotateZ": -77.30474667958828,
+            "rotateX": 179.32944528404408,
+            "scaleZ": -0.9999999999999999,
+            "translateY": 59.6505994469364,
+            "scaleX": 1.0,
+            "translateX": -2.0759971545960596,
+            "translateZ": -3.3050002704471497,
             "radius": 1.0,
-            "translateY": 59.650599446936404,
-            "scaleY": 0.9999999999999999,
-            "scaleX": 0.9999999999999999,
-            "scaleZ": -1.0,
-            "rotateY": -0.0,
-            "rotateX": 180.0
+            "rotateY": -0.9478560454130948,
+            "scaleY": 1.0,
+            "rotateZ": -70.53170641814043
+        }
+    },
+    "R_handsutil": {
+        "R_handsutil_control_PLC_JNT": {
+            "rotateX": -177.0719980844814,
+            "scaleZ": 1.0000000000000004,
+            "translateY": 44.42700974046147,
+            "scaleX": 1.0000000000000004,
+            "translateX": -33.66958787892017,
+            "translateZ": -0.5504694742202939,
+            "radius": 1.0,
+            "rotateY": -1.1783875820850747,
+            "scaleY": 1.0,
+            "rotateZ": 137.65394153616242
+        }
+    },
+    "R_legsmartControl": {
+        "R_legsmartControl_control_PLC_JNT": {
+            "rotateX": 145.2499269321704,
+            "scaleZ": 1.0,
+            "translateY": 5.114880067944171,
+            "scaleX": 1.0000000000000002,
+            "translateX": -5.004255446596998,
+            "translateZ": 4.625177275839096,
+            "radius": 1.0,
+            "rotateY": -2.7501262043427643e-05,
+            "scaleY": 1.0000000000000004,
+            "rotateZ": 179.37525373007182
         }
     }
 }
