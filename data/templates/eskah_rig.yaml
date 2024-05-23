@@ -13,9 +13,15 @@ root:
   children:
     - childName: torso
       childPrefix: C
-      connectionType: none
-      parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
-      childAttrs: [IN_WORLD, IN_INV_WORLD]
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
+    - childName: headeyeAimControl
+      childPrefix: LR
+      connectionType: spaceswitch
+      spaceName: root
+      parentAttrs: []
+      childAttrs: []
   controls: {}
   bindGeometry: []
 
@@ -40,33 +46,6 @@ torso:
   controls: {}
   bindGeometry: []
 
-spineUtilities:
-  componentType: UtilityModule
-  prefix: C
-  componentVars: {}
-  inputAttrs:
-    - attrName: IN_WORLD
-      attrType: matrix
-      internalAttr: base_CTL_CRV.parentspace
-    - attrName: IN_INV_WORLD
-      attrType: matrix
-      internalAttr: base_CTL_CRV.parentinvspace
-  outputAttrs:
-    - attrName: IKFK_SWITCH
-      attrType: double
-      proxy: True
-      internalAttr: base_CTL_CRV.ikfkswitch
-  children:
-    - childName: spine
-      childPrefix: C
-      connectionType: none
-      parentAttrs: [IKFK_SWITCH]
-      childAttrs: [IKFK_SWITCH]
-      childUpAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
-      parentUpAttrs: [IN_WORLD, IN_INV_WORLD]
-  controls: {}
-  bindGeometry: []
-
 spine:
   componentType: IKFKSpine
   prefix: C
@@ -74,18 +53,7 @@ spine:
     numJoints: 6
     numRoughIKSegments: 2
     numRoughFKControls: 4
-  inputAttrs:
-    - attrName: IN_WORLD
-      attrType: matrix
-      internalAttr: ikfkspine_DAT_LOC.parentspace
-    - attrName: IN_INV_WORLD
-      attrType: matrix
-      internalAttr: ikfkspine_DAT_LOC.parentinvspace
-    - attrName: IKFK_SWITCH
-      attrType: double
-      proxy: True
-      attrConnection: proxy
-      internalAttr: ikfkspine_DAT_LOC.ikfkswitch
+  inputAttrs: []
   outputAttrs:
     - attrName: END_OUT_WORLD
       attrType: matrix
@@ -105,11 +73,66 @@ spine:
       connectionType: parent
       parentAttrs: []
       childAttrs: []
+    - childName: head
+      childPrefix: C
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
     - childName: leg
       childPrefix: LR
       connectionType: parent
       parentAttrs: [BASE_OUT_WORLD, BASE_OUT_INV_WORLD]
       childAttrs: [IN_WORLD, IN_INV_WORLD]
+  controls: {}
+  bindGeometry: []
+
+head:
+  componentType: head
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+headSquash:
+  componentType: SingleJointModule
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+headPositions:
+  componentType: SingleJointModule
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+headEyes:
+  componentType: SingleJointModule
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+headMouth:
+  componentType: SingleJointModule
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
   controls: {}
   bindGeometry: []
 

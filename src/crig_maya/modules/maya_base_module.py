@@ -14,6 +14,7 @@ class MayaBaseModule(base_module.BaseModule):
         self._componentVars = {}
         self._inputAttrs = []
         self._outputAttrs = []
+        self._geomData = []
         self._baseGroups = {}
         self._bindPositionData = {}
 
@@ -82,6 +83,14 @@ class MayaBaseModule(base_module.BaseModule):
         self._outputNode = o
 
     @property
+    def geomData(self):
+        return self._geomData
+
+    @geomData.setter
+    def geomData(self, gd):
+        self._geomData = gd
+
+    @property
     def baseGroups(self):
         return self._baseGroups
 
@@ -113,12 +122,16 @@ class MayaBaseModule(base_module.BaseModule):
         for attr in self.outputAttrs:
             if 'proxy' in attr and attr['proxy']:
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], usedAsProxy=True)
+            elif 'parent' in attr and attr['parent']:
+                cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], parent=attr['parent'])
             else:
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
         cmds.select(input_group)
         for attr in self.inputAttrs:
             if 'proxy' in attr and attr['proxy']:
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], usedAsProxy=True)
+            elif 'parent' in attr and attr['parent']:
+                cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], parent=attr['parent'])
             else:
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
 
@@ -129,6 +142,20 @@ class MayaBaseModule(base_module.BaseModule):
         cmds.select(input_group)
         for attr in self.inputAttrs:
             self.figureOutAttrConnections(attr, input_group, True)
+
+    def refreshCopiedAttrs(self):
+        output_group = self.baseGroups['output_group']
+        cmds.select(output_group)
+        for attr in self.outputAttrs:
+            if 'attrConnection' in attr:
+                if attr['attrConnection'] == constants.ATTR_CONNECTION_TYPES.copy or attr['attrConnection'] == constants.ATTR_CONNECTION_TYPES.copyTransform:
+                    self.figureOutAttrConnections(attr, output_group, False)
+        input_group = self.baseGroups['input_group']
+        cmds.select(input_group)
+        for attr in self.inputAttrs:
+            if 'attrConnection' in attr:
+                if attr['attrConnection'] == constants.ATTR_CONNECTION_TYPES.copy or attr['attrConnection'] == constants.ATTR_CONNECTION_TYPES.copyTransform:
+                    self.figureOutAttrConnections(attr, input_group, True)
 
     def figureOutAttrConnections(self, attr, parent_group, input):
         if not attr['internalAttr']:
@@ -158,10 +185,12 @@ class MayaBaseModule(base_module.BaseModule):
 
         if lower_connection_type == constants.ATTR_CONNECTION_TYPES.direct:
             cmds.connectAttr(source_attr, dest_attr)
+        elif lower_connection_type == constants.ATTR_CONNECTION_TYPES.directTransform:
+            python_utils.decomposeAndConnectMatrix(source_attr, dest_attr)
         elif lower_connection_type == constants.ATTR_CONNECTION_TYPES.copy:
-            source_node_name, source_attr_name = source_attr.split('.')
-            dest_node_name, dest_attr_name = dest_attr.split('.')
-            cmds.copyAttr(source_node_name, dest_node_name, values='True', attribute=[source_attr_name, dest_attr_name])
+            attr_value = cmds.getAttr(source_attr)
+            attr_type = cmds.getAttr(dest_attr, type=True)
+            cmds.setAttr(dest_attr, attr_value, type=attr_type)
         elif lower_connection_type == constants.ATTR_CONNECTION_TYPES.copyTransform:
             python_utils.copyOverMatrix(source_attr, dest_attr)
         elif lower_connection_type == constants.ATTR_CONNECTION_TYPES.proxy:
@@ -175,8 +204,8 @@ class MayaBaseModule(base_module.BaseModule):
 
 
     def setInternalAttrStuff(self, internalAttr, attr_data):
-        # If the attribute doesn't exist we add it
-        if not cmds.attributeQuery(internalAttr.split('.')[1], node=internalAttr.split('.')[0], exists=True):
+        # If the attribute doesn't exist we add it (and also check that it's not an indexed sub attribute)
+        if not cmds.attributeQuery(internalAttr.split('.')[1], node=internalAttr.split('.')[0], exists=True) and len(internalAttr.split('[')) <= 1:
             node, attr = internalAttr.split('.')
             cmds.addAttr(node, longName=attr, attributeType=attr_data['attrType'])
         

@@ -9,6 +9,7 @@ from PySide2 import QtCore
 from PySide2 import QtWidgets
 
 from . import constants
+from . import joint_widget_view
 from .crig_maya import maya_controller, maya_utils_controller
 from .crig_maya.modules import root_module
 
@@ -109,6 +110,10 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.select_bind_joints_button.clicked.connect(self.utils.selectBindJoints)
         self.mirror_driven_keys_button = QtWidgets.QPushButton('Mirror DKeys')
         self.mirror_driven_keys_button.clicked.connect(self.utils.mirrorDrivenKeys)
+        self.generate_vertex_joints_button = QtWidgets.QPushButton('Add Vertex Joints')
+        self.generate_vertex_joints_button.clicked.connect(self.activateVertexJointWidget)
+        self.mark_attrs_for_saving_button = QtWidgets.QPushButton('Mark Attrs 2 Save')
+        self.mark_attrs_for_saving_button.clicked.connect(self.utils.markAttrsForSaving)
         # Add to layout
         self.utils_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.utils_layout)
@@ -116,6 +121,8 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.utils_layout.addWidget(self.match_RL_button)
         self.utils_layout.addWidget(self.select_bind_joints_button)
         self.utils_layout.addWidget(self.mirror_driven_keys_button)
+        self.utils_layout.addWidget(self.generate_vertex_joints_button)
+        self.utils_layout.addWidget(self.mark_attrs_for_saving_button)
 
 
     def initMainPanelWidgets(self):
@@ -250,6 +257,11 @@ class ModularRigger(QtWidgets.QMainWindow):
 
     def callBindSkin(self):
         self.controller.bindSkin(self.bind_pathbox.text())
+
+    def activateVertexJointWidget(self):
+        self.jointWidgetWindow = joint_widget_view.VertexJointUIPopup(self.controller, self.utils, self.filepaths_dict)
+        self.jointWidgetWindow.show()
+        self.jointWidgetWindow.resize(300, 150)
 
 def run():
         win = ModularRigger()

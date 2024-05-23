@@ -17,6 +17,20 @@ def setNodesFromDict(node_dict):
 def getRigGeo():
         return [x for x in cmds.listRelatives(constants.DEFAULT_GROUPS.geometry, allDescendents=True, type='transform') if cmds.listRelatives(x, shapes=True)]
 
+def zeroOutLocal(node):
+    try:
+        cmds.setAttr('{0}.translate'.format(node), 0,0,0)
+    except:
+        constants.RIGGER_LOG.info('couldn\'t zero out {0}.translate')
+    try:
+        cmds.setAttr('{0}.rotate'.format(node), 0,0,0)
+    except:
+        constants.RIGGER_LOG.info('couldn\'t zero out {0}.rotate')
+    try:
+        cmds.setAttr('{0}.scale'.format(node), 1,1,1)
+    except:
+        constants.RIGGER_LOG.info('couldn\'t zero out {0}.scale')
+
 def zeroJointOrient(joint):
     # Get rotation and the joint orient.
     orient_vec = cmds.getAttr('{0}.jointOrient'.format(joint))[0]
@@ -111,6 +125,18 @@ def createMatrixSwitch(parent1, parent2, child, world_matrix=True, weight=0.0):
         input_matrix = '{0}.outputMatrix'.format(blend_matrix)
         matrix_decompose = decomposeAndConnectMatrix(input_matrix, child)
     return blend_matrix, mult_matrix, matrix_decompose
+
+def createParentSwitchMult(newParentMatrix, newParentInverseMatrix, childWorldMatrix, name):
+    mult_matrix = cmds.createNode('multMatrix', name='{0}_PSWTCH_MMULT'.format(name))
+    initial_child_matrix = cmds.getAttr(childWorldMatrix)
+    cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), initial_child_matrix, type='matrix')
+
+    initial_parent_inverse_matrix = cmds.getAttr(newParentInverseMatrix)
+    cmds.setAttr('{0}.matrixIn[1]'.format(mult_matrix), initial_parent_inverse_matrix, type='matrix')
+
+    cmds.connectAttr(newParentMatrix, '{0}.matrixIn[2]'.format(mult_matrix))
+    return mult_matrix
+
 
 def createColorBlend(attr1, attr2, child, weight=0.0):
     blend_color = cmds.shadingNode('blendColors', name='{0}_BLND_BLNDC'.format(child), asUtility=True)
@@ -235,7 +261,14 @@ def copyOverMatrix(parentMatrix, childTransform):
 def duplicateBindJoint(bind_joint, parent, new_purpose_suffix):
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(bind_joint)
     world_position = cmds.xform('{0}'.format(bind_joint), query=True, translation=True, worldSpace=True)
-    new_joint = cmds.joint(parent, name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, new_purpose_suffix, node_type), position=world_position, radius=cmds.getAttr('{0}.radius'.format(bind_joint)))
+    world_rotation = cmds.xform('{0}'.format(bind_joint), query=True, rotation=True, worldSpace=True)
+    new_joint = cmds.joint(
+                        parent,
+                        name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, new_purpose_suffix, node_type),
+                        orientation=world_rotation,
+                        position=world_position,
+                        radius=cmds.getAttr('{0}.radius'.format(bind_joint))
+                    )
     return new_joint
 
 def duplicateBindChain(bind_joint, parent, new_purpose_suffix):
@@ -258,6 +291,14 @@ def createLocAt(joint, parent, loc_purpose_suffix):
     cmds.matchTransform(new_locator, joint, pos=True, rot=False, scale=False)
     return new_locator
 
+def createLocatorAndParent(joint, parent, loc_purpose_suffix, position=True, rotation=False, scale=False):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(joint)
+    locator_place_group = cmds.group(name='{0}_{1}_{2}_PLC_GRP'.format(prefix, component_name, joint_name), parent=parent, empty=True)
+    cmds.matchTransform(locator_place_group, joint, position=position, rotation=rotation, scale=scale)
+    locator = createLocAt(locator_place_group, locator_place_group, loc_purpose_suffix)
+    return locator_place_group, locator
+
+
 def getNodeNameParts(node):
     component_part = node.split('_', 2)
     prefix = component_part[0]
@@ -268,12 +309,34 @@ def getNodeNameParts(node):
     node_type = node_part[2]
     return prefix, component_name, joint_name, node_purpose, node_type
 
-def dictionizeAttrs(node_list, attr_list):
+def findNextAvailableMultiIndex(attr_name, start_index, sub_attr=''):
+    # Assume less than 1 million connections.
+    for i in range(start_index, 1000000):
+        attr_string = '{0}[{1}]'.format(attr_name, i)
+        if sub_attr:
+            attr_string = '{0}.{1}'.format(attr_string, sub_attr)
+        if not cmds.connectionInfo(attr_string, sourceFromDestination=True):
+            return i
+
+def dictionizeAttrs(node_list, attr_list, type=False):
     attr_dict = {}
     for node in node_list:
         attr_dict[node] = {}
-        for attr in attr_list:
-            attr_dict[node][attr] = cmds.getAttr('{0}.{1}'.format(node, attr))
+        if not type:
+            for attr in attr_list:
+                try:
+                    attr_dict[node][attr] = cmds.getAttr('{0}.{1}'.format(node, attr))
+                except:
+                    constants.RIGGER_LOG.warning('Node {0} does not have attribute {1}  Could not extract.'.format(node, attr))
+        else:
+            for attr in attr_list:
+                try:
+                    attr_dict[node][attr] = {}
+                    attr_dict[node][attr]['data'] = cmds.getAttr('{0}.{1}'.format(node, attr))
+                    attr_dict[node][attr]['type'] = cmds.getAttr('{0}.{1}'.format(node, attr), type=True)
+                except:
+                    constants.RIGGER_LOG.warning('Node {0} does not have attribute {1}  Could not extract.'.format(node, attr))
+
     return attr_dict
 
 def getDagPath(node=None):
@@ -333,6 +396,18 @@ def getPoleVec(lineNode1, lineNode2, poleNode):
     out_vec = pole_vec - mid_vec
     return out_vec
 
+def getClosestPointOnCurve(transform, curve):
+        transformDag = om2.MFnTransform(getDagPath(transform))
+        curve = om2.MFnNurbsCurve(getDagPath(curve))
+        closestPoint, closestParam = curve.closestPoint(transformDag.rotatePivot(om2.MSpace.kWorld), space=om2.MSpace.kWorld)
+        return closestPoint, closestParam
+
+def getPointAlongCurve(fakeParam, curve):
+    curve = om2.MFnNurbsCurve(getDagPath(curve))
+    curveLen = curve.length()
+    actualParam = curve.findParamFromLength(curveLen * fakeParam)
+    point = curve.getPointAtParam(actualParam, space=om2.MSpace.kWorld)
+    return point
 
 def getNumCVs(curve):
     dagPath = getDagPath(curve)
@@ -404,6 +479,14 @@ def insertJoints(start_joint, end_joint, name, num_joints):
     cmds.parent(end_joint, new_joint)
     return joint_list
 
+def insertJointAtParent(parent_joint, child_joint):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(child_joint)
+    new_parent_joint = cmds.joint(parent_joint, name='{0}_{1}_{2}_parent_{3}_JNT'.format(prefix, component_name, joint_name, node_purpose))
+    cmds.matchTransform(new_parent_joint, parent_joint)
+    cmds.parent(child_joint, new_parent_joint)
+    setOrientJoint(new_parent_joint, 'yzx', 'zup')
+    return new_parent_joint
+
 def  makeCircleControl(name, scale):
     curve_points = [[0.7836116248912245, 4.798237340988473e-17, -0.7836116248912246], [6.785732323110912e-17, 6.785732323110912e-17, -1.1081941875543877], [-0.7836116248912246, 4.798237340988472e-17, -0.7836116248912244], [-1.1081941875543881, 3.517735619006027e-33, -5.74489823752483e-17], [-0.7836116248912246, -4.7982373409884725e-17, 0.7836116248912245], [-1.1100856969603225e-16, -6.785732323110917e-17, 1.1081941875543884], [0.7836116248912245, -4.798237340988472e-17, 0.7836116248912244], [1.1081941875543881, -9.253679210110099e-33, 1.511240500779959e-16]]
     scaled_points = [[num*scale for num in point] for point in curve_points]
@@ -438,17 +521,36 @@ def makeDirectControl(name, controlledNode, scale, curveType="circle", matchTran
     cmds.parent(controlledNode, control)
     return position_group, control
 
-def makeConstraintControl(name, parent, controlledNode, scale, curveType="circle", matchTransform='', maintainOffset=True, useParentOffset=True):
+def makeConstraintControl(name, parent, controlledNode, scale, curveType="circle", matchTransform='', maintainOffset=True, useParentOffset=True, connectAttrs=['rotate', 'scale', 'translate', 'shear'], reverse=False):
     position_group, control = makeControl(name, scale, curveType)
     if not matchTransform:
         cmds.matchTransform(position_group, parent)
     else:
         cmds.matchTransform(position_group, matchTransform)
     cmds.parent(position_group, parent)
-    mult_matrix, matrix_compose = constrainTransformByMatrix(control, controlledNode, maintainOffset, useParentOffset)
+    if reverse:
+        cmds.setAttr('{0}.scale'.format(position_group), -1, -1, -1)
+    mult_matrix, matrix_compose = constrainTransformByMatrix(control, controlledNode, maintainOffset, useParentOffset, connectAttrs=connectAttrs)
     return position_group, control, mult_matrix, matrix_compose
 
 def makeControlMatchTransform(name, matchedNode, scale=1, curveType="circle"):
     position_group, control = makeControl(name, scale, curveType)
     cmds.matchTransform(position_group, matchedNode)
     return position_group, control
+
+def replaceJointWithControl(joint, control_name, parent):
+        # Create the stuff that goes under the "controls_GRP", which is pretty much all of the logic and user interface curves.
+        prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(joint)
+        control = makeCircleControl('{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, control_name), 2)
+        placement_group = cmds.group(name='{0}_{1}_{2}_PLC_GRP'.format(prefix, component_name, control_name), parent=parent, empty=True)
+        cmds.matchTransform(placement_group, control)
+        cmds.parent(control, placement_group)
+
+        # Match the control to the place joint then delete the joint.
+        cmds.matchTransform(placement_group, joint)
+        child = cmds.listRelatives(joint)
+        if child:
+            parent_node = cmds.listRelatives(joint, parent=True)[0]
+            cmds.parent(child, parent_node)
+        cmds.delete(joint)
+        return placement_group, control

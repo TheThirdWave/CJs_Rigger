@@ -83,6 +83,16 @@ class BaseModule(ABC):
     def outputAttrs(self, o):
         pass
 
+    @property
+    @abstractmethod
+    def geomData(self):
+        return []
+
+    @geomData.setter
+    @abstractmethod
+    def geomData(self, gd):
+        pass
+
     @classmethod
     def loadFromDict(cls, name, data, default_attrs):
         inst = cls(name, data['prefix'])
@@ -90,6 +100,7 @@ class BaseModule(ABC):
         inst.controls = data['controls']
         inst.componentVars = data['componentVars']
         inst.inputAttrs = data['inputAttrs']
+        inst.geomData = data['bindGeometry']
 
         # Add default attributes if they haven't been overridden.
         for default in default_attrs['inputAttrs']:
@@ -113,7 +124,7 @@ class BaseModule(ABC):
         # Add default attrs to child data if they're not there.
         for child in inst.children:
             if child['connectionType'] == constants.CONNECTION_TYPES.parent:
-                for i in range(len(default_attrs['inputAttrs'])):
+                for i in range(len(default_attrs['outputAttrs'])):
                     if default_attrs['inputAttrs'][i]['attrName'] not in child['childAttrs'] and default_attrs['outputAttrs'][i]['attrName'] not in child['parentAttrs']:
                         child['childAttrs'].append(default_attrs['inputAttrs'][i]['attrName'])
                         child['parentAttrs'].append(default_attrs['outputAttrs'][i]['attrName'])

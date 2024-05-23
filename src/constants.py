@@ -20,21 +20,29 @@ PREV_RIG_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..
 class ConnectionTypes(NamedTuple):
     parent: str
     translateConstraint: str
-CONNECTION_TYPES = ConnectionTypes('parent', 'translateconstraint')
+    spaceSwitch: str
+CONNECTION_TYPES = ConnectionTypes('parent', 'translateconstraint', 'spaceswitch')
 
 class AttrConnectionTypes(NamedTuple):
     direct: str
+    directTransform: str
     copy: str
     copyTransform: str
     proxy: str
     parent: str
-ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'copy', 'copytransform', 'proxy', 'parent')
+    parentOffset: str
+ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset')
 
 # Basic groups that the controller assumes exists in the maya scene.
 class BaseRigGroups(NamedTuple):
     geometry: str
     rig: str
 DEFAULT_GROUPS = BaseRigGroups('geometry_GRP', 'rig_GRP')
+
+VERTEX_JOINT_COMPONENTS = [
+    ['EyelidsModule', 0],
+    ['EyebrowsModule', 1]
+]
 
 # MAYA SPECIFIC CONSTANTS
 POSITION_SAVE_ATTRS = {
@@ -50,14 +58,18 @@ POSITION_SAVE_ATTRS = {
     'radius'
 }
 
+# My brother told me to call it this.
+SAVE_ATTR_LIST_ATTR = 'theJuice'
+
 # This is duplicating info in the "default_attrs.yaml" file, and adds to overhead if updating it, but I think
 # it's worth it for VS Code autocomplete purposes.  I might get rid of it if I start overloading on the default attrs.
 class DefaultComponentAttributes(NamedTuple):
     inWorld: str
     inInverseWorld: str
+    spaceSwitch: str
     outWorld: str
     outInverseWorld: str
-DEFAULT_ATTRS = DefaultComponentAttributes('IN_WORLD','IN_INV_WORLD','END_OUT_WORLD','END_OUT_INV_WORLD')
+DEFAULT_ATTRS = DefaultComponentAttributes('IN_WORLD','IN_INV_WORLD', 'SPACE_SWITCH', 'END_OUT_WORLD','END_OUT_INV_WORLD')
 
 # I'm going to save anything to do with the logic or controls of the components in a big .json file.  The root
 # dictionary keys are going to be the different types of data I'm saving out.  I'm keeping the expected keys
@@ -65,4 +77,5 @@ DEFAULT_ATTRS = DefaultComponentAttributes('IN_WORLD','IN_INV_WORLD','END_OUT_WO
 class ControlDataKeys(NamedTuple):
     curves: str
     drivenKeys: str
-CONTROL_DATA_KEYS = ControlDataKeys('curves', 'drivenKeys')
+    attributes: str
+CONTROL_DATA_KEYS = ControlDataKeys('curves', 'drivenKeys', 'attributes')

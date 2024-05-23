@@ -9,13 +9,7 @@ components:
     componentType: UtilityModule
     prefix:
     componentVars: {}
-    inputAttrs:
-      - attrName: IN_WORLD
-        attrType: matrix
-        internalAttr: base_CTL_CRV.parentspace
-      - attrName: IN_INV_WORLD
-        attrType: matrix
-        internalAttr: base_CTL_CRV.parentinvspace
+    inputAttrs: []
     outputAttrs:
       - attrName: THUMB_IKFK_SWITCH
         attrType: double

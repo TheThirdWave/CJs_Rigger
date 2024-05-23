@@ -157,10 +157,12 @@ class BaseController(ABC):
                         self.loadedBlueprints[blueprint_type]['blueprintAliases'] = []
                     self.loadedBlueprints[blueprint_type]['blueprintAliases'].append(name)
                     for blueprint_component_name, blueprint_component_data in self.loadedBlueprints[blueprint_type]['components'].items():
-                        blueprint_component_data['prefix'] = data['prefix']
+                        if not blueprint_component_data['prefix']:
+                            blueprint_component_data['prefix'] = data['prefix']
                         for child in blueprint_component_data['children']:
                             child['childName'] = '{0}{1}'.format(name, child['childName'])
-                            child['childPrefix'] = data['prefix']
+                            if not child['childPrefix']:
+                                child['childPrefix'] = data['prefix']
                         new_components['{0}{1}'.format(name, blueprint_component_name)] = blueprint_component_data
         templates.update(new_components)
 

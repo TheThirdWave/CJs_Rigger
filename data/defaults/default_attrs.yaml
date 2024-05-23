@@ -8,6 +8,9 @@ inputAttrs:
     attrType: matrix
     internalAttr: placement_PLC_GRP
     attrConnection: copytransform
+  - attrName: SPACE_SWITCH
+    attrType: enum
+    internalAttr:
 outputAttrs:
   - attrName: END_OUT_WORLD
     attrType: matrix

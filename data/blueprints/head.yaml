@@ -1,0 +1,259 @@
+variables:
+  inputComponents:
+    - neck
+components:
+  neck:
+    componentType: IKFKSpine
+    prefix:
+    componentVars:
+      numJoints: 3
+      numRoughIKSegments: 1
+      numRoughFKControls: 2
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: end_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: end_BND_JNT.worldInverseMatrix
+    children:
+      - childName: jaw
+        childPrefix:
+        connectionType: none
+        parentAttrs: []
+        childAttrs: []
+      - childName: mouth
+        childPrefix:
+        connectionType: none
+        parentAttrs: []
+        childAttrs: []
+      - childName: eyeControl
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: eyeLid
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: []
+        childAttrs: []
+      - childName: eyeBrow
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: ears
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: []
+        childAttrs: []
+      - childName: horns
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  jaw: 
+    componentType: SingleChainIK
+    prefix:
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  mouth:
+    componentType: SingleJointModule
+    prefix:
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  eyeControl:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldInverseMatrix
+      - attrName: END_OUT_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.matrix
+      - attrName: END_OUT_INV_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.inverseMatrix
+    children:
+      - childName: eyes
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: [END_OUT_MAT]
+        childAttrs: [IN_MAT]
+      - childName: eyeAimControl
+        childPrefix: LR
+        connectionType: spaceswitch
+        spaceName: eye
+        parentAttrs: [END_OUT_INV_WORLD]
+        childAttrs: [IN_INV_WORLD]
+      - childName: eyeAim
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
+        childAttrs: [IN_CTL_PAR_WORLD, IN_CTL_PAR_INV_WORLD]
+    controls: {}
+    bindGeometry: []
+
+  eyeAimControl:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs:
+      - attrName: SPACE_SWITCH
+        attrType: enum
+        attrConnection: proxy
+        internalAttr: base_CTL_CRV.spaceSwitch
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldInverseMatrix
+      - attrName: END_OUT_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.matrix
+      - attrName: END_OUT_INV_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.inverseMatrix
+    children:
+      - childName: eyeAim
+        childPrefix: LR
+        connectionType: none
+        parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
+        childAttrs: [IN_CTL_WORLD, IN_CTL_INV_WORLD]
+    controls: {}
+    bindGeometry: []
+
+  eyes:
+    componentType: SingleJointModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs:
+      - attrName: IN_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV
+        attrConnection: directTransform
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldInverseMatrix
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  eyeAim:
+    componentType: AimJointModule
+    prefix: LR
+    componentVars:
+      maintainOffset: False
+    inputAttrs:
+      - attrName: IN_CTL_WORLD
+        attrType: matrix
+        internalAttr: base_ACNST_MMULT.matrixIn[0]
+      - attrName: IN_CTL_PAR_INV_WORLD
+        attrType: matrix
+        internalAttr: base_ACNST_MMULT.matrixIn[1]
+      - attrName: IN_CTL_PAR_WORLD
+        attrType: matrix
+        internalAttr: base_ACNST_MMULT.matrixIn[2]
+        attrConnection: copy
+      - attrName: IN_CTL_INV_WORLD
+        attrType: matrix
+        internalAttr: base_ACNST_MMULT.matrixIn[3]
+        attrConnection: copy
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry:
+      - bindType: offsetParentMatrix
+        bindJoint: base_BND_JNT
+        bindGeo: EyeAim_GRP
+
+  eyeLid:
+    componentType: EyelidsModule
+    prefix: LR
+    componentVars:
+      numUpper: 11
+      numLower: 11
+      numCorrectives: 3
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldInverseMatrix
+    children: []
+    controls: {}
+    bindGeometry:
+      - bindType: keepChildPositions
+        bindJoint: base_BND_JNT
+        bindGeo: EyeAim_GRP
+
+  eyeBrow:
+    componentType: EyebrowsModule
+    prefix: LR
+    componentVars:
+      numJoints: 5
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_0_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_0_BND_JNT.worldInverseMatrix
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  ears:
+    componentType: IKFKSpine
+    prefix: LR
+    componentVars:
+      numJoints: 4
+      numRoughIKSegments: 2
+      numRoughFKControls: 3
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  horns:
+    componentType: IKFKSpine
+    prefix: LR
+    componentVars:
+      numJoints: 4
+      numRoughIKSegments: 2
+      numRoughFKControls: 3
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []

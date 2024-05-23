@@ -4,7 +4,7 @@ variables:
 components:
   limb:
     componentType: IKFKLimb
-    prefix: LR
+    prefix:
     componentVars: {}
     inputAttrs:
       - attrName: IN_IK_WORLD
@@ -36,31 +36,25 @@ components:
         internalAttr: ik_HOLD_GRP.visibility
     children:
       - childName: foot
-        childPrefix: LR
+        childPrefix:
         connectionType: none
         parentAttrs: [END_OUT_FK_WORLD, END_OUT_IK_CTL_WORLD, END_OUT_IK_HDL_WORLD, IKFK_SWITCH]
         childAttrs: [IN_FK_WORLD, IN_IK_WORLD, IN_IK_2_WORLD, IKFK_SWITCH]
         childUpAttrs: [END_OUT_IK_WORLD]
         parentUpAttrs: [IN_IK_WORLD]
       - childName: smartControl
-        childPrefix: LR
+        childPrefix:
         connectionType: parent
-        parentAttrs: [IKFK_SWITCH, IK_VISIBILITY]
-        childAttrs: [IKFK_SWITCH, IK_VISIBILITY]
+        parentAttrs: [END_OUT_IK_CTL_WORLD, END_OUT_IK_CTL_INV_WORLD, IKFK_SWITCH, IK_VISIBILITY]
+        childAttrs: [IN_WORLD, IN_INV_WORLD, IKFK_SWITCH, IK_VISIBILITY]
     controls: {}
     bindGeometry: []
 
   smartControl:
     componentType: UtilityModule
-    prefix: LR
+    prefix:
     componentVars: {}
     inputAttrs:
-      - attrName: IN_WORLD
-        attrType: matrix
-        internalAttr: base_CTL_CRV.parentspace
-      - attrName: IN_INV_WORLD
-        attrType: matrix
-        internalAttr: base_CTL_CRV.parentinvspace
       - attrName: IKFK_SWITCH
         attrType: double
         proxy: True
@@ -100,7 +94,7 @@ components:
         internalAttr: base_CTL_CRV.toeWiggle
     children:
       - childName: foot
-        childPrefix: LR
+        childPrefix:
         connectionType: none
         parentAttrs: [FOOT_ROLL, BEND_LIMIT_ANGLE, TOE_STRAIGHT_ANGLE, FOOT_TILT, BALL_LEAN, TOE_SPIN, TOE_WIGGLE]
         childAttrs: [FOOT_ROLL, BEND_LIMIT_ANGLE, TOE_STRAIGHT_ANGLE, FOOT_TILT, BALL_LEAN, TOE_SPIN, TOE_WIGGLE]
@@ -109,7 +103,7 @@ components:
 
   foot:
     componentType: FootControlModule
-    prefix: LR
+    prefix:
     componentVars: {}
     inputAttrs:
       - attrName: IN_FK_WORLD

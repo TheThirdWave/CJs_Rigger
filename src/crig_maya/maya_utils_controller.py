@@ -110,3 +110,106 @@ class UtilsController(utils_controller.UtilsController):
                             '{0}_{1}_{2}_{3}_{4}'.format(dest_connection[0], dest_connection[1], dest_connection[2], dest_connection[3], dest_connection[4])
                         )
 
+    def generateVertexJoints(self, component, joint_side):
+        # Get selected vertices.
+        verts = cmds.ls(selection=True, flatten=True)
+        # Sort the vertices from inner to outer (lowest X to highest X if an L component, reversed if an R)
+        reversed = False
+        if component.prefix == 'R':
+            reversed = True
+        sort_func = lambda x : cmds.xform(x, query=True, translation=True)[0]
+        verts.sort(reverse=reversed, key=sort_func)
+        idx = 0
+        if joint_side == 'upper':
+            component.componentVars['numUpper'] = len(verts)
+            try:
+                cmds.delete(*component.upper_joints)
+            except:
+                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
+            for vert in verts:
+                new_joint = cmds.joint(
+                    component.base_joint,
+                    name='{0}_{1}_upper_{2}_BND_JNT'.format(component.prefix, component.name, idx),
+                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
+                )
+                component.upper_joints.append(new_joint)
+                idx += 1
+
+        elif joint_side == 'lower':
+            component.componentVars['numLower'] = len(verts)
+            try:
+                cmds.delete(*component.lower_joints)
+            except:
+                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
+            for vert in verts:
+                new_joint = cmds.joint(
+                    component.base_joint,
+                    name='{0}_{1}_lower_{2}_BND_JNT'.format(component.prefix, component.name, idx),
+                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
+                )
+                component.lower_joints.append(new_joint)
+                idx += 1
+        
+        elif joint_side == 'inner':
+            try:
+                cmds.delete(component.inner_corner_joint)
+            except:
+                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
+            for vert in verts:
+                new_joint = cmds.joint(
+                    component.base_joint,
+                    name='{0}_{1}_inner_BND_JNT'.format(component.prefix, component.name),
+                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
+                )
+                component.inner_corner_joint = new_joint
+                idx += 1
+                break
+            
+        elif joint_side == 'outer':
+            try:
+                cmds.delete(component.outer_corner_joint)
+            except:
+                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
+            for vert in verts:
+                new_joint = cmds.joint(
+                    component.base_joint,
+                    name='{0}_{1}_outer_BND_JNT'.format(component.prefix, component.name),
+                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
+                )
+                component.outer_corner_joint = new_joint
+                idx += 1
+                break
+
+        elif joint_side == 'base':
+            component.componentVars['numJoints'] = len(verts)
+            try:
+                cmds.delete(*component.bind_joints)
+            except:
+                print('CREATE VERTEX JOINT: could not delete {0}_{1} joints.'.format(component.prefix, component.name))
+            for vert in verts:
+                new_joint = cmds.joint(
+                    component.bind_joints_group,
+                    name='{0}_{1}_base_{2}_BND_JNT'.format(component.prefix, component.name, idx),
+                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
+                )
+                component.bind_joints.append(new_joint)
+                idx += 1
+        pass
+
+    def markAttrsForSaving(self):
+        selected_node = cmds.ls(selection=True)[-1]
+        selected_attrs = cmds.channelBox('mainChannelBox', query=True, selectedMainAttributes=True)
+        if not cmds.attributeQuery(constants.SAVE_ATTR_LIST_ATTR, node=selected_node, exists=True):
+            cmds.addAttr(selected_node, longName=constants.SAVE_ATTR_LIST_ATTR, dataType='string')
+
+        if selected_attrs:
+            existingAttrs = cmds.getAttr('{0}.{1}'.format(selected_node, constants.SAVE_ATTR_LIST_ATTR))
+            if not existingAttrs:
+                existing_list = selected_attrs
+            else:
+                existing_list = existingAttrs.split(',')
+                for attr in selected_attrs:
+                    if attr not in existing_list:
+                        existing_list.append(attr)
+
+            cmds.setAttr('{0}.{1}'.format(selected_node, constants.SAVE_ATTR_LIST_ATTR), ','.join(existing_list), type='string')

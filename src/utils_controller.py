@@ -18,3 +18,7 @@ class UtilsController(ABC):
     @abstractmethod
     def mirrorDrivenKeys(self):
         pass
+
+    @abstractmethod
+    def generateVertexJoints(self, component_name, joint_side):
+        pass

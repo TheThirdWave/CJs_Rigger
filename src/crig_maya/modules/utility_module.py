@@ -48,12 +48,6 @@ class UtilityModule(maya_base_module.MayaBaseModule):
                 if nodeAttr not in cmds.listAttr(base_control):
                     cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True)
 
-        # Connect constrain parent group to parent space matrix.
-        python_utils.constrainByMatrix('{0}.parentspace'.format(base_control), self.baseGroups['parent_group'], False)
-
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
-
-        # Copy inv world space to placement_GRP to keep the offset around.
-        python_utils.copyOverMatrix('{0}.parentinvspace'.format(base_control), self.baseGroups['placement_group'])
 
         return

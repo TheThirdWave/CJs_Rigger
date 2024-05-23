@@ -47,12 +47,12 @@ class ComponentGraph():
         for child in curnode.component.children:
             for node in self.nodes:
                 if self.isComponent(child['childName'], child['childPrefix'], node.component):
-                    node.parent.append(curnode)
+                    node.parents.append(curnode)
                     curnode.children.append(node)
 
     def deleteNonRootsFromList(self):
         for node in list(self.nodes):
-            if node.parent:
+            if node.parents:
                 self.nodes.remove(node)
 
     def isComponent(self, cName, cPrefix, checkNodeData):
@@ -77,17 +77,30 @@ class ComponentGraphIterator():
             queue.append(node)
     
         while(len(queue) > 0):
-    
-            # Call function to be used on component
-            # remove it from queue
-            if not queue[0].read:
-                function(queue[0].component)
-            node = queue.pop(0)
-            node.read = True
-    
-            for child in node.children:
-                if not child.read:
-                    queue.append(child)
+            
+            requeue = False
+            # If not all parents have been read,
+            # move to the bottom of the queue
+            for parent in queue[0].parents:
+                if not parent.read:
+                    requeue = True
+                    break
+            
+            if requeue:
+                node = queue.pop(0)
+                queue.append(node)
+                continue
+            else:
+                # Call function to be used on component
+                # remove it from queue
+                if not queue[0].read:
+                    function(queue[0].component)
+                node = queue.pop(0)
+                node.read = True
+        
+                for child in node.children:
+                    if not child.read:
+                        queue.append(child)
         for node in graph.components:
             node.read = False
 
@@ -99,7 +112,7 @@ class ComponentGraphIterator():
 class GraphNode():
 
     def __init__(self, component):
-        self.parent = []
+        self.parents = []
         self.component = component
         self.children = []
         self.read = False
