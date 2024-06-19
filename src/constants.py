@@ -33,15 +33,43 @@ class AttrConnectionTypes(NamedTuple):
     parentOffset: str
 ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset')
 
-# Basic groups that the controller assumes exists in the maya scene.
+# Basic groups that the controller assumes exist in the maya scene.
 class BaseRigGroups(NamedTuple):
     geometry: str
     rig: str
 DEFAULT_GROUPS = BaseRigGroups('geometry_GRP', 'rig_GRP')
 
+# This is a list of the modules that are compatible with the "joint to vertex" tool I made
+# to quickly snap groups of joints to a vertex/bunch of vertices
 VERTEX_JOINT_COMPONENTS = [
-    ['EyelidsModule', 0],
-    ['EyebrowsModule', 1]
+    {
+        'moduleName': 'EyelidsModule',
+        'categories': [
+            {'name': 'upper', 'jointKey': 'upperJoints', 'numJointsVar': 'numUpper'},
+            {'name': 'inner', 'jointKey': 'innerJoint'},
+            {'name': 'lower', 'jointKey': 'lowerJoints', 'numJointsVar': 'numLower'},
+            {'name': 'outer', 'jointKey': 'outerJoint'}
+        ]
+    },
+    {
+        'moduleName': 'EyebrowsModule',
+        'categories': [
+            {'name': 'base', 'jointKey': 'bindJoints', 'numJointsVar': 'numJoints'}
+        ]
+    },
+    {
+        'moduleName': 'MouthModule',
+        'categories': [
+            {'name': 'upper_front', 'jointKey': 'upperFrontJoints', 'numJointsVar': 'numUpper'},
+            {'name': 'upper_back', 'jointKey': 'upperBackJoints', 'numJointsVar': 'numUpper'},
+            {'name': 'lower_front', 'jointKey': 'lowerFrontJoints', 'numJointsVar': 'numLower'},
+            {'name': 'lower_back', 'jointKey': 'lowerBackJoints', 'numJointsVar': 'numLower'},
+            {'name': 'left_front', 'jointKey': 'leftFrontJoint'},
+            {'name': 'left_back', 'jointKey': 'leftBackJoint'},
+            {'name': 'right_front', 'jointKey': 'rightFrontJoint'},
+            {'name': 'right_back', 'jointKey': 'rightBackJoint'}
+        ]
+    }
 ]
 
 # MAYA SPECIFIC CONSTANTS
@@ -60,6 +88,10 @@ POSITION_SAVE_ATTRS = {
 
 # My brother told me to call it this.
 SAVE_ATTR_LIST_ATTR = 'theJuice'
+
+# Geo marked with this attr will have it's skin weights saved out even if it's
+# not in the geometry_GRP.
+BOUND_GEO_ATTR = 'boundGeo'
 
 # This is duplicating info in the "default_attrs.yaml" file, and adds to overhead if updating it, but I think
 # it's worth it for VS Code autocomplete purposes.  I might get rid of it if I start overloading on the default attrs.

@@ -9,24 +9,25 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
     def createBindJoints(self):
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
         cmds.select(self.baseGroups['deform_group'])
-        self.base_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_base_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
-        self.inner_corner_joint = cmds.joint(self.base_joint, name='{0}_{1}_inner_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
-        self.outer_corner_joint = cmds.joint(self.base_joint, name='{0}_{1}_outer_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
+        self.joint_dict = {}
+        self.joint_dict['baseJoint'] = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_base_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
+        self.joint_dict['innerJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_inner_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
+        self.joint_dict['outerJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_outer_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         if 'numUpper' in self.componentVars:
             num_upper = self.componentVars['numUpper']
         else:
             num_upper = 0
-        self.upper_joints = []
+        self.joint_dict['upperJoints'] = []
         for idx in range(num_upper):
-            self.upper_joints.append(cmds.joint(self.base_joint, name='{0}_{1}_upper_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
+            self.joint_dict['upperJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_upper_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
 
         if 'numLower' in self.componentVars:
             num_lower = self.componentVars['numLower']
         else:
             num_lower = 0
-        self.lower_joints = []
+        self.joint_dict['lowerJoints'] = []
         for idx in range(num_lower):
-            self.lower_joints.append(cmds.joint(self.base_joint, name='{0}_{1}_lower_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
+            self.joint_dict['lowerJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_lower_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
 
         if 'numCorrectives' in self.componentVars:
             self.num_correctives = self.componentVars['numCorrectives']
@@ -45,17 +46,17 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
 
         # Create a "base" joint for each lid joint.
         upper_base_joints = []
-        for upper_joint in self.upper_joints:
-            new_base_joint = python_utils.insertJointAtParent(self.base_joint, upper_joint)
+        for upper_joint in self.joint_dict['upperJoints']:
+            new_base_joint = python_utils.insertJointAtParent(self.joint_dict['baseJoint'], upper_joint)
             upper_base_joints.append(new_base_joint)
 
         lower_base_joints = []
-        for lower_joint in self.lower_joints:
-            new_base_joint = python_utils.insertJointAtParent(self.base_joint, lower_joint)
+        for lower_joint in self.joint_dict['lowerJoints']:
+            new_base_joint = python_utils.insertJointAtParent(self.joint_dict['baseJoint'], lower_joint)
             lower_base_joints.append(new_base_joint)
 
-        outer_base_joint = python_utils.insertJointAtParent(self.base_joint, self.outer_corner_joint)
-        inner_base_joint = python_utils.insertJointAtParent(self.base_joint, self.inner_corner_joint)
+        outer_base_joint = python_utils.insertJointAtParent(self.joint_dict['baseJoint'], self.joint_dict['outerJoint'])
+        inner_base_joint = python_utils.insertJointAtParent(self.joint_dict['baseJoint'], self.joint_dict['innerJoint'])
 
         logic_group = '{0}_{1}_logic_PAR_GRP'.format(self.prefix, self.name)
         upper_locators_group = '{0}_{1}_upper_locators_PAR_GRP'.format(self.prefix, self.name)
@@ -68,21 +69,21 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         cmds.group(name=lower_locators_group, parent=logic_group, empty=True)
 
 
-        upper_base_objects = [ {'parentJoint': inner_base_joint, 'joint': self.inner_corner_joint} ]
+        upper_base_objects = [ {'parentJoint': inner_base_joint, 'joint': self.joint_dict['innerJoint']} ]
         for i in range(len(upper_base_joints)):
-            upper_base_objects.append({'parentJoint': upper_base_joints[i], 'joint': self.upper_joints[i]})
-        upper_base_objects.append( {'parentJoint': outer_base_joint, 'joint': self.outer_corner_joint} )
+            upper_base_objects.append({'parentJoint': upper_base_joints[i], 'joint': self.joint_dict['upperJoints'][i]})
+        upper_base_objects.append( {'parentJoint': outer_base_joint, 'joint': self.joint_dict['outerJoint']} )
 
-        lower_base_objects = [ {'parentJoint': inner_base_joint, 'joint': self.inner_corner_joint} ]
+        lower_base_objects = [ {'parentJoint': inner_base_joint, 'joint': self.joint_dict['innerJoint']} ]
         for i in range(len(lower_base_joints)):
-            lower_base_objects.append({'parentJoint': lower_base_joints[i], 'joint': self.lower_joints[i]})
-        lower_base_objects.append( {'parentJoint': outer_base_joint, 'joint': self.outer_corner_joint} )
+            lower_base_objects.append({'parentJoint': lower_base_joints[i], 'joint': self.joint_dict['lowerJoints'][i]})
+        lower_base_objects.append( {'parentJoint': outer_base_joint, 'joint': self.joint_dict['outerJoint']} )
 
         # duplicate the bind joints for all the middle joints to create the corrective joints
         if self.num_correctives:
             for object in upper_base_objects[1:-1] + lower_base_objects[1:-1]:
                 prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['joint'])
-                object['correctivesParentJoint'] = cmds.joint(self.base_joint, name='{0}_{1}_{2}_correctives_PAR_JNT'.format(self.prefix, self.name, joint_name))
+                object['correctivesParentJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_{2}_correctives_PAR_JNT'.format(self.prefix, self.name, joint_name))
                 object['correctiveBaseJoint'] = []
                 object['correctiveJoint'] = []
                 for layer in range(self.num_correctives):
@@ -93,8 +94,8 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
                     object['correctiveJoint'].append(cmds.joint(object['correctiveBaseJoint'][layer], name='{0}_{1}_{2}_{3}_CRN_JNT'.format(self.prefix, self.name, joint_name, layer)))
                     cmds.matchTransform(object['correctiveJoint'][layer], object['joint'])
 
-        inner_base_objects = {'parentJoint': inner_base_joint, 'joint': self.inner_corner_joint}
-        outer_base_objects = {'parentJoint': outer_base_joint, 'joint': self.outer_corner_joint}
+        inner_base_objects = {'parentJoint': inner_base_joint, 'joint': self.joint_dict['innerJoint']}
+        outer_base_objects = {'parentJoint': outer_base_joint, 'joint': self.joint_dict['outerJoint']}
 
         # First, create the locators
 
@@ -234,7 +235,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         upper_rough_controls = []
         for rough_joint in upper_rough_joints:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(rough_joint)
-            joint_relative_vec =  python_utils.getTransformDiffVec(rough_joint, self.base_joint)
+            joint_relative_vec =  python_utils.getTransformDiffVec(rough_joint, self.joint_dict['baseJoint'])
             new_control_vec = base_place_vec + joint_relative_vec
             control_name = '{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, joint_name)
             new_control_group, new_control = python_utils.makeControl(control_name, 1.5, curveType="circle")
@@ -246,7 +247,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         lower_rough_controls = []
         for rough_joint in lower_rough_joints:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(rough_joint)
-            joint_relative_vec =  python_utils.getTransformDiffVec(rough_joint, self.base_joint)
+            joint_relative_vec =  python_utils.getTransformDiffVec(rough_joint, self.joint_dict['baseJoint'])
             new_control_vec = base_place_vec + joint_relative_vec
             control_name = '{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, joint_name, 'PLC', 'GRP')
             # The inner and outer controls will have already been made by the loop for the upper rough joints.
@@ -390,7 +391,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         wire_idx = 0
         for blink_joint in blink_joints:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(blink_joint)
-            joint_relative_vec =  python_utils.getTransformDiffVec(blink_joint, self.base_joint)
+            joint_relative_vec =  python_utils.getTransformDiffVec(blink_joint, self.joint_dict['baseJoint'])
             new_control_vec = base_place_vec + joint_relative_vec
             control_name = '{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, joint_name, 'PLC', 'GRP')
             # The inner and outer controls will have already been made by the loop for the upper rough joints.
@@ -465,6 +466,8 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
             reverse = cmds.createNode('reverse', name=object['joint'].replace('_BND_JNT', '_CRN_REV'))
             cmds.connectAttr('{0}.outValueX'.format(set_range), '{0}.inputX'.format(reverse))
             cmds.connectAttr('{0}.outputX'.format(reverse), '{0}.{1}W1'.format(point_constraint, new_joint))
+
+        cmds.delete(self.control_place_joint) 
 
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 

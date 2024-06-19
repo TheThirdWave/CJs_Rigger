@@ -9,15 +9,19 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
     def createBindJoints(self):
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
         cmds.select(self.baseGroups['deform_group'])
-        self.bind_joints = []
+        self.joint_dict = {
+            'baseJoint' : '',
+            'bindJoints': []
+        }
+
         if 'numJoints' in self.componentVars:
             num_joints = self.componentVars['numJoints']
         else:
             num_joints = 1
 
-        self.bind_joints_group = cmds.group(name='{0}_{1}_bind_PAR_GRP'.format(self.prefix, self.name), parent=self.baseGroups['deform_group'], empty=True)
+        self.joint_dict['baseJoint'] = cmds.group(name='{0}_{1}_base_PAR_GRP'.format(self.prefix, self.name), parent=self.baseGroups['deform_group'], empty=True)
         for i in range(num_joints):
-            self.bind_joints.append(cmds.joint(self.bind_joints_group, name='{0}_{1}_base_{2}_BND_JNT'.format(self.prefix, self.name, i), position=(0, 0, 0)))
+            self.joint_dict['bindJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_base_{2}_BND_JNT'.format(self.prefix, self.name, i), position=(0, 0, 0)))
 
         self.inner_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_inner_PLC_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.middle_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_middle_PLC_JNT'.format(self.prefix, self.name), position=(1, 0, 0))
@@ -38,7 +42,7 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         cmds.group(name=logic_group, parent=self.baseGroups['placement_group'], empty=True)
         cmds.inheritTransform(logic_group, off=True)
 
-        base_objects = [ {'joint': x} for x in self.bind_joints ]
+        base_objects = [ {'joint': x} for x in self.joint_dict['bindJoints'] ]
 
         # Create the dense curve
         for object in base_objects:

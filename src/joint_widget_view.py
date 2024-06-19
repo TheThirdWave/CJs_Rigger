@@ -6,8 +6,9 @@ from . import constants
 from . import utils_controller
 
 class VertexJointUIPopup(QtWidgets.QWidget):
-    def __init__(self, controller, utils, filepaths_dict):
-        QtWidgets.QWidget.__init__(self)
+    def __init__(self, controller, utils, filepaths_dict, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+        self.setWindowFlags(QtCore.Qt.Tool)
 
         self.__class__.instance = self
 
@@ -33,8 +34,8 @@ class VertexJointUIPopup(QtWidgets.QWidget):
 
         for component in self.controller.components:
             for vertex_joint_component in constants.VERTEX_JOINT_COMPONENTS:
-                if component.__class__.__name__ == vertex_joint_component[0]:
-                    self.component_list.addItem('{0}_{1}'.format(component.prefix, component.name), vertex_joint_component[1])
+                if component.__class__.__name__ == vertex_joint_component['moduleName']:
+                    self.component_list.addItem('{0}_{1}'.format(component.prefix, component.name), vertex_joint_component['categories'])
 
         self.main_layout.addLayout(self.component_layout)
         self.component_layout.addWidget(self.component_label)
@@ -57,20 +58,14 @@ class VertexJointUIPopup(QtWidgets.QWidget):
 
     def updateSideList(self):
         self.side_list.clear()
-        if self.component_list.currentData() == 0:
-            self.side_list.addItem('upper')
-            self.side_list.addItem('inner')
-            self.side_list.addItem('lower')
-            self.side_list.addItem('outer')
-        elif self.component_list.currentData() == 1:
-            self.side_list.addItem('base')
+        for item in self.component_list.currentData():
+            self.side_list.addItem(item['name'], item)
 
 
     def runJointGenerator(self):
-        joint_side = self.side_list.currentText()
         component_full_name = self.component_list.currentText()
         component_prefix, component_name = component_full_name.split('_')
         for component in self.controller.components:
             if component_prefix == component.prefix and component_name == component.name:
-                self.utils.generateVertexJoints(component, joint_side)
+                self.utils.generateVertexJoints(component, self.side_list.currentData())
                 return

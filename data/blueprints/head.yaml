@@ -18,14 +18,9 @@ components:
         attrType: matrix
         internalAttr: end_BND_JNT.worldInverseMatrix
     children:
-      - childName: jaw
-        childPrefix:
-        connectionType: none
-        parentAttrs: []
-        childAttrs: []
       - childName: mouth
         childPrefix:
-        connectionType: none
+        connectionType: parent
         parentAttrs: []
         childAttrs: []
       - childName: eyeControl
@@ -35,7 +30,7 @@ components:
         childAttrs: []
       - childName: eyeLid
         childPrefix: LR
-        connectionType: none
+        connectionType: parent
         parentAttrs: []
         childAttrs: []
       - childName: eyeBrow
@@ -56,20 +51,12 @@ components:
     controls: {}
     bindGeometry: []
 
-  jaw: 
-    componentType: SingleChainIK
+  mouth: 
+    componentType: MouthModule
     prefix:
-    componentVars: {}
-    inputAttrs: []
-    outputAttrs: []
-    children: []
-    controls: {}
-    bindGeometry: []
-
-  mouth:
-    componentType: SingleJointModule
-    prefix:
-    componentVars: {}
+    componentVars:
+      numUpper: 17
+      numLower: 17
     inputAttrs: []
     outputAttrs: []
     children: []

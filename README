@@ -6,4 +6,4 @@ This README probably won't be read by anybody.
 
 requirements:
     - PyYAML
-    - 
+    - Pyside

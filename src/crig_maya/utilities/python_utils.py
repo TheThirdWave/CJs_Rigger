@@ -14,6 +14,10 @@ def setNodesFromDict(node_dict):
             except:
                 constants.RIGGER_LOG.info('attr {0}.{1} could not be set from saved positions.'.format(name, attr))
 
+def renameCurveShape(node, name):
+    curve_shape = cmds.listRelatives(node, shapes=True)[0]
+    cmds.rename(curve_shape, name)
+
 def getRigGeo():
         return [x for x in cmds.listRelatives(constants.DEFAULT_GROUPS.geometry, allDescendents=True, type='transform') if cmds.listRelatives(x, shapes=True)]
 
@@ -163,6 +167,45 @@ def constrainTransformByMatrix(parent, child, maintain_offset=False, use_parent_
 
     return mult_matrix, matrix_decompose
 
+def mirrorOffset(parent, child, targetParent, mirrorTarget, liveParent=False, liveTParent=False, pivotTransform=None):
+    offset_matrix = getLocalOffset(parent, child)
+    mult_matrix_1 = cmds.createNode('multMatrix', name='{0}_MCNST_MMULT'.format(mirrorTarget))
+    if not liveTParent:
+        parentWorldMatrix = om2.MTransformationMatrix(getDagPath(parent).inclusiveMatrix())
+        targetParentWorldMatrix = om2.MTransformationMatrix(getDagPath(targetParent).inclusiveMatrix())
+        tparentTranslation = targetParentWorldMatrix.translation(om2.MSpace.kWorld)
+        parentWorldMatrix.setTranslation(tparentTranslation, om2.MSpace.kWorld)
+        parentTotParentMat = targetParentWorldMatrix.asMatrix() * parentWorldMatrix.asMatrixInverse()
+        cmds.setAttr('{0}.matrixIn[6]'.format(mult_matrix_1), [parentTotParentMat.inverse().getElement(i, j) for i in range(4) for j in range(4)], type='matrix')
+        cmds.setAttr('{0}.matrixIn[1]'.format(mult_matrix_1), [parentTotParentMat.getElement(i, j) for i in range(4) for j in range(4)], type='matrix')
+    else:
+        decomp1, recomp1 = decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(targetParent), '{0}.matrixIn[7]'.format(mult_matrix_1))
+        decomp2, recomp2 = decomposeAndRecompose('{0}.worldMatrix[0]'.format(parent), '{0}.matrixIn[6]'.format(mult_matrix_1))
+        #cmds.setAttr('{0}.matrixIn[6]'.format(mult_matrix_1), cmds.getAttr('{0}.worldMatrix[0]'.format(parent)), type='matrix')
+        #cmds.setAttr('{0}.matrixIn[2]'.format(mult_matrix_1), cmds.getAttr('{0}.worldInverseMatrix[0]'.format(parent)), type='matrix')
+        decomp3, recomp3 = decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(parent), '{0}.matrixIn[2]'.format(mult_matrix_1))
+        decomp4, recomp4 = decomposeAndRecompose('{0}.worldMatrix[0]'.format(targetParent), '{0}.matrixIn[1]'.format(mult_matrix_1))
+    if liveParent:
+        cmds.connectAttr('{0}.worldInverseMatrix'.format(parent), '{0}.matrixIn[5]'.format(mult_matrix_1))
+    else:
+        world_inverse = cmds.getAttr('{0}.worldInverseMatrix'.format(parent))
+        cmds.setAttr('{0}.matrixIn[5]'.format(mult_matrix_1), world_inverse, type='matrix')
+    if pivotTransform:
+        targetParentWorldMatrix = om2.MTransformationMatrix(getDagPath(targetParent).inclusiveMatrix())
+        pivotWorldMatrix = om2.MTransformationMatrix(getDagPath(pivotTransform).inclusiveMatrix())
+        tParentToPivot = om2.MTransformationMatrix(pivotWorldMatrix.asMatrix() * targetParentWorldMatrix.asMatrixInverse())
+        translationMatrix = om2.MTransformationMatrix()
+        translationMatrix.setTranslation(tParentToPivot.translation(om2.MSpace.kWorld), om2.MSpace.kWorld)
+        cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix_1), [translationMatrix.asMatrixInverse().getElement(i, j) for i in range(4) for j in range(4)], type="matrix")
+        cmds.setAttr('{0}.matrixIn[8]'.format(mult_matrix_1), [translationMatrix.asMatrix().getElement(i, j) for i in range(4) for j in range(4)], type="matrix")
+        
+    cmds.connectAttr('{0}.worldMatrix'.format(child), '{0}.matrixIn[4]'.format(mult_matrix_1))
+    cmds.setAttr('{0}.matrixIn[3]'.format(mult_matrix_1), [offset_matrix.getElement(i, j) for i in range(4) for j in range(4)], type="matrix")
+    cmds.connectAttr('{0}.matrixSum'.format(mult_matrix_1), '{0}.offsetParentMatrix'.format(mirrorTarget))
+
+    return mult_matrix_1
+
+
 def createRotDiffNodes(child_matrix, parent_matrix, rot_axis=['Y']):
     child_node_name = child_matrix.split('.')[0]
     mult_matrix = cmds.createNode('multMatrix', name='{0}_MCNST_MMULT'.format(child_node_name))
@@ -176,19 +219,25 @@ def createRotDiffNodes(child_matrix, parent_matrix, rot_axis=['Y']):
     quat_to_euler = cmds.shadingNode('quatToEuler', name='{0}_BLND_BLNDC'.format(child_node_name), asUtility=True)
     rot_axis.append('W')
     # TODO: Make this not a hack
-    cmds.setAttr('{0}.inputRotateOrder'.format(quat_to_euler), 1)
+    if rot_axis[0] == 'Y':
+        cmds.setAttr('{0}.inputRotateOrder'.format(quat_to_euler), 1)
+    elif rot_axis[0] == 'X':
+        cmds.setAttr('{0}.inputRotateOrder'.format(quat_to_euler), 0)
+    if rot_axis[0] == 'Z':
+        cmds.setAttr('{0}.inputRotateOrder'.format(quat_to_euler), 2)
     for axis in rot_axis:
         cmds.connectAttr('{0}.outputQuat{1}'.format(matrix_decompose, axis), '{0}.inputQuat{1}'.format(quat_to_euler, axis))
     
     return mult_matrix, matrix_decompose, quat_to_euler
 
 
-def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear']):
+def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'], world_space=True):
     mult_matrix = cmds.createNode('multMatrix', name='{0}_MCNST_MMULT'.format(childTransform))
     child_parent = cmds.listRelatives(childTransform, parent=True)[0]
 
     cmds.connectAttr(parentMatrix, '{0}.matrixIn[1]'.format(mult_matrix))
-    cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(child_parent), '{0}.matrixIn[2]'.format(mult_matrix))
+    if world_space:
+        cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(child_parent), '{0}.matrixIn[2]'.format(mult_matrix))
     input_matrix = '{0}.matrixSum'.format(mult_matrix)
     if maintain_offset:
         parent_mMatrix = om2.MMatrix(cmds.getAttr(parentMatrix))
@@ -257,6 +306,20 @@ def copyOverMatrix(parentMatrix, childTransform):
     cmds.connectAttr('{0}.outputShear'.format(matrix_decompose), '{0}.shear'.format(childTransform))
     cmds.disconnectAttr(parentMatrix, '{0}.inputMatrix'.format(matrix_decompose))
     cmds.delete(matrix_decompose)
+
+def hookUpPointOnSurfaceTo4x4Mat(pointOnSurfaceNode, fourByFourMatNode):
+    cmds.connectAttr(pointOnSurfaceNode + '.positionX', fourByFourMatNode + '.in30')
+    cmds.connectAttr(pointOnSurfaceNode + '.positionY', fourByFourMatNode + '.in31')
+    cmds.connectAttr(pointOnSurfaceNode + '.positionZ', fourByFourMatNode + '.in32')
+    cmds.connectAttr(pointOnSurfaceNode + '.normalX', fourByFourMatNode + '.in00')
+    cmds.connectAttr(pointOnSurfaceNode + '.normalY', fourByFourMatNode + '.in01')
+    cmds.connectAttr(pointOnSurfaceNode + '.normalZ', fourByFourMatNode + '.in02')
+    cmds.connectAttr(pointOnSurfaceNode + '.tangentUx', fourByFourMatNode + '.in10')
+    cmds.connectAttr(pointOnSurfaceNode + '.tangentUy', fourByFourMatNode + '.in11')
+    cmds.connectAttr(pointOnSurfaceNode + '.tangentUz', fourByFourMatNode + '.in12')
+    cmds.connectAttr(pointOnSurfaceNode + '.tangentVx', fourByFourMatNode + '.in20')
+    cmds.connectAttr(pointOnSurfaceNode + '.tangentVy', fourByFourMatNode + '.in21')
+    cmds.connectAttr(pointOnSurfaceNode + '.tangentVz', fourByFourMatNode + '.in22')
 
 def duplicateBindJoint(bind_joint, parent, new_purpose_suffix):
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(bind_joint)
@@ -402,6 +465,31 @@ def getClosestPointOnCurve(transform, curve):
         closestPoint, closestParam = curve.closestPoint(transformDag.rotatePivot(om2.MSpace.kWorld), space=om2.MSpace.kWorld)
         return closestPoint, closestParam
 
+def getClosestPointOnSurface(transform, surface):
+        transformDag = om2.MFnTransform(getDagPath(transform))
+        surface = om2.MFnNurbsSurface(getDagPath(surface))
+        closestPoint, closestU, closestV = surface.closestPoint(transformDag.rotatePivot(om2.MSpace.kWorld), space=om2.MSpace.kWorld)
+        return closestPoint, closestU, closestV
+
+def pinTransformToSurface(transform, surface, connectionsList=['rotate', 'translate', 'scale']):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(transform)
+    pOSurface = cmds.createNode('pointOnSurfaceInfo', name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'DEF', 'POSI'))
+    closestPoint, closestU, closestV = getClosestPointOnSurface(transform, surface)
+    cmds.connectAttr('{0}.local'.format(surface), '{0}.inputSurface'.format(pOSurface))
+    cmds.setAttr('{0}.parameterU'.format(pOSurface), closestU)
+    cmds.setAttr('{0}.parameterV'.format(pOSurface), closestV)
+    fourByFour = cmds.createNode('fourByFourMatrix', name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'DEF', '4X4'))
+    hookUpPointOnSurfaceTo4x4Mat(pOSurface, fourByFour)
+    mult_matrix, matrix_decompose = constrainByMatrix(fourByFour + '.output', transform, False, False, connectionsList)
+    return mult_matrix, matrix_decompose, fourByFour, pOSurface
+
+# Basically pass in a 0-1 U coordinate and get back the associated param along the curve.
+def getCurveParam(fakeParam, curve):
+    curve = om2.MFnNurbsCurve(getDagPath(curve))
+    curveLen = curve.length()
+    actualParam = curve.findParamFromLength(curveLen * fakeParam)
+    return actualParam
+
 def getPointAlongCurve(fakeParam, curve):
     curve = om2.MFnNurbsCurve(getDagPath(curve))
     curveLen = curve.length()
@@ -409,10 +497,25 @@ def getPointAlongCurve(fakeParam, curve):
     point = curve.getPointAtParam(actualParam, space=om2.MSpace.kWorld)
     return point
 
+def getPointAlongSurface(fakeParamU, fakeParamV, surf):
+    surface = om2.MFnNurbsSurface(getDagPath(surf))
+    uDomain = surface.knotDomainInU
+    uParamLen = uDomain[1] - uDomain[0]
+    vDomain = surface.knotDomainInV
+    vParamLen = vDomain[1] - vDomain[0]
+    paramU = uDomain[0] + (uParamLen * fakeParamU)
+    paramV = vDomain[0] + (vParamLen * fakeParamV)
+    point = surface.getPointAtParam(paramU, paramV, space=om2.MSpace.kWorld)
+    return point, paramU, paramV
+
 def getNumCVs(curve):
     dagPath = getDagPath(curve)
     fnNurbsCurve = om2.MFnNurbsCurve(dagPath)
     return fnNurbsCurve.numCVs
+
+def getNumSurfCVs(node):
+    surf = om2.MFnNurbsSurface(getDagPath(node))
+    return surf.numCVsInU, surf.numCVsInV
 
 def getDrivenKeys(node):
     keys_dict = {}
@@ -481,7 +584,7 @@ def insertJoints(start_joint, end_joint, name, num_joints):
 
 def insertJointAtParent(parent_joint, child_joint):
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(child_joint)
-    new_parent_joint = cmds.joint(parent_joint, name='{0}_{1}_{2}_parent_{3}_JNT'.format(prefix, component_name, joint_name, node_purpose))
+    new_parent_joint = cmds.joint(parent_joint, name='{0}_{1}_{2}_parent_PAR_JNT'.format(prefix, component_name, joint_name))
     cmds.matchTransform(new_parent_joint, parent_joint)
     cmds.parent(child_joint, new_parent_joint)
     setOrientJoint(new_parent_joint, 'yzx', 'zup')
@@ -554,3 +657,14 @@ def replaceJointWithControl(joint, control_name, parent):
             cmds.parent(child, parent_node)
         cmds.delete(joint)
         return placement_group, control
+
+def createRibbonFromJoints(front_joints, back_joints, parent_node, name):
+    temp_curve_1 = cmds.curve(name='{0}_{1}_temp_1_DEF_CRV'.format(self.prefix, self.name), point=front_joints, degree=1)
+    temp_curve_2 = cmds.curve(name='{0}_{1}_temp_2_DEF_CRV'.format(self.prefix, self.name), point=back_joints, degree=1)
+    
+    new_ribbon = cmds.loft(temp_curve_1, temp_curve_2, constructionHistory=False, degree=1, name='{0}_{1}_{2}_DEF_RBN'.format(self.prefix, self.name, name))[0]
+    cmds.parent(new_ribbon, parent_node)
+    cmds.xform(new_ribbon, centerPivots=True)
+    cmds.delete(temp_curve_1)
+    cmds.delete(temp_curve_2)
+    return new_ribbon

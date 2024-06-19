@@ -1,4 +1,5 @@
 import maya.cmds as cmds
+import maya.mel as mel
 import maya.api.OpenMaya as om2
 
 from .utilities import python_utils
@@ -191,10 +192,17 @@ class MayaController(base_controller.BaseController):
         for shape, data in bind_data.items():
             bind_joints = []
             for vertex, touple in data.items():
-                [bind_joints.append(x[0]) for x in touple if x[0] not in bind_joints]
-            skinCluster = cmds.skinCluster(bind_joints, shape, name='{0}'.format(shape.replace('GEOShape', 'SCLST')), maximumInfluences=3, dropoffRate=7)[0]
+                [bind_joints.append(x[0]) for x in touple if x[0] not in bind_joints and cmds.ls(x[0])]
+            skinCluster = mel.eval('findRelatedSkinCluster ' + shape)
+            if not skinCluster:
+                try:
+                    skinCluster = cmds.skinCluster(bind_joints, shape, name='{0}'.format(shape.split('|')[-1].replace('GEOShape', 'SCLST')), maximumInfluences=3, dropoffRate=7, toSelectedBones=True)[0]
+                except:
+                    constants.RIGGER_LOG.warning('Could not bind skincluster to {0}'.format(shape))
+                    continue
+
             for vertex, touple in data.items():
-                cmds.skinPercent(skinCluster, vertex, transformValue=touple)
+                cmds.skinPercent(skinCluster, vertex, transformValue=[x for x in touple if cmds.ls(x[0])])
         return
 
     def saveBindJointPositions(self, positions_path):
@@ -247,9 +255,14 @@ class MayaController(base_controller.BaseController):
 
     def saveBindSkinData(self, bind_path):
         geo_transforms = python_utils.getRigGeo()
+        everything_in_the_rig = cmds.listRelatives(constants.DEFAULT_GROUPS.rig, allDescendents=True, type='transform')
+        for thing in everything_in_the_rig:
+            if cmds.attributeQuery(constants.BOUND_GEO_ATTR, node=thing, exists=True):
+                    geo_transforms.append(thing)
+
         bindDict = {}
         for transform in geo_transforms:
-            shape = cmds.listRelatives(transform, shapes=True)[0]
+            shape = cmds.listRelatives(transform, shapes=True, fullPath=True)[0]
             skinClusters = [x for x in cmds.listHistory(shape) if cmds.nodeType(x) == "skinCluster" ]
             if skinClusters:
                 bindDict[shape] = self.getVertexWeights(shape, skinClusters[0])
@@ -538,7 +551,10 @@ class MayaController(base_controller.BaseController):
 
 
     def getVertexWeights(self, shape, skinCluster, ignoreThreshold=0.001):
-        vertices = cmds.ls('{0}.vtx[*]'.format(shape), flatten=True)
+        if cmds.objectType(shape) == 'mesh':
+            vertices = cmds.ls('{0}.vtx[*]'.format(shape), flatten=True)
+        else:
+            vertices = cmds.ls('{0}.cv[*]'.format(shape), flatten=True)
         weightDict = {}
         for vertex in vertices:
             influenceNames = cmds.skinPercent(skinCluster, vertex, query=True, transform=None, ignoreBelow=ignoreThreshold)

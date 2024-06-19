@@ -110,7 +110,7 @@ class UtilsController(utils_controller.UtilsController):
                             '{0}_{1}_{2}_{3}_{4}'.format(dest_connection[0], dest_connection[1], dest_connection[2], dest_connection[3], dest_connection[4])
                         )
 
-    def generateVertexJoints(self, component, joint_side):
+    def generateVertexJoints(self, component, joint_data):
         # Get selected vertices.
         verts = cmds.ls(selection=True, flatten=True)
         # Sort the vertices from inner to outer (lowest X to highest X if an L component, reversed if an R)
@@ -120,80 +120,36 @@ class UtilsController(utils_controller.UtilsController):
         sort_func = lambda x : cmds.xform(x, query=True, translation=True)[0]
         verts.sort(reverse=reversed, key=sort_func)
         idx = 0
-        if joint_side == 'upper':
-            component.componentVars['numUpper'] = len(verts)
+        # Create/replace the joints in the component and update the relevant component properties.
+        if 'numJointsVar' in joint_data:
+            component.componentVars[joint_data['numJointsVar']] = len(verts)
             try:
-                cmds.delete(*component.upper_joints)
+                cmds.delete(*component.joint_dict[joint_data['jointKey']])
             except:
-                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
+                print('CREATE VERTEX JOINT: could not delete {0}_{1} {2} joints.'.format(component.prefix, component.name, joint_data['name']))
             for vert in verts:
                 new_joint = cmds.joint(
-                    component.base_joint,
-                    name='{0}_{1}_upper_{2}_BND_JNT'.format(component.prefix, component.name, idx),
+                    component.joint_dict['baseJoint'],
+                    name='{0}_{1}_{2}_{3}_BND_JNT'.format(component.prefix, component.name, joint_data['name'], idx),
                     position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
                 )
-                component.upper_joints.append(new_joint)
+                component.joint_dict[joint_data['jointKey']].append(new_joint)
                 idx += 1
-
-        elif joint_side == 'lower':
-            component.componentVars['numLower'] = len(verts)
+        else:
             try:
-                cmds.delete(*component.lower_joints)
+                    cmds.delete(component.joint_dict[joint_data['jointKey']])
             except:
-                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
+                print('CREATE VERTEX JOINT: could not delete {0}_{1} {2} joint.'.format(component.prefix, component.name, joint_data['name']))
             for vert in verts:
                 new_joint = cmds.joint(
-                    component.base_joint,
-                    name='{0}_{1}_lower_{2}_BND_JNT'.format(component.prefix, component.name, idx),
+                    component.joint_dict['baseJoint'],
+                    name='{0}_{1}_{2}_BND_JNT'.format(component.prefix, component.name, joint_data['name']),
                     position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
                 )
-                component.lower_joints.append(new_joint)
-                idx += 1
-        
-        elif joint_side == 'inner':
-            try:
-                cmds.delete(component.inner_corner_joint)
-            except:
-                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
-            for vert in verts:
-                new_joint = cmds.joint(
-                    component.base_joint,
-                    name='{0}_{1}_inner_BND_JNT'.format(component.prefix, component.name),
-                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
-                )
-                component.inner_corner_joint = new_joint
-                idx += 1
-                break
-            
-        elif joint_side == 'outer':
-            try:
-                cmds.delete(component.outer_corner_joint)
-            except:
-                print('CREATE VERTEX JOINT: could not delete component (which one I don\'t know).')
-            for vert in verts:
-                new_joint = cmds.joint(
-                    component.base_joint,
-                    name='{0}_{1}_outer_BND_JNT'.format(component.prefix, component.name),
-                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
-                )
-                component.outer_corner_joint = new_joint
+                component.joint_dict[joint_data['jointKey']] = new_joint
                 idx += 1
                 break
 
-        elif joint_side == 'base':
-            component.componentVars['numJoints'] = len(verts)
-            try:
-                cmds.delete(*component.bind_joints)
-            except:
-                print('CREATE VERTEX JOINT: could not delete {0}_{1} joints.'.format(component.prefix, component.name))
-            for vert in verts:
-                new_joint = cmds.joint(
-                    component.bind_joints_group,
-                    name='{0}_{1}_base_{2}_BND_JNT'.format(component.prefix, component.name, idx),
-                    position=cmds.xform(vert, query=True, translation=True, worldSpace=True)
-                )
-                component.bind_joints.append(new_joint)
-                idx += 1
         pass
 
     def markAttrsForSaving(self):

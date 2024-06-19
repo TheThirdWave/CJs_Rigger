@@ -259,7 +259,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.controller.bindSkin(self.bind_pathbox.text())
 
     def activateVertexJointWidget(self):
-        self.jointWidgetWindow = joint_widget_view.VertexJointUIPopup(self.controller, self.utils, self.filepaths_dict)
+        self.jointWidgetWindow = joint_widget_view.VertexJointUIPopup(self.controller, self.utils, self.filepaths_dict, self)
         self.jointWidgetWindow.show()
         self.jointWidgetWindow.resize(300, 150)
 
