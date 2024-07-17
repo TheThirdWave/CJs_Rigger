@@ -31,7 +31,8 @@ class AttrConnectionTypes(NamedTuple):
     proxy: str
     parent: str
     parentOffset: str
-ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset')
+    spaceSwitch: str
+ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset', 'spaceswitch')
 
 # Basic groups that the controller assumes exist in the maya scene.
 class BaseRigGroups(NamedTuple):
@@ -92,6 +93,8 @@ SAVE_ATTR_LIST_ATTR = 'theJuice'
 # Geo marked with this attr will have it's skin weights saved out even if it's
 # not in the geometry_GRP.
 BOUND_GEO_ATTR = 'boundGeo'
+
+DEFAULT_SPACE_SWITCH_ATTR = 'spaceSwitch'
 
 # This is duplicating info in the "default_attrs.yaml" file, and adds to overhead if updating it, but I think
 # it's worth it for VS Code autocomplete purposes.  I might get rid of it if I start overloading on the default attrs.

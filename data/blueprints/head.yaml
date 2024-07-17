@@ -18,34 +18,50 @@ components:
         attrType: matrix
         internalAttr: end_BND_JNT.worldInverseMatrix
     children:
-      - childName: mouth
-        childPrefix:
-        connectionType: parent
-        parentAttrs: []
-        childAttrs: []
       - childName: eyeControl
         childPrefix: LR
         connectionType: parent
         parentAttrs: []
         childAttrs: []
-      - childName: eyeLid
-        childPrefix: LR
+      - childName: bothEyesAimControl
+        childPrefix: C
+        connectionType: spaceswitch
+        spaceName: head
+        parentAttrs: [END_OUT_INV_WORLD]
+        childAttrs: [IN_INV_WORLD]
+      - childName: mouthMoveControl
+        childPrefix:
         connectionType: parent
         parentAttrs: []
         childAttrs: []
-      - childName: eyeBrow
-        childPrefix: LR
+      - childName: upperTeeth
+        childPrefix:
         connectionType: parent
         parentAttrs: []
         childAttrs: []
       - childName: ears
         childPrefix: LR
-        connectionType: none
+        connectionType: parent
         parentAttrs: []
         childAttrs: []
       - childName: horns
         childPrefix: LR
-        connectionType: none
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: hairTop
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: hairCenter
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: hairSide
+        childPrefix: LR
+        connectionType: parent
         parentAttrs: []
         childAttrs: []
     controls: {}
@@ -58,7 +74,108 @@ components:
       numUpper: 17
       numLower: 17
     inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: jaw_control_CTL_CRV.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: jaw_control_CTL_CRV.worldInverseMatrix
+    children:
+      - childName: lowerTeeth
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: tongue
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  upperTeeth:
+    componentType: SingleJointModule
+    prefix:
+    componentVars: {}
+    inputAttrs: []
     outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  lowerTeeth:
+    componentType: SingleJointModule
+    prefix:
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  tongue:
+    componentType: IKFKSpine
+    prefix:
+    componentVars:
+      numJoints: 4
+      numRoughIKSegments: 1
+      numRoughFKControls: 2
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  mouthMoveControl:
+    componentType: UtilityModule
+    prefix:
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldInverseMatrix
+      - attrName: END_OUT_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.matrix
+      - attrName: END_OUT_INV_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.inverseMatrix
+    children:
+      - childName: mouthMove
+        childPrefix:
+        connectionType: none
+        parentAttrs: [END_OUT_MAT]
+        childAttrs: [IN_MAT]
+      - childName: mouth
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  mouthMove:
+    componentType: SingleJointModule
+    prefix:
+    componentVars: {}
+    inputAttrs:
+      - attrName: IN_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV
+        attrConnection: directTransform
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldInverseMatrix
     children: []
     controls: {}
     bindGeometry: []
@@ -98,6 +215,48 @@ components:
         connectionType: none
         parentAttrs: [END_OUT_WORLD, END_OUT_INV_WORLD]
         childAttrs: [IN_CTL_PAR_WORLD, IN_CTL_PAR_INV_WORLD]
+      - childName: eyeLid
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: eyeBrow
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  bothEyesAimControl:
+    componentType: UtilityModule
+    prefix: C
+    componentVars: {}
+    inputAttrs:
+      - attrName: SPACE_SWITCH
+        attrType: enum
+        attrConnection: proxy
+        internalAttr: base_CTL_CRV.spaceSwitch
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_CTL_CRV.worldInverseMatrix
+      - attrName: END_OUT_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.matrix
+      - attrName: END_OUT_INV_MAT
+        attrType: matrix
+        internalAttr: base_CTL_CRV.inverseMatrix
+    children:
+      - childName: eyeAimControl
+        childPrefix: LR
+        connectionType: spaceswitch
+        spaceName: sharedControl
+        parentAttrs: [END_OUT_INV_WORLD]
+        childAttrs: [IN_INV_WORLD]
     controls: {}
     bindGeometry: []
 
@@ -244,3 +403,42 @@ components:
     children: []
     controls: {}
     bindGeometry: []
+
+  hairTop:
+    componentType: IKFKSpine
+    prefix:
+    componentVars:
+      numJoints: 9
+      numRoughIKSegments: 2
+      numRoughFKControls: 4
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  hairCenter:
+      componentType: IKFKSpine
+      prefix:
+      componentVars:
+        numJoints: 8
+        numRoughIKSegments: 2
+        numRoughFKControls: 4
+      inputAttrs: []
+      outputAttrs: []
+      children: []
+      controls: {}
+      bindGeometry: []
+
+  hairSide:
+      componentType: IKFKSpine
+      prefix: LR
+      componentVars:
+        numJoints: 9
+        numRoughIKSegments: 2
+        numRoughFKControls: 4
+      inputAttrs: []
+      outputAttrs: []
+      children: []
+      controls: {}
+      bindGeometry: []

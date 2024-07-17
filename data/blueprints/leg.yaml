@@ -5,12 +5,23 @@ components:
   limb:
     componentType: IKFKLimb
     prefix:
-    componentVars: {}
+    componentVars:
+      orientOffsetScale: 20
     inputAttrs:
       - attrName: IN_IK_WORLD
         attrType: matrix
         internalAttr: base_IKRP_PAR_GRP
         attrConnection: parent
+      - attrName: IK_END_ROOT_SPACESWITCH
+        attrType: matrix
+        internalAttr: ik_end_CTL_CRV.spaceSwitch
+        enumName: root
+        attrConnection: spaceswitch
+      - attrName: IK_ORIENT_ROOT_SPACESWITCH
+        attrType: matrix
+        internalAttr: orient_CTL_CRV.spaceSwitch
+        enumName: root
+        attrConnection: spaceswitch
     outputAttrs:
       - attrName: END_OUT_FK_WORLD
         attrType: matrix

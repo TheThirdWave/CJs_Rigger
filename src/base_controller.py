@@ -172,6 +172,7 @@ class BaseController(ABC):
     # with child elements that correspond to the blueprint's input components.
     def hookUpBlueprintComponents(self, templates):
         for name, data in templates.items():
+            to_remove = []
             for i in range(len(data['children'])):
                 for blueprint_type, blueprint_data in self.loadedBlueprints.items():
                     for alias in blueprint_data['blueprintAliases']:
@@ -180,7 +181,9 @@ class BaseController(ABC):
                                 new_child = copy.deepcopy(data['children'][i])
                                 new_child['childName'] = '{0}{1}'.format(alias, input_component_name)
                                 data['children'].append(new_child)
-                            data['children'].pop(i)
+                            to_remove.append(data['children'][i])
+
+            data['children'] = list(filter(lambda a: a not in to_remove, data['children']))
 
 
 

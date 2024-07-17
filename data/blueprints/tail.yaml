@@ -1,0 +1,46 @@
+variables:
+  inputComponents:
+    - tail
+components:
+  tail:
+    componentType: IKFKSpine
+    prefix:
+    componentVars:
+      numJoints: 20
+      numRoughIKSegments: 3
+      numRoughFKControls: 4
+    inputAttrs: []
+    outputAttrs:
+    - attrName: END_OUT_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldMatrix
+    - attrName: END_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: end_BND_JNT.worldInverseMatrix
+    - attrName: BASE_OUT_WORLD
+      attrType: matrix
+      internalAttr: base_BND_JNT.worldMatrix
+    - attrName: BASE_OUT_INV_WORLD
+      attrType: matrix
+      internalAttr: base_BND_JNT.worldInverseMatrix
+    children:
+    - childName: tailTip
+      childPrefix:
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  tailTip:
+    componentType: IKFKSpine
+    prefix:
+    componentVars:
+      numJoints: 4
+      numRoughIKSegments: 1
+      numRoughFKControls: 2
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []

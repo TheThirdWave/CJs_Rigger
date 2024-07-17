@@ -757,11 +757,15 @@ class MouthModule(maya_base_module.MayaBaseModule):
             for i in range(0, len(connections), 2):
                 if connections[i] == '{0}.matrixIn[6]'.format(mult_node):
                     cmds.disconnectAttr(connections[i+1], connections[i])
-                    attr = cmds.getAttr(connections[i+1])
+                    matrix_decompose, matrix_recompose = python_utils.decomposeAndRecompose(connections[i+1], connections[i], keepList=['rotate', 'scale'])
+                    cmds.disconnectAttr('{0}.outputMatrix'.format(matrix_recompose), connections[i])
+                    attr = cmds.getAttr('{0}.outputMatrix'.format(matrix_recompose))
                     cmds.setAttr('{0}.matrixIn[6]'.format(mult_node), attr, type='matrix')
                 if connections[i] == '{0}.matrixIn[2]'.format(mult_node):
                     cmds.disconnectAttr(connections[i+1], connections[i])
-                    attr = cmds.getAttr(connections[i+1])
+                    matrix_decompose, matrix_recompose = python_utils.decomposeAndRecompose(connections[i+1], connections[i], keepList=['rotate', 'scale'])
+                    cmds.disconnectAttr('{0}.outputMatrix'.format(matrix_recompose), connections[i])
+                    attr = cmds.getAttr('{0}.outputMatrix'.format(matrix_recompose))
                     cmds.setAttr('{0}.matrixIn[2]'.format(mult_node), attr, type='matrix')
 
         # Make the proxy attrs for all the controls that don't have them yet.

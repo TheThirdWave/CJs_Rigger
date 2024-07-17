@@ -14,62 +14,92 @@ components:
       - attrName: THUMB_IKFK_SWITCH
         attrType: double
         proxy: True
+        min: 0.0
+        max: 1.0
         internalAttr: base_CTL_CRV.ikfkswitchThumb
       - attrName: INDEX_IKFK_SWITCH
         attrType: double
         proxy: True
+        min: 0.0
+        max: 1.0
         internalAttr: base_CTL_CRV.ikfkswitchIndex
       - attrName: PINKY_IKFK_SWITCH
         attrType: double
         proxy: True
+        min: 0.0
+        max: 1.0
         internalAttr: base_CTL_CRV.ikfkswitchPinky
       - attrName: THUMB_RELAXED
         attrType: double
         proxy: True
+        min: 0.0
+        max: 10.0
         internalAttr: base_CTL_CRV.relaxedThumb
       - attrName: INDEX_RELAXED
         attrType: double
         proxy: True
+        min: 0.0
+        max: 10.0
         internalAttr: base_CTL_CRV.relaxedIndex
       - attrName: PINKY_RELAXED
         attrType: double
         proxy: True
+        min: 0.0
+        max: 10.0
         internalAttr: base_CTL_CRV.relaxedPinky
       - attrName: THUMB_CURL
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.curlThumb
       - attrName: INDEX_CURL
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.curlIndex
       - attrName: PINKY_CURL
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.curlPinky
       - attrName: THUMB_SCRUNCH
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.scrunchThumb
       - attrName: INDEX_SCRUNCH
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.scrunchIndex
       - attrName: PINKY_SCRUNCH
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.scrunchPinky
       - attrName: THUMB_LEAN
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.leanThumb
       - attrName: INDEX_LEAN
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.leanIndex
       - attrName: PINKY_LEAN
         attrType: double
         proxy: True
+        min: -10.0
+        max: 10.0
         internalAttr: base_CTL_CRV.leanPinky
     children:
       - childName: thumb
@@ -98,6 +128,8 @@ components:
       - attrName: IKFK_SWITCH
         attrType: double
         proxy: True
+        min: 0.0
+        max: 1.0
         attrConnection: proxy
         internalAttr: 4joint_DAT_LOC.ikfkswitch
       - attrName: RELAXED
@@ -145,6 +177,8 @@ components:
       - attrName: IKFK_SWITCH
         attrType: double
         proxy: True
+        min: 0.0
+        max: 1.0
         attrConnection: proxy
         internalAttr: 4joint_DAT_LOC.ikfkswitch
       - attrName: RELAXED
@@ -193,6 +227,8 @@ components:
       - attrName: IKFK_SWITCH
         attrType: double
         proxy: True
+        min: 0.0
+        max: 1.0
         attrConnection: proxy
         internalAttr: 4joint_DAT_LOC.ikfkswitch
       - attrName: RELAXED

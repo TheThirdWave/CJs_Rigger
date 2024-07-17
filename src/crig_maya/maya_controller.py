@@ -291,13 +291,23 @@ class MayaController(base_controller.BaseController):
             for node, attrs in nodes.items():
                 if cmds.ls(node):
                     for attr, dict in attrs.items():
-                        for i in range(0, len(dict['keyframes']), 2):
-                            cmds.setDrivenKeyframe(attr, currentDriver=dict['driver'], driverValue=dict['keyframes'][i], value=dict['keyframes'][i + 1])
-                        index_num = 0
-                        for i in range(0, len(dict['keytangents']), 4):
-                            cmds.keyTangent(attr, absolute=True, inAngle=dict['keytangents'][i], outAngle=dict['keytangents'][i+1], inTangentType=dict['keytangents'][i+2], outTangentType=dict['keytangents'][i+3], index=(index_num, index_num))
-                            index_num += 1
-                        cmds.setInfinity(attr, preInfinite=dict['infinites'][0], postInfinite=dict['infinites'][1])
+                        if 'driver' in dict:
+                            for i in range(0, len(dict['keyframes']), 2):
+                                cmds.setDrivenKeyframe(attr, currentDriver=dict['driver'], driverValue=dict['keyframes'][i], value=dict['keyframes'][i + 1])
+                            index_num = 0
+                            for i in range(0, len(dict['keytangents']), 4):
+                                cmds.keyTangent(attr, absolute=True, inAngle=dict['keytangents'][i], outAngle=dict['keytangents'][i+1], inTangentType=dict['keytangents'][i+2], outTangentType=dict['keytangents'][i+3], index=(index_num, index_num))
+                                index_num += 1
+                            cmds.setInfinity(attr, preInfinite=dict['infinites'][0], postInfinite=dict['infinites'][1])
+                        else:
+                            for driver, keyData in dict.items():
+                                for i in range(0, len(keyData['keyframes']), 2):
+                                    cmds.setDrivenKeyframe(attr, currentDriver=driver, driverValue=keyData['keyframes'][i], value=keyData['keyframes'][i + 1])
+                                index_num = 0
+                                for i in range(0, len(keyData['keytangents']), 4):
+                                    cmds.keyTangent(attr, absolute=True, inAngle=keyData['keytangents'][i], outAngle=keyData['keytangents'][i+1], inTangentType=keyData['keytangents'][i+2], outTangentType=keyData['keytangents'][i+3], index=(index_num, index_num))
+                                    index_num += 1
+                                cmds.setInfinity(attr, preInfinite=keyData['infinites'][0].lower(), postInfinite=keyData['infinites'][1].lower())
 
     def setSavedAttrs(self):
         components = self.controlsData[constants.CONTROL_DATA_KEYS.attributes]
@@ -422,7 +432,62 @@ class MayaController(base_controller.BaseController):
         cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.target[{1}].targetMatrix'.format(blend_matrix_name, free_index))
         cmds.connectAttr('{0}.outColorR'.format(switch_condition), '{0}.target[{1}].useMatrix'.format(blend_matrix_name, free_index))
 
+    def handleInternalSpaceSwitch(self, parentMatrix, enum_name, childTransform, switch_attr_name):
+        offsetParentMatrix = '{0}.offsetParentMatrix'.format(childTransform)
+        DG_parent = cmds.listRelatives(childTransform, parent=True)[0]
+
+        # Because of the way I've got the internal attributes set up, the internal space switch attribute will have been
+        # initialized to the wrong attr type, so we check the attribute to see if it's an enum, and if not, we replace
+        # the attribute.
+        if cmds.getAttr('{0}.{1}'.format(childTransform, switch_attr_name), type=True) != 'enum':
+            cmds.deleteAttr('{0}.{1}'.format(childTransform, switch_attr_name))
+            cmds.addAttr(childTransform, longName=switch_attr_name, attributeType='enum', keyable=True, hidden=False)
         
+        # Then, we check to see if the offsetParentMatrix is connected to anything, and if so, what.
+        oPMIncomingConnection = cmds.connectionInfo(offsetParentMatrix, sourceFromDestination=True)
+        
+        # If it isn't connected to anything, or if what it's connected to isn't the expected space switch, then we create the space switch.
+        make_new_switch = True
+        space_switch_name = '{0}_SPC_SWTCHM'.format(childTransform)
+        if oPMIncomingConnection:
+            incoming_node, incoming_attr = oPMIncomingConnection.split('.')
+            if incoming_node == space_switch_name:
+                make_new_switch = False
+        
+        if make_new_switch:
+            matrix_switch = cmds.createNode('blendMatrix', name=space_switch_name)
+            # We make the default/initial value of the space switch either the identity matrix, or whatever
+            # the pre-existing connection to the offsetParentMatrix was.
+            if oPMIncomingConnection:
+                default_parent_matrix = oPMIncomingConnection
+            else:
+                identity_mat_mult = cmds.createNode('multMatrix', name='{0}_0_IDNT_MMULT'.format(childTransform))
+                default_parent_matrix = '{0}.matrixSum'.format(identity_mat_mult)
+            cmds.connectAttr('{0}.outputMatrix'.format(matrix_switch), offsetParentMatrix, force=True)
+            python_utils.addParentToSpaceSwitch(
+                '{0}.{1}'.format(childTransform, switch_attr_name),
+                'off',
+                default_parent_matrix,
+                '{0}.worldMatrix'.format(DG_parent),
+                '{0}.worldInverseMatrix'.format(DG_parent),
+                childTransform,
+                matrix_switch
+            )
+            cmds.connectAttr(default_parent_matrix, '{0}.target[0].targetMatrix'.format(matrix_switch), force=True)
+        else:
+            incoming_node, incoming_attr = oPMIncomingConnection.split('.')
+            matrix_switch = incoming_node
+
+        python_utils.addParentToSpaceSwitch(
+            '{0}.{1}'.format(childTransform, switch_attr_name),
+            enum_name,
+            parentMatrix,
+            '{0}.worldMatrix'.format(DG_parent),
+            '{0}.worldInverseMatrix'.format(DG_parent),
+            childTransform,
+            matrix_switch
+        )
+
 
     def connectModuleAttrs(self, child, module):
         for ccomponent in self.components:
@@ -462,6 +527,22 @@ class MayaController(base_controller.BaseController):
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
                         python_utils.constrainByMatrix(new_attr, final_attr_path, True, True)
+                    if lower_connection_type == constants.ATTR_CONNECTION_TYPES.spaceSwitch:
+                        new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
+                        final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
+                        # Check to see if the user has defined an attribute for the space switch
+                        split_list = final_attr_path.split('.')
+                        space_switch_attr = constants.DEFAULT_SPACE_SWITCH_ATTR
+                        if len(split_list) > 1:
+                            space_switch_attr = split_list[-1]
+                            final_attr_path = split_list[0]
+                        
+                        # Check to see if the user has defined a name for the enum
+                        enum_name = attr['attrName']
+                        if 'enumName' in attr:
+                            enum_name = attr['enumName']
+
+                        self.handleInternalSpaceSwitch(new_attr, enum_name, final_attr_path, space_switch_attr)
 
 
     def propagateLimits(self):

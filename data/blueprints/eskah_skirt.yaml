@@ -1,0 +1,15 @@
+variables:
+  inputComponents:
+    - skirtAndSkull
+components:
+  skirtAndSkull:
+    componentType: JointCloudModule
+    prefix:
+    componentVars:
+      numJoints: 8
+      numKeyLayers: 1
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []

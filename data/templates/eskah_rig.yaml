@@ -16,12 +16,28 @@ root:
       connectionType: parent
       parentAttrs: []
       childAttrs: []
+    - childName: armLimb
+      childPrefix: LR
+      connectionType: none
+      parentAttrs: [END_OUT_WORLD, END_OUT_WORLD]
+      childAttrs: [IK_END_ROOT_SPACESWITCH, IK_ORIENT_ROOT_SPACESWITCH]
+    - childName: leg
+      childPrefix: LR
+      connectionType: none
+      parentAttrs: [END_OUT_WORLD, END_OUT_WORLD]
+      childAttrs: [IK_END_ROOT_SPACESWITCH, IK_ORIENT_ROOT_SPACESWITCH]
     - childName: headeyeAimControl
       childPrefix: LR
       connectionType: spaceswitch
       spaceName: root
-      parentAttrs: []
-      childAttrs: []
+      parentAttrs: [END_OUT_INV_WORLD]
+      childAttrs: [IN_INV_WORLD]
+    - childName: headbothEyesAimControl
+      childPrefix: C
+      connectionType: spaceswitch
+      spaceName: root
+      parentAttrs: [END_OUT_INV_WORLD]
+      childAttrs: [IN_INV_WORLD]
   controls: {}
   bindGeometry: []
 
@@ -43,6 +59,12 @@ torso:
       connectionType: parent
       parentAttrs: []
       childAttrs: []
+    - childName: tail
+      childPrefix: C
+      connectionType: parent
+      parentAttrs: []
+      childAttrs: []
+
   controls: {}
   bindGeometry: []
 
@@ -80,6 +102,11 @@ spine:
       childAttrs: []
     - childName: leg
       childPrefix: LR
+      connectionType: parent
+      parentAttrs: [BASE_OUT_WORLD, BASE_OUT_INV_WORLD]
+      childAttrs: [IN_WORLD, IN_INV_WORLD]
+    - childName: skirt
+      childPrefix: C
       connectionType: parent
       parentAttrs: [BASE_OUT_WORLD, BASE_OUT_INV_WORLD]
       childAttrs: [IN_WORLD, IN_INV_WORLD]
@@ -160,8 +187,19 @@ clavicle:
 armLimb:
   componentType: IKFKLimb
   prefix: LR
-  componentVars: {}
-  inputAttrs: []
+  componentVars:
+    orientOffsetScale: 6
+  inputAttrs:
+    - attrName: IK_END_ROOT_SPACESWITCH
+      attrType: matrix
+      internalAttr: ik_end_CTL_CRV.spaceSwitch
+      enumName: root
+      attrConnection: spaceswitch
+    - attrName: IK_ORIENT_ROOT_SPACESWITCH
+      attrType: matrix
+      internalAttr: orient_CTL_CRV.spaceSwitch
+      enumName: root
+      attrConnection: spaceswitch
   outputAttrs:
     - attrName: END_OUT_WORLD
       attrType: matrix
@@ -191,6 +229,26 @@ hands:
 leg:
   componentType: leg
   prefix: LR
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+tail:
+  componentType: tail
+  prefix: C
+  componentVars: {}
+  inputAttrs: []
+  outputAttrs: []
+  children: []
+  controls: {}
+  bindGeometry: []
+
+skirt:
+  componentType: eskah_skirt
+  prefix: C
   componentVars: {}
   inputAttrs: []
   outputAttrs: []

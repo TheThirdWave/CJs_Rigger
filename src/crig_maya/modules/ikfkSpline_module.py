@@ -287,6 +287,10 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
 
             moved_up_axis = up_axis.rotateBy(aim_quaternion)
             error_cos = jointV * moved_up_axis
+            if error_cos < -1:
+                error_cos = -1
+            elif error_cos > 1:
+                error_cos = 1
             error_angle = math.acos(error_cos)
             up_quaternion = om2.MQuaternion(error_angle, jointU)
             # Because the cos could be either positive or negative, we gotta do some error checking with JointV
@@ -551,6 +555,9 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                     python_utils.connectTransforms(rough_control, base_control_new_parent)
                     parent = rough_control
                     fk_rough_controls_1.append(rough_control)
+                    # Parent constrain the rough place group to the base place group it's on top of
+                    # to get the rough control to follow the chain properly.
+                    cmds.parentConstraint(fk_base_place_groups[j], rough_place_group, maintainOffset=True)
                     j = j + 1
                     break
                 j = j + 1
@@ -591,6 +598,13 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         data_locator = cmds.parent(data_locator, fk_joints[0], relative=True)[0]
         cmds.select(data_locator)
         cmds.addAttr(longName='ikfkswitch', defaultValue=0.0, minValue=0.0, maxValue=1.0)
+        cmds.addAttr(longName='ikFineControls', defaultValue=0.0, minValue=0.0, maxValue=1.0)
+        cmds.addAttr(longName='fkFineControls', defaultValue=0.0, minValue=0.0, maxValue=1.0)
+
+        cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
+        cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)
+        cmds.setDrivenKeyframe('{0}.visibility'.format(fk_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
+        cmds.setDrivenKeyframe('{0}.visibility'.format(fk_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
 
         # Connect ik/fk joints to bind joints and controls, except the last bind joint, that is attached to the rough control joint because I can't think
         # of a better way to control the rotation of the final joint in the spine (having it just follow the ik doesn't seem intuitive).
@@ -606,22 +620,20 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             else:
                 blend_matrix, mult_matrix, matrix_decompose = python_utils.createMatrixSwitch(ik_rough_control_joints[-1], fk_joints[idx], self.bind_joints[idx])
             cmds.connectAttr('{0}.ikfkswitch'.format(data_locator), '{0}.target[0].weight'.format(blend_matrix))
-            cmds.setDrivenKeyframe('{0}.visibility'.format(joint_objects[idx]['ik_control']), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
-            cmds.setDrivenKeyframe('{0}.visibility'.format(joint_objects[idx]['ik_control']), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)
-            cmds.setDrivenKeyframe('{0}.visibility'.format(fk_base_controls[idx]), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
-            cmds.setDrivenKeyframe('{0}.visibility'.format(fk_base_controls[idx]), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(joint_objects[idx]['ik_control']), currentDriver='{0}.ikFineControls'.format(data_locator), driverValue=0, value=0)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(joint_objects[idx]['ik_control']), currentDriver='{0}.ikFineControls'.format(data_locator), driverValue=1, value=1)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(fk_base_controls[idx]), currentDriver='{0}.fkFineControls'.format(data_locator), driverValue=0, value=0)
+            cmds.setDrivenKeyframe('{0}.visibility'.format(fk_base_controls[idx]), currentDriver='{0}.fkFineControls'.format(data_locator), driverValue=1, value=1)
             cmds.addAttr('{0}'.format(fk_base_controls[idx]), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
             cmds.addAttr('{0}'.format(joint_objects[idx]['ik_control']), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
 
         for control in ik_rough_controls:
-            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
-            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)
             cmds.addAttr('{0}'.format(control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
+            cmds.addAttr('{0}'.format(control), longName='ikFineControls', proxy='{0}.ikFineControls'.format(data_locator))
 
         for control in fk_rough_controls_1:
-            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
-            cmds.setDrivenKeyframe('{0}.visibility'.format(control), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
             cmds.addAttr('{0}'.format(control), longName='ikfkswitch', proxy='{0}.ikfkswitch'.format(data_locator))
+            cmds.addAttr('{0}'.format(control), longName='fkFineControls', proxy='{0}.fkFineControls'.format(data_locator))
 
 
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])

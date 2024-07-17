@@ -141,6 +141,69 @@ def createParentSwitchMult(newParentMatrix, newParentInverseMatrix, childWorldMa
     cmds.connectAttr(newParentMatrix, '{0}.matrixIn[2]'.format(mult_matrix))
     return mult_matrix
 
+def addParentToSpaceSwitch(enum_attr, enum_name, new_parent_matrix, base_parent_matrix, base_parent_inverse_matrix, child_transform, switch_node):
+    # Add parent to matrix switch.
+    # find the next-available target slot
+    free_index = findNextAvailableMultiIndex('{0}.target'.format(switch_node), 0, 'targetMatrix')
+
+    # Get the inverse of the new_parent_matrix
+    inverse_mat_node = cmds.createNode('inverseMatrix')
+    cmds.connectAttr(new_parent_matrix, '{0}.inputMatrix'.format(inverse_mat_node))
+    new_parent_inverse_matrix = '{0}.outputMatrix'.format(inverse_mat_node)
+
+    # Create parent mult-matrix
+    mult_matrix = cmds.createNode('multMatrix', name='{0}_{1}_PSWTCH_MMUL'.format(child_transform, free_index))
+
+    initial_child_matrix = cmds.getAttr(base_parent_matrix)
+    cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), initial_child_matrix, type='matrix')
+
+    initial_parent_inverse_matrix = cmds.getAttr(new_parent_inverse_matrix)
+    cmds.setAttr('{0}.matrixIn[1]'.format(mult_matrix), initial_parent_inverse_matrix, type='matrix')
+
+    cmds.connectAttr(new_parent_matrix, '{0}.matrixIn[2]'.format(mult_matrix))
+    cmds.connectAttr(base_parent_inverse_matrix, '{0}.matrixIn[3]'.format(mult_matrix))
+
+    cmds.delete(inverse_mat_node)
+
+    # Create new enum value
+    # First check if any values have already been created
+    input_depend_node = getDependNode(child_transform)
+    dependNodeFn = om2.MFnDependencyNode(input_depend_node)
+    attrFn = om2.MFnEnumAttribute(dependNodeFn.attribute(enum_attr.split('.')[-1]))
+    max = attrFn.getMax()
+    min = attrFn.getMin()
+    # If the minimum is higher than the max, no enum values have been defined for the attr yet, this would pose a problem if I
+    # was doing anything else with the attr, but the default max value for an undefined enum attr is -1, so it all works out.
+    # Because you can define an enum's value to whatever you want, it's possible for the next available enum value to actually be
+    # between the min and the max, which means we'd have to loop through all the values until we threw an exception to find the
+    # lowest free slot.  But that's work, so we'll just add the new value as "max + 1"
+    next_value = max + 1
+    attrFn.addField(enum_name, next_value)
+
+    # We also have to update whatever proxies are downstream of the switch enum because that doesn't happen automatically, which is dumb.
+    downstream_connections = cmds.connectionInfo(enum_attr, destinationFromSource=True)
+    for connection in downstream_connections:
+        connection_node = connection.split('.')[0]
+        connection_attr = connection.split('.')[1]
+        connection_depend_node = getDependNode(connection_node)
+        dependNodeFn = om2.MFnDependencyNode(connection_depend_node)
+        attrObj = dependNodeFn.attribute(connection_attr)
+        # Basically we assume if it's connected to a downstream enum attribute, we want to update that enum as well.
+        if attrObj.hasFn(om2.MFn.kEnumAttribute):
+            attrFn = om2.MFnEnumAttribute(dependNodeFn.attribute(connection_attr))
+            attrFn.addField(enum_name, next_value)
+
+    # Next we create the conditional that will switch on the space matrix if the enum on the control is set to it.
+    switch_condition = cmds.createNode('condition', name='{0}_{1}_SWTCH_CND'.format(child_transform, free_index))
+    cmds.setAttr('{0}.colorIfTrueR'.format(switch_condition), 1)
+    cmds.setAttr('{0}.colorIfFalseR'.format(switch_condition), 0)
+    cmds.connectAttr(enum_attr, '{0}.firstTerm'.format(switch_condition))
+    cmds.setAttr('{0}.secondTerm'.format(switch_condition), next_value)
+
+    # Connect everything up to the matrix blend
+    cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.target[{1}].targetMatrix'.format(switch_node, free_index))
+    cmds.connectAttr('{0}.outColorR'.format(switch_condition), '{0}.target[{1}].useMatrix'.format(switch_node, free_index))
+
 
 def createColorBlend(attr1, attr2, child, weight=0.0):
     blend_color = cmds.shadingNode('blendColors', name='{0}_BLND_BLNDC'.format(child), asUtility=True)
@@ -179,12 +242,12 @@ def mirrorOffset(parent, child, targetParent, mirrorTarget, liveParent=False, li
         cmds.setAttr('{0}.matrixIn[6]'.format(mult_matrix_1), [parentTotParentMat.inverse().getElement(i, j) for i in range(4) for j in range(4)], type='matrix')
         cmds.setAttr('{0}.matrixIn[1]'.format(mult_matrix_1), [parentTotParentMat.getElement(i, j) for i in range(4) for j in range(4)], type='matrix')
     else:
-        decomp1, recomp1 = decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(targetParent), '{0}.matrixIn[7]'.format(mult_matrix_1))
-        decomp2, recomp2 = decomposeAndRecompose('{0}.worldMatrix[0]'.format(parent), '{0}.matrixIn[6]'.format(mult_matrix_1))
+        decomp1, recomp1 = decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(targetParent), '{0}.matrixIn[7]'.format(mult_matrix_1), keepList=['rotate', 'scale'])
+        decomp2, recomp2 = decomposeAndRecompose('{0}.worldMatrix[0]'.format(parent), '{0}.matrixIn[6]'.format(mult_matrix_1), keepList=['rotate', 'scale'])
         #cmds.setAttr('{0}.matrixIn[6]'.format(mult_matrix_1), cmds.getAttr('{0}.worldMatrix[0]'.format(parent)), type='matrix')
         #cmds.setAttr('{0}.matrixIn[2]'.format(mult_matrix_1), cmds.getAttr('{0}.worldInverseMatrix[0]'.format(parent)), type='matrix')
-        decomp3, recomp3 = decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(parent), '{0}.matrixIn[2]'.format(mult_matrix_1))
-        decomp4, recomp4 = decomposeAndRecompose('{0}.worldMatrix[0]'.format(targetParent), '{0}.matrixIn[1]'.format(mult_matrix_1))
+        decomp3, recomp3 = decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(parent), '{0}.matrixIn[2]'.format(mult_matrix_1), keepList=['rotate', 'scale'])
+        decomp4, recomp4 = decomposeAndRecompose('{0}.worldMatrix[0]'.format(targetParent), '{0}.matrixIn[1]'.format(mult_matrix_1), keepList=['rotate', 'scale'])
     if liveParent:
         cmds.connectAttr('{0}.worldInverseMatrix'.format(parent), '{0}.matrixIn[5]'.format(mult_matrix_1))
     else:
@@ -524,10 +587,23 @@ def getDrivenKeys(node):
         for attr in cmds.setDrivenKeyframe(node, query=True, driven=True):
             keys_dict[attr] = {}
     for attr, dict in keys_dict.items():
-        dict['driver'] = cmds.setDrivenKeyframe(attr, query=True, driver=True)[0]
-        dict['keyframes'] = cmds.keyframe(attr, query=True, floatChange=True, valueChange=True, absolute=True, index=())
-        dict['keytangents'] = cmds.keyTangent(attr, query=True, inAngle=True, inTangentType=True, outAngle=True, outTangentType=True, index=())
-        dict['infinites'] = cmds.setInfinity(attr, query=True, preInfinite=True, postInfinite=True)
+        drivers = cmds.setDrivenKeyframe(attr, query=True, driver=True)
+        for driver in drivers:
+            dict[driver] = {}
+            # Now we have to find the dang animCurve node in between the driver attr and the driven attr.  This is a pain.
+            downstream_nodes = cmds.listConnections(driver)
+            upstream_node = cmds.listConnections(attr)
+            upstream_node_history = cmds.listHistory(upstream_node)
+            for downstream_node in downstream_nodes:
+                downstream_node_history = cmds.listHistory(downstream_node, future=True)
+                common_nodes = [x for x in downstream_node_history if x in upstream_node_history and 'animCurve' in cmds.nodeType(x)]
+                # If there's anything in common_nodes as near as I can tell it *has* to be the animCurve node we want.
+                if common_nodes:
+                    dict[driver]['keyframes'] = cmds.keyframe(common_nodes[0], query=True, floatChange=True, valueChange=True, absolute=True, index=())
+                    dict[driver]['keytangents'] = cmds.keyTangent(common_nodes[0], query=True, inAngle=True, inTangentType=True, outAngle=True, outTangentType=True, index=())
+                    dict[driver]['infinites'] = []
+                    dict[driver]['infinites'].append(cmds.getAttr('{0}.preInfinity'.format(common_nodes[0]), asString=True))
+                    dict[driver]['infinites'].append(cmds.getAttr('{0}.postInfinity'.format(common_nodes[0]), asString=True))
     return keys_dict
 
 def getCurveData(node):

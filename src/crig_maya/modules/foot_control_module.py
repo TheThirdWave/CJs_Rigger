@@ -66,7 +66,6 @@ class FootControlModule(maya_base_module.MayaBaseModule):
                                                 solver='ikSCsolver' )
         ball_ik_effector = cmds.rename(ball_ik_effector, '{0}_{1}_ball_IKS_EFF'.format(self.prefix, self.name))
         # Parent ik to control.
-        cmds.matchTransform(ball_ik_handle, ball_locator)
         cmds.parent(ball_ik_handle, ball_locator)
 
         toe_ik_handle, toe_ik_effector = cmds.ikHandle( name='{0}_{1}_toe_IKS_HDL'.format(self.prefix, self.name),
@@ -74,12 +73,9 @@ class FootControlModule(maya_base_module.MayaBaseModule):
                                                 endEffector=ik_joints[2],
                                                 solver='ikSCsolver' )
         toe_ik_effector = cmds.rename(toe_ik_effector, '{0}_{1}_toe_IKS_EFF'.format(self.prefix, self.name))
-        # Parent ik to control.
-        cmds.matchTransform(toe_ik_handle, toe_locator)
 
         # Then parent handle to a group underneath the ankle.
         toe_wiggle_group = cmds.group(name='{0}_{1}_toe_wiggle_PAR_GRP'.format(self.prefix, self.name), parent=toe_locator, empty=True)
-        cmds.matchTransform(toe_wiggle_group, ball_locator)
         cmds.parent(toe_ik_handle, toe_wiggle_group)
 
         # Now we create all the attributes that control the various ik movements.
@@ -122,7 +118,7 @@ class FootControlModule(maya_base_module.MayaBaseModule):
         cmds.connectAttr('{0}.toeSpin'.format(ball_locator), '{0}.rotateY'.format(toe_locator))
         cmds.connectAttr('{0}.ballLean'.format(ball_locator), '{0}.rotateZ'.format(ball_locator))
 
-        # TODO: Get foot roll nodes set up
+        # Get foot roll nodes set up
         # Nodes that bend the ball joint
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(ball_locator)
         ballZeroToBendPercent = cmds.shadingNode('setRange', name='{0}_{1}_{2}_{3}'.format(prefix, component_name, joint_name, 'bend_0_CTL_RNG'), asUtility=True)

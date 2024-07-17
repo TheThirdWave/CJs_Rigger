@@ -12,6 +12,10 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         self.start_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_start_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.middle_joint = cmds.joint(self.start_joint, name='{0}_{1}_middle_BND_JNT'.format(self.prefix, self.name), position=(1, 0, 0), relative=True, scaleCompensate=False)
         self.end_joint = cmds.joint(self.middle_joint, name='{0}_{1}_end_BND_JNT'.format(self.prefix, self.name), position=(1, 0, 0), relative=True, scaleCompensate=False)
+        if 'orientOffsetScale' in self.componentVars:
+            self.orient_offset_scale = self.componentVars['orientOffsetScale']
+        else:
+            self.orient_offset_scale = 6
 
     def createControlRig(self):
         if not self.baseGroups:
@@ -152,8 +156,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
             cmds.setAttr('{0}.scale'.format(ik_orient_control_place), -1, -1, -1)
         mid_pole_vec = python_utils.getPoleVec(start_ik_joint, ik_handle, ik_orient_control_place)
         orient_transform = om2.MFnTransform(python_utils.getDagPath(ik_orient_control_place))
-        orient_offset_scale = 6
-        orient_transform.setTranslation(orient_transform.translation(om2.MSpace.kWorld) + (mid_pole_vec * orient_offset_scale), om2.MSpace.kWorld)
+        orient_transform.setTranslation(orient_transform.translation(om2.MSpace.kWorld) + (mid_pole_vec * self.orient_offset_scale), om2.MSpace.kWorld)
 
         # Then we create a pole vector constraint between the orient control and the ik handle
         cmds.poleVectorConstraint(ik_orient_control, ik_handle)
