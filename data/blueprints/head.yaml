@@ -18,6 +18,32 @@ components:
         attrType: matrix
         internalAttr: end_BND_JNT.worldInverseMatrix
     children:
+      - childName: stretchTop
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: stretchBottom
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  stretchTop:
+    componentType: SingleJointModule
+    prefix:
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldInverseMatrix
+    children:
       - childName: eyeControl
         childPrefix: LR
         connectionType: parent
@@ -29,22 +55,7 @@ components:
         spaceName: head
         parentAttrs: [END_OUT_INV_WORLD]
         childAttrs: [IN_INV_WORLD]
-      - childName: mouthMoveControl
-        childPrefix:
-        connectionType: parent
-        parentAttrs: []
-        childAttrs: []
-      - childName: upperTeeth
-        childPrefix:
-        connectionType: parent
-        parentAttrs: []
-        childAttrs: []
-      - childName: ears
-        childPrefix: LR
-        connectionType: parent
-        parentAttrs: []
-        childAttrs: []
-      - childName: horns
+      - childName: hornControls
         childPrefix: LR
         connectionType: parent
         parentAttrs: []
@@ -60,6 +71,37 @@ components:
         parentAttrs: []
         childAttrs: []
       - childName: hairSide
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  stretchBottom:
+    componentType: SingleJointModule
+    prefix:
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldInverseMatrix
+    children:
+      - childName: mouthMoveControl
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: upperTeeth
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: earControls
         childPrefix: LR
         connectionType: parent
         parentAttrs: []
@@ -379,12 +421,23 @@ components:
     bindGeometry: []
 
   ears:
-    componentType: IKFKSpine
+      componentType: IKFKSpine
+      prefix: LR
+      componentVars:
+        numJoints: 4
+        numRoughIKSegments: 1
+        numRoughFKControls: 3
+      inputAttrs: []
+      outputAttrs: []
+      children: []
+      controls: {}
+      bindGeometry: []
+
+  earControls:
+    componentType: UtilityModule
     prefix: LR
-    componentVars:
-      numJoints: 4
-      numRoughIKSegments: 2
-      numRoughFKControls: 3
+    componentVars: {}
+    inputAttrs: []
     inputAttrs: []
     outputAttrs: []
     children: []
@@ -398,6 +451,17 @@ components:
       numJoints: 4
       numRoughIKSegments: 2
       numRoughFKControls: 3
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  hornControls:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs: []
     inputAttrs: []
     outputAttrs: []
     children: []

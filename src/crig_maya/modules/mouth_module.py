@@ -233,6 +233,11 @@ class MouthModule(maya_base_module.MayaBaseModule):
         cmds.addAttr(right_control, longName='L_StickyLips', proxy='{0}.L_StickyLips'.format(left_control))
         cmds.addAttr(right_control, longName='R_StickyLips', proxy='{0}.R_StickyLips'.format(left_control))
 
+        # Add visibility setting for the fine tweak controls that aren't made yet.
+        cmds.addAttr(left_control, longName='TweakControls', keyable=True, defaultValue=0.0, minValue=0.0, maxValue=1.0)
+
+        cmds.addAttr(right_control, longName='TweakControls', proxy='{0}.TweakControls'.format(left_control), keyable=True)
+
         num_u_cvs, num_v_cvs = python_utils.getNumSurfCVs(upper_blend_ribbon)
         num_cvs = num_u_cvs * num_v_cvs
         half_num_cvs = int(num_v_cvs / 2)
@@ -449,10 +454,22 @@ class MouthModule(maya_base_module.MayaBaseModule):
             cmds.parent(parent_joint, ribbon_joints_group)
             object['backRibbonJoint'] = parent_joint
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(parent_joint, upper_control_ribbon, connectionsList=['translate'])
+            parent_joint = cmds.duplicate(object['backJoint'], name=object['backJoint'].replace('BND_JNT', 'PAR_JNT'))[0]
+            cmds.parent(parent_joint, object['backRibbonJoint'])
+            object['zeroBackRibbonJoint'] = parent_joint
+            parent_joint = cmds.duplicate(object['backJoint'], name=object['backJoint'].replace('BND_JNT', 'super_CTL_JNT'))[0]
+            cmds.parent(parent_joint, object['zeroBackRibbonJoint'])
+            object['superFineBackRibbonJoint'] = parent_joint
             parent_joint = cmds.duplicate(object['frontJoint'], name=object['frontJoint'].replace('BND_JNT', 'CTL_JNT'))[0]
             cmds.parent(parent_joint, object['backRibbonJoint'])
             object['frontRibbonJoint'] = parent_joint
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(parent_joint, upper_control_ribbon, connectionsList=['translate'])
+            parent_joint = cmds.duplicate(object['frontJoint'], name=object['frontJoint'].replace('BND_JNT', 'PAR_JNT'))[0]
+            cmds.parent(parent_joint, object['frontRibbonJoint'])
+            object['zeroFrontRibbonJoint'] = parent_joint
+            parent_joint = cmds.duplicate(object['frontJoint'], name=object['frontJoint'].replace('BND_JNT', 'super_CTL_JNT'))[0]
+            cmds.parent(parent_joint, object['zeroFrontRibbonJoint'])
+            object['superFineFrontRibbonJoint'] = parent_joint
             object['proxyGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'PRX_GRP'), empty=True)
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], upper_base_ribbon)
             object['staticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
@@ -461,17 +478,29 @@ class MouthModule(maya_base_module.MayaBaseModule):
             invert_mult = cmds.createNode('multDoubleLinear', name=object['backJoint'].replace('BND_JNT', 'JAW_MDL'))
             cmds.connectAttr('{0}.outputRotateZ'.format(quat_to_euler), '{0}.input1'.format(invert_mult))
             cmds.setAttr('{0}.input2'.format(invert_mult), -1)
-            cmds.connectAttr('{0}.output'.format(invert_mult), '{0}.rotateX'.format(object['backRibbonJoint']))    
+            cmds.connectAttr('{0}.output'.format(invert_mult), '{0}.rotateX'.format(object['backRibbonJoint']))
 
         for object in lower_objects:
             parent_joint = cmds.duplicate(object['backJoint'], name=object['backJoint'].replace('BND_JNT', 'CTL_JNT'))[0]
             cmds.parent(parent_joint, ribbon_joints_group)
             object['backRibbonJoint'] = parent_joint
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(parent_joint, lower_control_ribbon, connectionsList=['translate'])
+            parent_joint = cmds.duplicate(object['backJoint'], name=object['backJoint'].replace('BND_JNT', 'PAR_JNT'))[0]
+            cmds.parent(parent_joint, object['backRibbonJoint'])
+            object['zeroBackRibbonJoint'] = parent_joint
+            parent_joint = cmds.duplicate(object['backJoint'], name=object['backJoint'].replace('BND_JNT', 'super_CTL_JNT'))[0]
+            cmds.parent(parent_joint, object['zeroBackRibbonJoint'])
+            object['superFineBackRibbonJoint'] = parent_joint
             parent_joint = cmds.duplicate(object['frontJoint'], name=object['frontJoint'].replace('BND_JNT', 'CTL_JNT'))[0]
             cmds.parent(parent_joint, object['backRibbonJoint'])
             object['frontRibbonJoint'] = parent_joint
-            mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(parent_joint, lower_control_ribbon, connectionsList=['translate'])
+            mult_matrix, matrix_decompose, fourByFour, pSurface = python_utils.pinTransformToSurface(parent_joint, lower_control_ribbon, connectionsList=['translate'])
+            parent_joint = cmds.duplicate(object['frontJoint'], name=object['frontJoint'].replace('BND_JNT', 'PAR_JNT'))[0]
+            cmds.parent(parent_joint, object['frontRibbonJoint'])
+            object['zeroFrontRibbonJoint'] = parent_joint
+            parent_joint = cmds.duplicate(object['frontJoint'], name=object['frontJoint'].replace('BND_JNT', 'super_CTL_JNT'))[0]
+            cmds.parent(parent_joint, object['zeroFrontRibbonJoint'])
+            object['superFineFrontRibbonJoint'] = parent_joint
             object['proxyGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'PRX_GRP'), empty=True)
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], lower_base_ribbon)
             object['staticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
@@ -480,7 +509,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
             invert_mult = cmds.createNode('multDoubleLinear', name=object['backJoint'].replace('BND_JNT', 'JAW_MDL'))
             cmds.connectAttr('{0}.outputRotateZ'.format(quat_to_euler), '{0}.input1'.format(invert_mult))
             cmds.setAttr('{0}.input2'.format(invert_mult), -1)
-            cmds.connectAttr('{0}.output'.format(invert_mult), '{0}.rotateX'.format(object['backRibbonJoint']))    
+            cmds.connectAttr('{0}.output'.format(invert_mult), '{0}.rotateX'.format(object['backRibbonJoint']))
             
 
         # Now that we're done duplicating the dense curves we add bound_geo attribute to signal to the autorigger to save out it's bind weights.    
@@ -518,6 +547,56 @@ class MouthModule(maya_base_module.MayaBaseModule):
             object['controlParentGroup'] = control_zero_group
             mirror_offset_mult_nodes.append(python_utils.mirrorOffset(object['controlParentGroup'], object['control'], lower_rough_joints[i]['parentGroup'], lower_rough_joints[i]['joint'], liveParent=True, liveTParent=True))
             i += 1
+
+        # Create ultra fine controls for individual vertex level tweaks.
+        prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(upper_controls_group)
+        upper_tweak_control_group = cmds.group(parent=upper_controls_group, name='{0}_{1}_upper_tweak_controls_PAR_GRP'.format(prefix, component_name), empty=True)
+        i = 0
+        for object in upper_objects:
+            object['tweakControlPlace'], object['tweakControl'] = python_utils.makeControl('{0}_{1}_upper_tweak_{2}_CTL_CRV'.format(prefix, component_name, i), 0.1, curveType="circle")
+            jointControlDiffVec = python_utils.getTransformDiffVec(jaw_control, jaw_parent_joint)
+            transformFunc1 = om2.MFnTransform(python_utils.getDagPath(object['backJoint']))
+            transformFunc2 = om2.MFnTransform(python_utils.getDagPath(object['tweakControlPlace']))
+            transformFunc2.setTranslation(transformFunc1.translation(om2.MSpace.kWorld) + jointControlDiffVec, om2.MSpace.kWorld)
+            transformFunc1.setObject(python_utils.getDagPath(object['tweakControl']))
+            transformFunc2.setRotation(transformFunc1.rotation(om2.MSpace.kWorld, asQuaternion=True), om2.MSpace.kWorld)
+            cmds.parent(object['tweakControlPlace'], upper_tweak_control_group)
+            prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['tweakControl'])
+            control_zero_group = cmds.group(name='{0}_{1}_{2}_PAR_GRP'.format(prefix, component_name, joint_name), parent=object['tweakControlPlace'], empty=True)
+            cmds.matchTransform(control_zero_group, object['tweakControl'])
+            cmds.parent(object['tweakControl'], control_zero_group)
+            object['tweakControlPar'] = control_zero_group
+            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group)
+            python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroBackRibbonJoint'], object['superFineBackRibbonJoint'], liveParent=True, liveTParent=True)
+            python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroFrontRibbonJoint'], object['superFineFrontRibbonJoint'], liveParent=True, liveTParent=True)
+            if (i > 0 and i < (len(upper_objects) - 1)):
+                cmds.connectAttr('{0}.TweakControls'.format(left_control), '{0}.visibility'.format(object['tweakControl']))
+            i +=1
+
+        prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(lower_controls_group)
+        lower_tweak_control_group = cmds.group(parent=lower_controls_group, name='{0}_{1}_lower_tweak_controls_PAR_GRP'.format(prefix, component_name), empty=True)
+        i = 0
+        for object in lower_objects:
+            object['tweakControlPlace'], object['tweakControl'] = python_utils.makeControl('{0}_{1}_lower_tweak_{2}_CTL_CRV'.format(prefix, component_name, i), 0.1, curveType="circle")
+            jointControlDiffVec = python_utils.getTransformDiffVec(jaw_control, jaw_parent_joint)
+            frontBackDiffVec = python_utils.getTransformDiffVec(object['backRibbonJoint'], object['frontRibbonJoint'])
+            transformFunc1 = om2.MFnTransform(python_utils.getDagPath(object['backJoint']))
+            transformFunc2 = om2.MFnTransform(python_utils.getDagPath(object['tweakControlPlace']))
+            transformFunc2.setTranslation(transformFunc1.translation(om2.MSpace.kWorld) + jointControlDiffVec + (frontBackDiffVec/2), om2.MSpace.kWorld)
+            transformFunc1.setObject(python_utils.getDagPath(object['tweakControl']))
+            transformFunc2.setRotation(transformFunc1.rotation(om2.MSpace.kWorld, asQuaternion=True), om2.MSpace.kWorld)
+            cmds.parent(object['tweakControlPlace'], lower_tweak_control_group)
+            prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['tweakControl'])
+            control_zero_group = cmds.group(name='{0}_{1}_{2}_PAR_GRP'.format(prefix, component_name, joint_name), parent=object['tweakControlPlace'], empty=True)
+            cmds.matchTransform(control_zero_group, object['tweakControl'])
+            cmds.parent(object['tweakControl'], control_zero_group)
+            object['tweakControlPar'] = control_zero_group
+            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group)
+            python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroBackRibbonJoint'], object['superFineBackRibbonJoint'], liveParent=True, liveTParent=True)
+            python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroFrontRibbonJoint'], object['superFineFrontRibbonJoint'], liveParent=True, liveTParent=True)
+            if (i > 0 and i < (len(upper_objects) - 1)):
+                cmds.connectAttr('{0}.TweakControls'.format(left_control),'{0}.visibility'.format(object['tweakControl']))
+            i +=1
 
         # Create controls for the corners of the mouth using a rube goldberg machine of MATRIX MULTIPLICATIONS, uses openmaya, took twice as long to figure out, I am smart.
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(left_objects['controlPlaceGroup'])
@@ -571,7 +650,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
         # create controls for the corners of the mouth, somehow.
         # get new controls positions, first we get the vector between the jaw control and the jaw joint (which we assume will give us the
         # vector between the blendshape model and the main model), and then use that to get the positions of the correct vertecies on the original mesh
-        # (which is where we'll put the control pivots.
+        # (which is where we'll put the control pivots.)
         left_objects['fineCornerPlace'], left_objects['fineControl'] = python_utils.makeControl(left_objects['control'].replace('left', 'left_fine_control'), 0.1, curveType="circle")
         cmds.parent(left_objects['fineCornerPlace'], left_objects['control'])
         left_objects['roughUpPlace'], left_objects['roughUpControl'] = python_utils.makeControl(left_objects['control'].replace('left', 'left_up_rough_control'), 0.1, curveType="circle")
@@ -740,12 +819,12 @@ class MouthModule(maya_base_module.MayaBaseModule):
         #cmds.delete(right_objects['frontJoint'])
 
         for object in upper_objects:
-            python_utils.constrainTransformByMatrix(object['backRibbonJoint'], object['backJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
-            python_utils.constrainTransformByMatrix(object['frontRibbonJoint'], object['frontJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+            python_utils.constrainTransformByMatrix(object['superFineBackRibbonJoint'], object['backJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+            python_utils.constrainTransformByMatrix(object['superFineFrontRibbonJoint'], object['frontJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
 
         for object in lower_objects:
-            python_utils.constrainTransformByMatrix(object['backRibbonJoint'], object['backJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
-            python_utils.constrainTransformByMatrix(object['frontRibbonJoint'], object['frontJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+            python_utils.constrainTransformByMatrix(object['superFineBackRibbonJoint'], object['backJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+            python_utils.constrainTransformByMatrix(object['superFineFrontRibbonJoint'], object['frontJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
 
 
         # So, turning on the liveTParent option in the "python_utils.mirrorOffset()" function causes a double transform issue, BUT, if I try to fix the issue by replacing
@@ -769,6 +848,38 @@ class MouthModule(maya_base_module.MayaBaseModule):
                     cmds.setAttr('{0}.matrixIn[2]'.format(mult_node), attr, type='matrix')
 
         # Make the proxy attrs for all the controls that don't have them yet.
+        for object in upper_control_objects:
+            for key, node in object.items():
+                if isinstance(node, str) and cmds.listRelatives(node, shapes=True):
+                    try:
+                        cmds.addAttr(node, longName='StickyLips_OnOff', proxy='{0}.StickyLips_OnOff'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='L_StickyLips', proxy='{0}.L_StickyLips'.format(left_control))
+                        cmds.addAttr(node, longName='R_StickyLips', proxy='{0}.R_StickyLips'.format(left_control))
+                        cmds.addAttr(node, longName='Dynamic_SL_OnOff', proxy='{0}.Dynamic_SL_OnOff'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Dynamic_SL_MinAngle', proxy='{0}.Dynamic_SL_MinAngle'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Dynamic_SL_MaxAngle', proxy='{0}.Dynamic_SL_MaxAngle'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Manual_L_SL', proxy='{0}.Manual_L_SL'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Manual_R_SL', proxy='{0}.Manual_R_SL'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='TweakControls', proxy='{0}.TweakControls'.format(left_control), keyable=True)
+                    except:
+                        continue
+
+        for object in lower_control_objects:
+            for key, node in object.items():
+                if isinstance(node, str) and cmds.listRelatives(node, shapes=True):
+                    try:
+                        cmds.addAttr(node, longName='StickyLips_OnOff', proxy='{0}.StickyLips_OnOff'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='L_StickyLips', proxy='{0}.L_StickyLips'.format(left_control))
+                        cmds.addAttr(node, longName='R_StickyLips', proxy='{0}.R_StickyLips'.format(left_control))
+                        cmds.addAttr(node, longName='Dynamic_SL_OnOff', proxy='{0}.Dynamic_SL_OnOff'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Dynamic_SL_MinAngle', proxy='{0}.Dynamic_SL_MinAngle'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Dynamic_SL_MaxAngle', proxy='{0}.Dynamic_SL_MaxAngle'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Manual_L_SL', proxy='{0}.Manual_L_SL'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='Manual_R_SL', proxy='{0}.Manual_R_SL'.format(left_control), keyable=True)
+                        cmds.addAttr(node, longName='TweakControls', proxy='{0}.TweakControls'.format(left_control), keyable=True)
+                    except:
+                        continue
+
         for object in upper_objects:
             for key, node in object.items():
                 if isinstance(node, str) and cmds.listRelatives(node, shapes=True):

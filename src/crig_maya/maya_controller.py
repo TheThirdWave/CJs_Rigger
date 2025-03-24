@@ -134,6 +134,8 @@ class MayaController(base_controller.BaseController):
         # You'd think this would be in the bindSkin function, but it's not.  For reasons.
         self.handleSpecialBindOps()
 
+        self.setControlColors()
+
 
     def callControlRigAndConnect(self, component):
         component.createControlRig()
@@ -167,6 +169,19 @@ class MayaController(base_controller.BaseController):
                     self.keepChildPositionsBind(component, bind)
                 else:
                     constants.RIGGER_LOG.error('Unknown component bindGeometry type {0} in component {1}!  I don\'t actually use this for much.'.format(bind['bindType'], component.name))
+
+    def setControlColors(self):
+        controls = cmds.ls('*_CTL_CRV')
+        for control in controls:
+            prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(control)
+            cmds.setAttr('{0}.overrideEnabled'.format(control), 1)
+            cmds.setAttr('{0}.overrideRGBColors'.format(control), 1)
+            if prefix == 'C':
+                cmds.setAttr('{0}.overrideColorRGB'.format(control), 1.0, 1.0, 0.0)
+            elif prefix == 'R':
+                cmds.setAttr('{0}.overrideColorRGB'.format(control), 1.0, 0.0, 0.0)
+            else:
+                cmds.setAttr('{0}.overrideColorRGB'.format(control), 0.0, 0.0, 1.0)
 
     
     def offsetParentMatrixBind(self, component, bindData):
@@ -526,7 +541,11 @@ class MayaController(base_controller.BaseController):
                     if lower_connection_type == constants.ATTR_CONNECTION_TYPES.parentOffset:
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
-                        python_utils.constrainByMatrix(new_attr, final_attr_path, True, True)
+                        python_utils.constrainByMatrix(new_attr, final_attr_path, True, False)
+                    if lower_connection_type == constants.ATTR_CONNECTION_TYPES.parentOffsetTranslate:
+                        new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
+                        final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
+                        python_utils.constrainByMatrix(new_attr, final_attr_path, True, False, ['translate'])
                     if lower_connection_type == constants.ATTR_CONNECTION_TYPES.spaceSwitch:
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])

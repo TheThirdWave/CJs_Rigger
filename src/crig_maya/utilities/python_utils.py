@@ -1,5 +1,6 @@
 import math
 import maya.cmds as cmds
+import maya.mel as mel
 import maya.OpenMaya as om
 import maya.api.OpenMaya as om2
 
@@ -294,7 +295,7 @@ def createRotDiffNodes(child_matrix, parent_matrix, rot_axis=['Y']):
     return mult_matrix, matrix_decompose, quat_to_euler
 
 
-def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'], world_space=True):
+def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'], world_space=True, connect=True):
     mult_matrix = cmds.createNode('multMatrix', name='{0}_MCNST_MMULT'.format(childTransform))
     child_parent = cmds.listRelatives(childTransform, parent=True)[0]
 
@@ -307,11 +308,12 @@ def constrainByMatrix(parentMatrix, childTransform, maintain_offset=False, use_p
         child_mMatrix = om2.MMatrix(cmds.getAttr('{0}.worldMatrix'.format(childTransform)))
         offset_matrix = child_mMatrix * parent_mMatrix.inverse()
         cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), [offset_matrix.getElement(i, j) for i in range(4) for j in range(4)], type="matrix")
-    if not use_parent_offset:
-        matrix_decompose = decomposeAndConnectMatrix(input_matrix, childTransform, connectAttrs)
-    else:
-        cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.offsetParentMatrix'.format(childTransform))
-        matrix_decompose = ''
+    matrix_decompose = ''
+    if connect:
+        if not use_parent_offset:
+            matrix_decompose = decomposeAndConnectMatrix(input_matrix, childTransform, connectAttrs)
+        else:
+            cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.offsetParentMatrix'.format(childTransform))
 
         
     return mult_matrix, matrix_decompose
@@ -717,13 +719,11 @@ def makeControlMatchTransform(name, matchedNode, scale=1, curveType="circle"):
     cmds.matchTransform(position_group, matchedNode)
     return position_group, control
 
-def replaceJointWithControl(joint, control_name, parent):
+def replaceJointWithControl(joint, control_name, parent, shape="circle"):
         # Create the stuff that goes under the "controls_GRP", which is pretty much all of the logic and user interface curves.
         prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(joint)
-        control = makeCircleControl('{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, control_name), 2)
-        placement_group = cmds.group(name='{0}_{1}_{2}_PLC_GRP'.format(prefix, component_name, control_name), parent=parent, empty=True)
-        cmds.matchTransform(placement_group, control)
-        cmds.parent(control, placement_group)
+        placement_group, control = makeControl('{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, control_name), 2, shape)
+        cmds.parent(placement_group, parent)
 
         # Match the control to the place joint then delete the joint.
         cmds.matchTransform(placement_group, joint)
@@ -744,3 +744,18 @@ def createRibbonFromJoints(front_joints, back_joints, parent_node, name):
     cmds.delete(temp_curve_1)
     cmds.delete(temp_curve_2)
     return new_ribbon
+
+def createCMuscle(geometry):
+    cmds.select(geometry)
+    muscle_stuff = mel.eval('cMuscle_makeMuscle(0)')[0]
+    muscle_stuff = cmds.rename(muscle_stuff, '{0}_cMuscle'.format(geometry))
+    return muscle_stuff
+
+def rigForCMuscleKeepOut(node, suffix):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(node)
+    cmds.select(node)
+    keep_out_stuff = mel.eval('cMuscle_rigKeepOutSel()')
+    keep_out_stuff[1] = cmds.rename(keep_out_stuff[1], '{0}_{1}_{2}_{3}_KPS'.format(prefix, component_name, joint_name, suffix))
+    keep_out_stuff[0] = cmds.rename(keep_out_stuff[0], '{0}_{1}_{2}_{3}_KPO'.format(prefix, component_name, joint_name, suffix))
+    keep_out_stuff[2] = cmds.rename(keep_out_stuff[2], '{0}_{1}_{2}_{3}_GRP'.format(prefix, component_name, joint_name, suffix))
+    return keep_out_stuff[0], keep_out_stuff[1], keep_out_stuff[2]

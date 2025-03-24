@@ -139,3 +139,6 @@ class BaseModule(ABC):
     def createControlRig(self):
         pass
 
+    def destroy(self):
+        pass
+

@@ -31,7 +31,7 @@ class AimJointModule(maya_base_module.MayaBaseModule):
 
         # Connect control to bind joint.
         joint_transform = om2.MFnTransform(python_utils.getDagPath(self.bind_joint))
-        up_vec = om2.MVector.kZaxisVector.rotateBy(joint_transform.rotation(om2.MSpace.kWorld, asQuaternion=True))
+        up_vec = om2.MVector.kYaxisVector.rotateBy(joint_transform.rotation(om2.MSpace.kWorld, asQuaternion=True))
         cmds.aimConstraint(self.aim_loc, self.bind_joint, aimVector=[0.0, 1.0, 0.0] , upVector=[0.0, 0.0, 1.0], worldUpVector=up_vec.normal(), maintainOffset=self.componentVars['maintainOffset'])
 
         # The inputs to the mult_matrix will be defined in the rig.json, hopefully I'll have per-component defaults set up soon so it's not too confusing.

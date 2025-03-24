@@ -1,13 +1,227 @@
 variables:
   inputComponents:
-    - skirtAndSkull
+    - BeltAndSkull
 components:
-  skirtAndSkull:
-    componentType: JointCloudModule
+  BeltAndSkull:
+    componentType: KeepOutBelt
     prefix:
     componentVars:
-      numJoints: 8
-      numKeyLayers: 1
+      numKeepOutJoints: 10
+      curveGeo: Big_Belt_bottom_CRV
+      collisionGeo:
+        - R_LegCollider_GEO
+        - L_LegCollider_GEO
+    inputAttrs: []
+    outputAttrs:
+      - attrName: END_OUT_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldMatrix
+      - attrName: END_OUT_INV_WORLD
+        attrType: matrix
+        internalAttr: base_BND_JNT.worldInverseMatrix
+      - attrName: BELT_MEAS_0
+        attrType: matrix
+        internalAttr: 0_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_1
+        attrType: matrix
+        internalAttr: 1_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_2
+        attrType: matrix
+        internalAttr: 2_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_3
+        attrType: matrix
+        internalAttr: 3_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_4
+        attrType: matrix
+        internalAttr: 4_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_5
+        attrType: matrix
+        internalAttr: 5_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_6
+        attrType: matrix
+        internalAttr: 6_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_7
+        attrType: matrix
+        internalAttr: 7_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_8
+        attrType: matrix
+        internalAttr: 8_measure_BND_JNT.worldMatrix
+      - attrName: BELT_MEAS_9
+        attrType: matrix
+        internalAttr: 9_measure_BND_JNT.worldMatrix
+    children:
+      - childName: InnerBelt
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: Skirt
+        childPrefix:
+        connectionType: parent
+        parentAttrs: [BELT_MEAS_0, BELT_MEAS_1, BELT_MEAS_2, BELT_MEAS_3, BELT_MEAS_4, BELT_MEAS_5, BELT_MEAS_6, BELT_MEAS_7, BELT_MEAS_8, BELT_MEAS_9, BELT_MEAS_9, BELT_MEAS_0]
+        childAttrs: [TRANSLATE_PAR_0, TRANSLATE_PAR_1, TRANSLATE_PAR_2, TRANSLATE_PAR_3, TRANSLATE_PAR_4, TRANSLATE_PAR_5, TRANSLATE_PAR_6, TRANSLATE_PAR_7, TRANSLATE_PAR_8, TRANSLATE_PAR_9, TRANSLATE_PAR_10, TRANSLATE_PAR_11]
+      - childName: sideSkirtControls1
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: sideSkirtControls2
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: sideSkirtControls3
+        childPrefix: LR
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: backSkirtControls1
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: backSkirtControls2
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+      - childName: backSkirtControls3
+        childPrefix:
+        connectionType: parent
+        parentAttrs: []
+        childAttrs: []
+    controls: {}
+    bindGeometry: []
+
+  InnerBelt:
+    componentType: JointCloud
+    prefix:
+    componentVars:
+      numChains: 10
+      chainLength: 1
+      numKeyLayers: 0
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  Skirt:
+    componentType: JointCloud
+    prefix:
+    componentVars:
+      numChains: 12
+      chainLength: 4
+      numKeyLayers: 2
+      numChainKeyLayers: 1
+    inputAttrs:
+      - attrName: TRANSLATE_PAR_0
+        attrType: matrix
+        internalAttr: 0_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_1
+        attrType: matrix
+        internalAttr: 1_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_2
+        attrType: matrix
+        internalAttr: 2_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_3
+        attrType: matrix
+        internalAttr: 3_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_4
+        attrType: matrix
+        internalAttr: 4_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_5
+        attrType: matrix
+        internalAttr: 5_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_6
+        attrType: matrix
+        internalAttr: 6_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_7
+        attrType: matrix
+        internalAttr: 7_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_8
+        attrType: matrix
+        internalAttr: 8_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_9
+        attrType: matrix
+        internalAttr: 9_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_10
+        attrType: matrix
+        internalAttr: 10_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+      - attrName: TRANSLATE_PAR_11
+        attrType: matrix
+        internalAttr: 11_0_CTL_JNT
+        attrConnection: parentoffsettranslate
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  sideSkirtControls1:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  sideSkirtControls2:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  sideSkirtControls3:
+    componentType: UtilityModule
+    prefix: LR
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  backSkirtControls1:
+    componentType: UtilityModule
+    prefix: C
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  backSkirtControls2:
+    componentType: UtilityModule
+    prefix: C
+    componentVars: {}
+    inputAttrs: []
+    outputAttrs: []
+    children: []
+    controls: {}
+    bindGeometry: []
+
+  backSkirtControls3:
+    componentType: UtilityModule
+    prefix: C
+    componentVars: {}
     inputAttrs: []
     outputAttrs: []
     children: []

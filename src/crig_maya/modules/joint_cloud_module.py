@@ -3,7 +3,7 @@ from ..utilities import python_utils
 from ... import constants
 import maya.cmds as cmds
 
-class JointCloudModule(maya_base_module.MayaBaseModule):
+class JointCloud(maya_base_module.MayaBaseModule):
 
     def createBindJoints(self):
         # Create the bind joints that the stuff in the "controls_GRP" will drive.  These should not have any actual puppetry logic in them, they should be driven by puppet joints.
@@ -11,25 +11,34 @@ class JointCloudModule(maya_base_module.MayaBaseModule):
         self.joint_dict = {}
         self.joint_dict['baseJoint'] = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_base_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
 
-        if 'numJoints' in self.componentVars:
-            num_joints = self.componentVars['numJoints']
+        if 'numChains' in self.componentVars:
+            num_chains = self.componentVars['numChains']
         else:
-            num_joints = 3
+            num_chains = 1
+
+        if 'chainLength' in self.componentVars:
+            self.chain_length = self.componentVars['chainLength']
+        else:
+            self.chain_length = 1
 
         if 'numKeyLayers' in self.componentVars:
             self.key_layers = self.componentVars['numKeyLayers']
         else:
             self.key_layers = 0
+
+        if 'numChainKeyLayers' in self.componentVars:
+            self.chain_key_layers = self.componentVars['numChainKeyLayers']
+        else:
+            self.chain_key_layers = 0
         
         self.joint_dict['cloudJoints'] = []
-        for i in range(num_joints):
+        for i in range(num_chains):
             joint_chain = []
-            end_joint = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_{2}_BND_JNT'.format(self.prefix, self.name, i), position=(0, 0, 0))
-            for j in range(self.key_layers):
-                key_joint = cmds.duplicate(end_joint, name=end_joint.replace('BND_JNT', '{0}_PLC_JNT'.format(j)))
-                cmds.parent(end_joint, key_joint)
-                joint_chain.append(key_joint)
-            joint_chain.append(end_joint)
+            last_joint = self.joint_dict['baseJoint']
+            for j in range(self.chain_length):
+                current_joint = cmds.joint(last_joint, name='{0}_{1}_{2}_{3}_BND_JNT'.format(self.prefix, self.name, i, j), position=(0, 0, 0))
+                joint_chain.append(current_joint)
+                last_joint = current_joint
             self.joint_dict['cloudJoints'].append(joint_chain)
 
     def createControlRig(self):
@@ -37,30 +46,48 @@ class JointCloudModule(maya_base_module.MayaBaseModule):
             constants.RIGGER_LOG.warning('Base groups for component {0} not found, run "Generate Bind Joints" first.')
             return
 
-        joint_list = []
-        for joint_chain in self.joint_dict['cloudJoints']:
-            # reparent the end joint to be below the base joint
-            cmds.parent(joint_chain[-1], self.joint_dict['baseJoint'])
-            end_joint = joint_chain[-1]
-            # Create the stuff that goes under the "controls_GRP", which is pretty much all of the logic and user interface curves.
-            base_control = python_utils.makeSquareControl(end_joint.replace('BND_JNT', 'CTL_CRV'), 2)
-            base_placement = cmds.group(name=end_joint.replace('BND_JNT', 'PLC_GRP'), parent=self.baseGroups['placement_group'], empty=True)
-            cmds.matchTransform(base_placement, base_control)
-            cmds.parent(base_control, base_placement)
-            cmds.matchTransform(base_placement, end_joint)
-            joint_chain.remove(end_joint)
-            if joint_chain:
-                cmds.parent(joint_chain[0], base_placement)
-                parent = base_placement
-                for key_joint in joint_chain:
-                    cmds.parent(key_joint, parent)
-                    cmds.rename(key_joint.replace('PLC_JNT', 'KEY_JNT'))
-                    key_joint = key_joint.replace('PLC_JNT', 'KEY_JNT')
-                cmds.parent(base_control, joint_chain[-1])
-            joint_list.append( { 'control': base_control, 'placement': base_placement, 'keyJoints': joint_chain, 'bindJoint': end_joint } )
-            # Connect control to bind joint.
-            mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(base_control, end_joint)
+        base_dupe_joint = cmds.duplicate(self.joint_dict['baseJoint'], name=self.joint_dict['baseJoint'].replace('BND', 'CTL'), parentOnly=True)[0]
+        cmds.parent(base_dupe_joint, self.baseGroups['placement_group'])
+        python_utils.constrainTransformByMatrix(base_dupe_joint, self.joint_dict['baseJoint'])
 
+        for joint_chain in self.joint_dict['cloudJoints']:
+            par_joint = base_dupe_joint
+            dupe_chain = []
+            for j in range(len(joint_chain)):
+                base_and_keys = []
+                new_joint = cmds.joint(par_joint, name=joint_chain[j].replace('BND', 'CTL'), relative=True, scaleCompensate=False)
+                prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(new_joint)
+                base_and_keys.append(new_joint)
+                par_joint = new_joint
+                for i in range(self.chain_key_layers):
+                    new_joint = cmds.joint(par_joint, name=joint_chain[j].replace('BND', '{0}_KEY'.format(i)), relative=True, scaleCompensate=False)
+                    base_and_keys.append(new_joint)
+                    par_joint = new_joint
+                if j < (len(joint_chain) - 1):
+                    control_stuff = python_utils.makeControl('{0}_{1}_{2}_chain_CTL_CRV'.format(prefix, component_name, joint_name), 2, "circle")
+                    control_pos_group = control_stuff[0]
+                    cmds.parent(control_stuff[0], par_joint)
+                    python_utils.zeroOutLocal(control_pos_group)
+                    par_joint = control_stuff[1]
+                    base_and_keys.append(control_stuff[1])
+                dupe_chain.append(base_and_keys)
+            for j in range(len(joint_chain)):
+                cmds.matchTransform(dupe_chain[j][0], joint_chain[j])
+                current_joint = dupe_chain[j][-1]
+                prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(current_joint)
+                if node_type == 'CRV':
+                    prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(dupe_chain[j][-2])
+                par_joint = current_joint
+                key_joints = [current_joint]
+                cur_key_joint = current_joint
+                for i in range(self.key_layers):
+                    new_joint = cmds.joint(cur_key_joint, name='{0}_{1}_{2}_{3}_KEY_JNT'.format(prefix, component_name, joint_name, i), relative=True, scaleCompensate=False)
+                    key_joints.append(new_joint)
+                    cur_key_joint = new_joint
+                cmds.setAttr('{0}.segmentScaleCompensate'.format(joint_chain[j]), False)
+                control_stuff = python_utils.makeConstraintControl('{0}_{1}_{2}_CTL_CRV'.format(prefix, component_name, joint_name), key_joints[-1], joint_chain[j], 1.0, "circle", maintainOffset=False, useParentOffset=False)
+                control_pos_group = control_stuff[0]
+                python_utils.zeroOutLocal(control_pos_group)
 
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 

@@ -26,13 +26,15 @@ CONNECTION_TYPES = ConnectionTypes('parent', 'translateconstraint', 'spaceswitch
 class AttrConnectionTypes(NamedTuple):
     direct: str
     directTransform: str
+    directTranslate: str
     copy: str
     copyTransform: str
     proxy: str
     parent: str
     parentOffset: str
+    parentOffsetTranslate: str
     spaceSwitch: str
-ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset', 'spaceswitch')
+ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'directTranslate', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset', 'parentoffsettranslate', 'spaceswitch')
 
 # Basic groups that the controller assumes exist in the maya scene.
 class BaseRigGroups(NamedTuple):

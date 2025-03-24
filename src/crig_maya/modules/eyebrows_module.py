@@ -26,6 +26,7 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         self.inner_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_inner_PLC_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.middle_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_middle_PLC_JNT'.format(self.prefix, self.name), position=(1, 0, 0))
         self.outer_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_outer_PLC_JNT'.format(self.prefix, self.name), position=(2, 0, 0))
+        self.all_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_all_PLC_JNT'.format(self.prefix, self.name), position=(0, 0, 1))
 
 
     def createControlRig(self):
@@ -37,6 +38,7 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         inner_place_group, inner_control = python_utils.replaceJointWithControl(self.inner_control_place_joint, 'inner', self.baseGroups['placement_group'])
         middle_place_group, middle_control = python_utils.replaceJointWithControl(self.middle_control_place_joint, 'middle', self.baseGroups['placement_group'])
         outer_place_group, outer_control = python_utils.replaceJointWithControl(self.outer_control_place_joint, 'outer', self.baseGroups['placement_group'])
+        all_place_group, all_control = python_utils.replaceJointWithControl(self.all_control_place_joint, 'all', self.baseGroups['placement_group'], "square")
 
         logic_group = '{0}_{1}_logic_PAR_GRP'.format(self.prefix, self.name)
         cmds.group(name=logic_group, parent=self.baseGroups['placement_group'], empty=True)
@@ -82,9 +84,11 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
             cmds.setAttr('{0}.scale'.format(pos_group), *control_scale)
             rough_joints.append(rough_joint)
 
-            cmds.connectAttr('{0}.translate'.format(user_controls[idx]), '{0}.translate'.format(rough_joint))
-            cmds.connectAttr('{0}.rotate'.format(user_controls[idx]), '{0}.rotate'.format(rough_joint))
-            cmds.connectAttr('{0}.scale'.format(user_controls[idx]), '{0}.scale'.format(rough_joint))
+            cmds.parent(user_controls[idx], all_control)
+            python_utils.mirrorOffset(user_controls_place[idx], user_controls[idx], pos_group, rough_joint, liveParent=True)
+            #cmds.connectAttr('{0}.translate'.format(user_controls[idx]), '{0}.translate'.format(rough_joint))
+            #cmds.connectAttr('{0}.rotate'.format(user_controls[idx]), '{0}.rotate'.format(rough_joint))
+            #cmds.connectAttr('{0}.scale'.format(user_controls[idx]), '{0}.scale'.format(rough_joint))
 
 
         # Then skin the rough joints to the rough curve.
