@@ -12,6 +12,10 @@ from . import graph_utils
 
 class BaseController(ABC):
 
+    def __init__(self):
+        constants.DEFAULT_CURVE_TEMPLATES = self.loadJSON(constants.CURVE_TEMPLATES_PATH)
+        return
+
     @property
     @abstractmethod
     def modulePath(self):
@@ -237,6 +241,10 @@ class BaseController(ABC):
     def saveJSON(self, path, data):
         with open(path, 'w') as file:
             json.dump(data, file, indent = 4)
+
+    def saveYaml(self, path, data):
+        with open(path, 'w') as file:
+            yaml.safe_dump(data, file, default_flow_style=False, indent=4)
 
     def loadYaml(self, path):
         templates = None

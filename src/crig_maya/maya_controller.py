@@ -8,6 +8,7 @@ from .. import base_controller, constants, graph_utils
 class MayaController(base_controller.BaseController):
 
     def __init__(self):
+        super().__init__()
         self._modulePath = constants.MAYA_MODULES_PATH
         self._dccPath = constants.MAYA_CRIG_PATH
         self._components = []

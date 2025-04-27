@@ -22,3 +22,7 @@ class UtilsController(ABC):
     @abstractmethod
     def generateVertexJoints(self, component_name, joint_side):
         pass
+
+    @abstractmethod
+    def appendSoftModDeformer(self):
+        pass

@@ -437,13 +437,20 @@ def getNodeNameParts(node):
     node_type = node_part[2]
     return prefix, component_name, joint_name, node_purpose, node_type
 
+def getGeoNameParts(geo):
+    splits = geo.split('_')
+    suffix = splits[-1]
+    character = splits[0]
+    geo_name = '_'.join(splits[1:-1])
+    return character, geo_name, suffix
+
 def findNextAvailableMultiIndex(attr_name, start_index, sub_attr=''):
     # Assume less than 1 million connections.
     for i in range(start_index, 1000000):
         attr_string = '{0}[{1}]'.format(attr_name, i)
         if sub_attr:
             attr_string = '{0}.{1}'.format(attr_string, sub_attr)
-        if not cmds.connectionInfo(attr_string, sourceFromDestination=True):
+        if not cmds.connectionInfo(attr_string, sourceFromDestination=True) and not cmds.connectionInfo(attr_string, isLocked=True):
             return i
 
 def dictionizeAttrs(node_list, attr_list, type=False):
@@ -669,24 +676,26 @@ def insertJointAtParent(parent_joint, child_joint):
     return new_parent_joint
 
 def  makeCircleControl(name, scale):
-    curve_points = [[0.7836116248912245, 4.798237340988473e-17, -0.7836116248912246], [6.785732323110912e-17, 6.785732323110912e-17, -1.1081941875543877], [-0.7836116248912246, 4.798237340988472e-17, -0.7836116248912244], [-1.1081941875543881, 3.517735619006027e-33, -5.74489823752483e-17], [-0.7836116248912246, -4.7982373409884725e-17, 0.7836116248912245], [-1.1100856969603225e-16, -6.785732323110917e-17, 1.1081941875543884], [0.7836116248912245, -4.798237340988472e-17, 0.7836116248912244], [1.1081941875543881, -9.253679210110099e-33, 1.511240500779959e-16]]
+    curve_points = constants.DEFAULT_CURVE_TEMPLATES['circle']['points']
     scaled_points = [[num*scale for num in point] for point in curve_points]
-    control = cmds.curve(name=name, d=3, p=scaled_points)
+    control = cmds.curve(name=name, d=constants.DEFAULT_CURVE_TEMPLATES['circle']['degree'], p=scaled_points)
     cmds.closeCurve(name, ch=False, ps=False, rpo=True)
     return control
 
 def makeSquareControl(name, scale):
-    curve_points = [(1,0,1), (-1,0,1), (-1,0,-1), (1,0,-1),(1,0,1)]
+    curve_points = constants.DEFAULT_CURVE_TEMPLATES['square']['points']
     scaled_points = [[num*scale for num in point] for point in curve_points]
-    control = cmds.curve(name=name, degree=1, point=scaled_points)
+    control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES['square']['degree'], point=scaled_points)
     cmds.closeCurve(name, ch=False, ps=False, rpo=True)
     return control
 
 def makeControl(name, scale, curveType="circle"):
-    if curveType == "circle":
-        control = makeCircleControl(name, scale)
+    curve_points = constants.DEFAULT_CURVE_TEMPLATES[curveType]['points']
+    scaled_points = [[num*scale for num in point] for point in curve_points]
+    if 'knots' in constants.DEFAULT_CURVE_TEMPLATES[curveType]:
+        control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points, knot=constants.DEFAULT_CURVE_TEMPLATES[curveType]['knots'])
     else:
-        control = makeSquareControl(name, scale)
+        control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points)
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(name)
     position_group = cmds.group(control, name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PLC', 'GRP'))
     return position_group, control

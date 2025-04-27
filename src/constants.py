@@ -12,6 +12,7 @@ POSITIONS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '
 CONTROLS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'controls'))
 SKIN_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'skin'))
 DEFAULT_ATTRS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'defaults', 'default_attrs.yaml'))
+CURVE_TEMPLATES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'defaults', 'curve_data.json'))
 PREV_RIG_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'previous_rig_paths.json'))
 
 # Is this overcomplicated for a single switch statement in "maya_controller.py"? Yes. But I miss C
@@ -116,3 +117,7 @@ class ControlDataKeys(NamedTuple):
     drivenKeys: str
     attributes: str
 CONTROL_DATA_KEYS = ControlDataKeys('curves', 'drivenKeys', 'attributes')
+
+# So this is going to actually get loaded by the controller on initialization.  I feel like this is violating
+# the spirit of this file, but it really is the most convenient way to go about this.
+DEFAULT_CURVE_TEMPLATES = {}
