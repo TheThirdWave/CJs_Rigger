@@ -23,16 +23,21 @@ class AimJointModule(maya_base_module.MayaBaseModule):
         
         # We unparent the aim locator from the bind joint because it feels cleaner to me.  Then we set up all the input nodes.
         # This component won't have any user-accessable controls, it will be driven by other components.
-        cmds.parent(self.aim_loc, self.baseGroups['deform_group'])
+        base_dupe_joint = cmds.duplicate(self.bind_joint, name=self.bind_joint.replace('BND', 'CTL'), parentOnly=True)[0]
+        cmds.parent(base_dupe_joint, self.baseGroups['placement_group'])
+        python_utils.constrainTransformByMatrix(base_dupe_joint, self.bind_joint)
+
+        cmds.parent(self.aim_loc, self.baseGroups['placement_group'])
         place_group = cmds.group(empty=True, name='{0}_{1}_base_PLC_GRP'.format(self.prefix, self.name))
         cmds.matchTransform(place_group, self.aim_loc)
-        cmds.parent(place_group, self.baseGroups['deform_group'])
+        cmds.parent(place_group, self.baseGroups['placement_group'])
         cmds.parent(self.aim_loc, place_group)
+        cmds.inheritTransform(place_group, off=True)
 
         # Connect control to bind joint.
-        joint_transform = om2.MFnTransform(python_utils.getDagPath(self.bind_joint))
+        joint_transform = om2.MFnTransform(python_utils.getDagPath(base_dupe_joint))
         up_vec = om2.MVector.kYaxisVector.rotateBy(joint_transform.rotation(om2.MSpace.kWorld, asQuaternion=True))
-        cmds.aimConstraint(self.aim_loc, self.bind_joint, aimVector=[0.0, 1.0, 0.0] , upVector=[0.0, 0.0, 1.0], worldUpVector=up_vec.normal(), maintainOffset=self.componentVars['maintainOffset'])
+        cmds.aimConstraint(self.aim_loc, base_dupe_joint, aimVector=[0.0, 1.0, 0.0] , upVector=[0.0, 0.0, 1.0], worldUpVector=up_vec.normal(), maintainOffset=self.componentVars['maintainOffset'])
 
         # The inputs to the mult_matrix will be defined in the rig.json, hopefully I'll have per-component defaults set up soon so it's not too confusing.
         mult_matrix = cmds.createNode('multMatrix', name='{0}_{1}_base_ACNST_MMULT'.format(self.prefix, self.name))

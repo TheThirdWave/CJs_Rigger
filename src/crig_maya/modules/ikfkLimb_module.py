@@ -16,6 +16,11 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
             self.orient_offset_scale = self.componentVars['orientOffsetScale']
         else:
             self.orient_offset_scale = 6
+        
+        if 'ikinput' in self.componentVars:
+            self.ikinput = self.componentVars['ikinput']
+        else:
+            self.ikinput = False
 
     def createControlRig(self):
         if not self.baseGroups:
@@ -136,7 +141,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         #cmds.parent(ik_handle, msc_group)
         # Create IK Controls
         ik_control_group = cmds.group(name='{0}_{1}_ik_ctls_HOLD_GRP'.format(self.prefix, self.name), parent=ik_group, empty=True)
-        end_ik_control_place, end_ik_control = python_utils.makeControl('{0}_{1}_ik_end_CTL_CRV'.format(self.prefix, self.name), 2.0, "circle",)
+        end_ik_control_place, end_ik_control = python_utils.makeControl('{0}_{1}_ik_end_CTL_CRV'.format(self.prefix, self.name), 2.0, "circle")
         cmds.matchTransform(end_ik_control_place, end_ik_joint)
         cmds.parent(end_ik_control_place, ik_control_group)
         if self.prefix == 'R':
@@ -190,6 +195,48 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         cmds.parent(start_joint_locator, ik_group)
         cmds.matchTransform(start_joint_locator, start_ik_joint)
 
+        # Create a whole setup for the ik handle under the measurement locator for cycle avoidance reasons for feet input.
+        if self.ikinput:
+            cmds.aimConstraint(
+                end_ik_control, 
+                start_joint_locator,
+                aimVector=[0.0, 1.0, 0.0],
+                upVector=[0.0, 0.0, 1.0],
+                worldUpType='objectrotation',
+                worldUpObject=ik_group,
+                worldUpVector=[0.0, 0.0, 1.0]
+            )
+            # Make a group that basically follows the end_ik_joint but using different logic to avoid cycles
+            ikinput_group = cmds.group(name='{0}_{1}_input_IK_GRP'.format(self.prefix, self.name), parent=start_joint_locator, empty=True)
+            cmds.matchTransform(ikinput_group, start_joint_locator)
+
+            start_end_dist, start_loc_decomp, end_ctl_decomp = python_utils.createDistNode(
+                start_joint_locator,
+                end_ik_control,
+                space_matrix='{0}.parentInverseMatrix[0]'.format(start_joint_locator)
+                )
+            
+            stretch_condition = cmds.createNode('condition', name='{0}_{1}_input_ik_STRCH_CND'.format(self.prefix, self.name))
+            cmds.connectAttr('{0}.stretch'.format(end_ik_control), '{0}.firstTerm'.format(stretch_condition))
+            cmds.setAttr('{0}.secondTerm'.format(stretch_condition), 1.0)
+            cmds.setAttr('{0}.operation'.format(stretch_condition), 3)
+            cmds.connectAttr('{0}.distance'.format(start_end_dist), '{0}.colorIfTrueR'.format(stretch_condition))
+            cmds.setAttr('{0}.colorIfFalseR'.format(stretch_condition), cmds.getAttr('{0}.distance'.format(start_end_dist)))
+            stretch_clamp = cmds.createNode('clampRange', name='{0}_{1}_input_ik_STRCH_CMP'.format(self.prefix, self.name))
+            cmds.connectAttr('{0}.outColorR'.format(stretch_condition), '{0}.maximum'.format(stretch_clamp))
+            cmds.connectAttr('{0}.distance'.format(start_end_dist), '{0}.input'.format(stretch_clamp))
+            cmds.connectAttr('{0}.output'.format(stretch_clamp), '{0}.translateY'.format(ikinput_group))
+
+            # Similarly, make a goup that follows the control's rotation and scale, so combined with it's parent it will have the same world transform as end_ik_control.
+            ikinput_place_group = cmds.group(name='{0}_{1}_input_IKRP_PLC_GRP'.format(self.prefix, self.name), parent=ikinput_group, empty=True)
+            cmds.matchTransform(ikinput_place_group, ikinput_group)
+            python_utils.constrainTransformByMatrix(end_ik_control, ikinput_place_group, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale'])
+
+            # Parent the ik handle to this new shennanaganry
+            cmds.parent(ik_handle_group, ikinput_place_group)
+
+
+
         # Create nodes to get the length values that can be put into the squash and stretch math.
         self.createIKLengthNodes(start_joint_locator, upper_arm_ik_joints, lower_arm_ik_joints, ik_orient_control, end_ik_joint, end_ik_control, ik_handle_group)
         self.makeSASNodes(start_ik_joint, ik_orient_control, upper_arm_ik_joints, middle_ik_joint, ik_orient_control, middle_ik_joint, False)
@@ -202,7 +249,7 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         data_locator = cmds.spaceLocator(name='{0}_{1}_ikfklimbs_DAT_LOC'.format(self.prefix, self.name))[0]
         cmds.parent(data_locator, start_fk_joint, relative=True)
         cmds.select(data_locator)
-        cmds.addAttr(longName='ikfkswitch', defaultValue=0.0, minValue=0.0, maxValue=1.0)
+        cmds.addAttr(longName='ikfkswitch', defaultValue=0.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
         cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=0)
         cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=1)
         cmds.setDrivenKeyframe('{0}.visibility'.format(fk_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)

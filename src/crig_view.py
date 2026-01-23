@@ -1,5 +1,6 @@
 import os
 import shiboken2
+#import shiboken6
 
 import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
@@ -7,6 +8,10 @@ import maya.cmds as cmds
 from PySide2 import QtGui
 from PySide2 import QtCore
 from PySide2 import QtWidgets
+
+#from PySide6 import QtGui
+#from PySide6 import QtCore
+#from PySide6 import QtWidgets
 
 from . import constants
 from . import joint_widget_view
@@ -17,13 +22,15 @@ def get_maya_window():
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     return shiboken2.wrapInstance(int(ptr), QtWidgets.QWidget)
 
+    #return shiboken6.wrapInstance(int(ptr), QtWidgets.QWidget)
+
 class ModularRigger(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent=parent)
 
         self.__class__.instance = self
 
-        self.controller = maya_controller.MayaController()
+        self.controller = maya_controller.MayaController(UI_STATE)
         self.utils = maya_utils_controller.UtilsController()
         self.filepaths_dict = {}
         self.maya_main_window = get_maya_window()
@@ -100,6 +107,24 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.bind_layout.addWidget(self.bind_button)
         self.bind_layout.addWidget(self.bind_save_button)
 
+        # Create python script file widgets.
+        self.script_divider = QtWidgets.QFrame()
+        self.script_divider.setGeometry(QtCore.QRect(320, 150, 118, 3))
+        self.script_divider.setStyleSheet('border: 1px solid rgb(25,25,25)')
+        self.script_divider.setFrameShape(QtWidgets.QFrame.HLine)
+        self.script_divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.main_layout.addWidget(self.script_divider)
+
+        self.postscript_label = QtWidgets.QLabel('Post Generation Scripts:')
+        self.postscript_pathbox = QtWidgets.QLineEdit()
+        self.postscript_button = QtWidgets.QPushButton('Load PostScripts')
+        self.postscript_button.clicked.connect(self.getPostScriptPath)
+        self.postscript_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.postscript_layout)
+        self.postscript_layout.addWidget(self.postscript_label)
+        self.postscript_layout.addWidget(self.postscript_pathbox)
+        self.postscript_layout.addWidget(self.postscript_button)
+
     def initUtilsWidgets(self):
         # Init buttons
         self.matrix_constraint_button = QtWidgets.QPushButton('Mat Const')
@@ -114,6 +139,8 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.generate_vertex_joints_button.clicked.connect(self.activateVertexJointWidget)
         self.mark_attrs_for_saving_button = QtWidgets.QPushButton('Mark Attrs 2 Save')
         self.mark_attrs_for_saving_button.clicked.connect(self.utils.markAttrsForSaving)
+        self.rig_for_unreal_check = QtWidgets.QCheckBox('Build for Unreal')
+        UI_STATE.unrealCheck = self.rig_for_unreal_check
         # Add to layout
         self.utils_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.utils_layout)
@@ -123,6 +150,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.utils_layout.addWidget(self.mirror_driven_keys_button)
         self.utils_layout.addWidget(self.generate_vertex_joints_button)
         self.utils_layout.addWidget(self.mark_attrs_for_saving_button)
+        self.utils_layout.addWidget(self.rig_for_unreal_check)
 
 
     def initMainPanelWidgets(self):
@@ -145,7 +173,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.loc_button = QtWidgets.QPushButton('Generate Bind Joints')
         self.loc_button.clicked.connect(self.controller.generateLocs)
         self.joint_button = QtWidgets.QPushButton('Generate Components')
-        self.joint_button.clicked.connect(self.controller.generateJoints)
+        self.joint_button.clicked.connect(self.callBuildControls)
         self.skin_button = QtWidgets.QPushButton('Bind Skin')
         self.skin_button.clicked.connect(self.callBindSkin)
         self.button_layout = QtWidgets.QHBoxLayout()
@@ -161,6 +189,7 @@ class ModularRigger(QtWidgets.QMainWindow):
             self.initPositionsStuff(self.filepaths_dict['positions_path'])
             self.initCurvesStuff(self.filepaths_dict['curves_path'])
             self.initSkinStuff(self.filepaths_dict['skin_path'])
+            self.postscript_pathbox.setText(self.filepaths_dict['postscript_path'])
         except:
             constants.RIGGER_LOG.info('Previous rig data not found at {0}, leaving filepaths blank.'.format(constants.PREV_RIG_DATA_PATH))
             self.filepaths_dict = {}
@@ -246,6 +275,16 @@ class ModularRigger(QtWidgets.QMainWindow):
     def initSkinStuff(self, filename):
         self.bind_pathbox.setText(filename)
 
+    def getPostScriptPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Post Script Data File',
+        constants.SKIN_DATA_PATH,
+        'Text files (*.txt)'
+        )
+        self.filepaths_dict['postscript_path'] = filename
+        self.saveFilepathDicts()
+        self.postscript_pathbox.setText(filename)
+
     def saveSkinPath(self):
         filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
         'Select Bind Data File',
@@ -255,6 +294,13 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.bind_pathbox.setText(filename)
         self.controller.saveBindSkinData(filename)
 
+    def callBuildControls(self):
+        try:
+            self.controller.importPostScripts(self.postscript_pathbox.text())
+        except:
+            constants.RIGGER_LOG.info('Post script load failed for some reason.')
+        self.controller.generateJoints()
+
     def callBindSkin(self):
         self.controller.bindSkin(self.bind_pathbox.text())
 
@@ -262,6 +308,12 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.jointWidgetWindow = joint_widget_view.VertexJointUIPopup(self.controller, self.utils, self.filepaths_dict, self)
         self.jointWidgetWindow.show()
         self.jointWidgetWindow.resize(300, 150)
+
+# Turns out I might need to pass some UI state to the controller, rather than doing some parent
+# pointer thing or passing what I need in the function calls, I'm going to make this holder class. Because reasons.
+class UIState():
+    unrealCheck: QtWidgets.QCheckBox
+UI_STATE = UIState()
 
 def run():
         win = ModularRigger()

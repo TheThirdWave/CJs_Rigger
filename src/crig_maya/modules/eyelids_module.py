@@ -14,25 +14,30 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         self.joint_dict['innerJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_inner_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.joint_dict['outerJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_outer_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         if 'numUpper' in self.componentVars:
-            num_upper = self.componentVars['numUpper']
+            self.num_upper = self.componentVars['numUpper']
         else:
-            num_upper = 0
+            self.num_upper = 0
         self.joint_dict['upperJoints'] = []
-        for idx in range(num_upper):
+        for idx in range(self.num_upper):
             self.joint_dict['upperJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_upper_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
 
         if 'numLower' in self.componentVars:
-            num_lower = self.componentVars['numLower']
+            self.num_lower = self.componentVars['numLower']
         else:
-            num_lower = 0
+            self.num_lower = 0
         self.joint_dict['lowerJoints'] = []
-        for idx in range(num_lower):
+        for idx in range(self.num_lower):
             self.joint_dict['lowerJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_lower_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
 
         if 'numCorrectives' in self.componentVars:
             self.num_correctives = self.componentVars['numCorrectives']
         else:
             self.num_correctives = 0
+
+        if 'separateControls' in self.componentVars:
+            self.separateControls = self.componentVars['separateControls']
+        else:
+            self.separateControls = True
 
         self.control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_control_PLC_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.upper_place_joint = cmds.joint(self.control_place_joint, name='{0}_{1}_upper_PLC_JNT'.format(self.prefix, self.name), position=(0, 1, 0))
@@ -43,6 +48,33 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         if not self.baseGroups:
             constants.RIGGER_LOG.warning('Base groups for component {0} not found, run "Generate Bind Joints" first.')
             return
+
+        # Because I accidentally connected all the logic directly to the bind joints, we do some
+        # shennanagans here to create separate control joints.
+        control_joint_group = '{0}_{1}_control_joints_PAR_GRP'.format(self.prefix, self.name)
+        cmds.group(name=control_joint_group, parent=self.baseGroups['placement_group'], empty=True)
+        cmds.inheritTransform(control_joint_group, off=True)
+        self.bind_joint_dict = {}
+        self.bind_joint_dict['baseJoint'] = python_utils.duplicateBindJoint(self.joint_dict['baseJoint'], control_joint_group, 'CTL')
+        python_utils.constrainTransformByMatrix(self.bind_joint_dict['baseJoint'], self.joint_dict['baseJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+        self.bind_joint_dict['innerJoint'] = python_utils.duplicateBindJoint(self.joint_dict['innerJoint'], self.bind_joint_dict['baseJoint'], 'CTL')
+        python_utils.constrainTransformByMatrix(self.bind_joint_dict['innerJoint'], self.joint_dict['innerJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+        self.bind_joint_dict['outerJoint'] = python_utils.duplicateBindJoint(self.joint_dict['outerJoint'], self.bind_joint_dict['baseJoint'], 'CTL')
+        python_utils.constrainTransformByMatrix(self.bind_joint_dict['outerJoint'], self.joint_dict['outerJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+        self.bind_joint_dict['upperJoints'] = []
+        for joint in self.joint_dict['upperJoints']:
+            new_control_joint = python_utils.duplicateBindJoint(joint, self.bind_joint_dict['baseJoint'], 'CTL')
+            self.bind_joint_dict['upperJoints'].append(new_control_joint)
+            python_utils.constrainTransformByMatrix(new_control_joint, joint, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+        self.bind_joint_dict['lowerJoints'] = []
+        for joint in self.joint_dict['lowerJoints']:
+            new_control_joint = python_utils.duplicateBindJoint(joint, self.bind_joint_dict['baseJoint'], 'CTL')
+            self.bind_joint_dict['lowerJoints'].append(new_control_joint)
+            python_utils.constrainTransformByMatrix(new_control_joint, joint, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
+        hold = self.joint_dict
+        self.joint_dict = self.bind_joint_dict
+        self.bind_joint_dict = hold
+
 
         # Create a "base" joint for each lid joint.
         upper_base_joints = []
@@ -91,8 +123,11 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
                     object['correctiveBaseJoint'].append(cmds.joint(object['correctivesParentJoint'], name='{0}_{1}_{2}_{3}_CRN_JNT'.format(self.prefix, self.name, joint_name, layer)))
                     cmds.matchTransform(object['correctiveBaseJoint'][layer], object['parentJoint'])
                     prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['joint'])
-                    object['correctiveJoint'].append(cmds.joint(object['correctiveBaseJoint'][layer], name='{0}_{1}_{2}_{3}_CRN_JNT'.format(self.prefix, self.name, joint_name, layer)))
+                    corrective_joint = cmds.joint(object['correctiveBaseJoint'][layer], name='{0}_{1}_{2}_{3}_CTL_JNT'.format(self.prefix, self.name, joint_name, layer))
+                    object['correctiveJoint'].append(corrective_joint)
                     cmds.matchTransform(object['correctiveJoint'][layer], object['joint'])
+                    new_bind_joint = python_utils.duplicateBindJoint(corrective_joint, self.bind_joint_dict['baseJoint'], 'CRN')
+                    python_utils.constrainTransformByMatrix(corrective_joint, new_bind_joint, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
 
         inner_base_objects = {'parentJoint': inner_base_joint, 'joint': self.joint_dict['innerJoint']}
         outer_base_objects = {'parentJoint': outer_base_joint, 'joint': self.joint_dict['outerJoint']}
@@ -191,12 +226,14 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         # Create the rough curves and use them to drive the originals with a wire deformer
         rough_upper_curve = cmds.duplicate(upper_curve, name='{0}_{1}_upper_rough_DEF_CRV'.format(self.prefix, self.name))[0]
         cmds.rebuildCurve(rough_upper_curve, constructionHistory=False, degree=3, spans=4, keepTangents=False)
-        cmds.wire(upper_curve, wire=rough_upper_curve, name='{0}_{1}_upper_base_DEF_WIRD'.format(self.prefix, self.name))
+        wire_def = cmds.wire(upper_curve, wire=rough_upper_curve, name='{0}_{1}_upper_base_DEF_WIRD'.format(self.prefix, self.name))[0]
+        cmds.setAttr('{0}.dropoffDistance[0]'.format(wire_def), 20)
 
 
         rough_lower_curve = cmds.duplicate(lower_curve, name='{0}_{1}_lower_rough_DEF_CRV'.format(self.prefix, self.name))[0]
         cmds.rebuildCurve(rough_lower_curve, constructionHistory=False, degree=3, spans=4, keepTangents=False)
-        cmds.wire(lower_curve, wire=rough_lower_curve, name='{0}_{1}_lower_base_DEF_WIRD'.format(self.prefix, self.name))
+        wire_def = cmds.wire(lower_curve, wire=rough_lower_curve, name='{0}_{1}_lower_base_DEF_WIRD'.format(self.prefix, self.name))[0]
+        cmds.setAttr('{0}.dropoffDistance[0]'.format(wire_def), 20)
 
         # Create controls/joints for rough curves
         # Start and end control locators already exist (the inner/outer locators)
@@ -317,7 +354,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         #Now create the blink curves.
         #First create the rough curve that will blend between the top and bottom curves, along with the attributes that will drive the blendshape weights.
         blink_curve = cmds.duplicate(rough_upper_curve, name='{0}_{1}_blink_DEF_CRV'.format(self.prefix, self.name))[0]
-        blink_blendshape = cmds.blendShape(rough_upper_curve, rough_lower_curve, blink_curve, name='L_headeyeLid_blink_CTL_BSHP')[0]
+        blink_blendshape = cmds.blendShape(rough_upper_curve, rough_lower_curve, blink_curve, name='{0}_{1}_blink_CTL_BSHP'.format(self.prefix, self.name))[0]
         all_rough_controls = upper_rough_controls[0:-1] + lower_rough_controls[1:]
         cmds.addAttr(all_rough_controls[0], longName='SmartBlink', keyable=True, defaultValue=0.0, minValue=0.0, maxValue=1.0)
         cmds.connectAttr('{0}.SmartBlink'.format(all_rough_controls[0]), '{0}.{1}'.format(blink_blendshape, rough_lower_curve))
@@ -333,17 +370,14 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
 
         upper_blink_wire = cmds.wire(upper_blink_curve, wire=blink_curve, name='{0}_{1}_upper_blink_CTL_WIRD'.format(self.prefix, self.name))[0]
         cmds.setAttr('{0}.scale[0]'.format(upper_blink_wire), 0)
+        cmds.setAttr('{0}.dropoffDistance[0]'.format(upper_blink_wire), 20)
 
         cmds.setAttr('{0}.SmartBlink'.format(all_rough_controls[0]), 1.0)
         lower_blink_wire = cmds.wire(lower_blink_curve, wire=blink_curve, name='{0}_{1}_lower_blink_CTL_WIRD'.format(self.prefix, self.name))[0]
         cmds.setAttr('{0}.scale[0]'.format(lower_blink_wire), 0)
+        cmds.setAttr('{0}.dropoffDistance[0]'.format(lower_blink_wire), 20)
 
         cmds.setAttr('{0}.SmartBlink'.format(all_rough_controls[0]), 0.5)
-
-        #Then we sneak in a "middle" curve that will act as an adjustable inbetween blend shape, this is needed to correct clipping issues from that extra
-        #snap-to-the-locators thing we're adding down at the bottom of the file (which is, itself, fixing other, different, clipping issues)
-        middle_curve = cmds.duplicate(blink_curve, name='{0}_{1}_middle_CTL_CRV'.format(self.prefix, self.name))[0]
-        cmds.blendShape(blink_blendshape, edit=True, inBetween=True, inBetweenType='relative', t=(blink_curve, 1, middle_curve, 0.5))
 
         #Now we blendshape the base lid curves to their respective blink curves.
         upper_blink_blendshape = cmds.blendShape(upper_blink_curve, '{0}_{1}_upper_base_DEF_CRV'.format(self.prefix, self.name), name='{0}_{1}_upper_blink_CTL_BSHP'.format(self.prefix, self.name))[0]
@@ -362,6 +396,10 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         control_percent = 1.0 / (num_controls - 1)
         blink_joints = [inner_rough_joint]
         blink_locs = []
+        # Create an intermediate curve that will go between the blink curve and the pointOnCurveInfo nodes because the Evaluation Manager hates me.
+        pin_curve = cmds.duplicate(blink_curve, name='{0}_{1}_pin_DEF_CRV'.format(self.prefix, self.name))[0]
+        pin_shape = cmds.listRelatives(pin_curve)[0]
+        cmds.connectAttr('{0}.outputGeometry[0]'.format(blink_blendshape), '{0}.create'.format(pin_shape))
         for idx in range(1, num_controls - 1):
             pointOnCurve = python_utils.getPointAlongCurve((control_percent * idx), blink_curve)
             blink_joint = cmds.joint(blink_joints_group, name='{0}_{1}_blink_{2}_CTL_JNT'.format(self.prefix, self.name, idx), position=[pointOnCurve.x, pointOnCurve.y, pointOnCurve.z])
@@ -375,7 +413,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
             cmds.parent(blink_loc, blink_joints_group)
             closestPoint, closestParam = python_utils.getClosestPointOnCurve(blink_loc, blink_curve)
             pointOnCurveNode = cmds.createNode('pointOnCurveInfo', name=blink_loc.replace('CTL_LOC', 'CTL_POCI'))
-            cmds.connectAttr('{0}.outputGeometry[0]'.format(blink_blendshape), '{0}.inputCurve'.format(pointOnCurveNode))
+            cmds.connectAttr('{0}.worldSpace[0]'.format(pin_shape), '{0}.inputCurve'.format(pointOnCurveNode))
             cmds.setAttr('{0}.parameter'.format(pointOnCurveNode), closestParam)
             cmds.connectAttr('{0}.position'.format(pointOnCurveNode), '{0}.translate'.format(blink_loc))
             blink_locs.append(blink_loc)
@@ -466,6 +504,29 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
             reverse = cmds.createNode('reverse', name=object['joint'].replace('_BND_JNT', '_CRN_REV'))
             cmds.connectAttr('{0}.outValueX'.format(set_range), '{0}.inputX'.format(reverse))
             cmds.connectAttr('{0}.outputX'.format(reverse), '{0}.{1}W1'.format(point_constraint, new_joint))
+
+        #Then we sneak in a "middle" curve that will act as an adjustable inbetween blend shape, this is needed to correct clipping issues from that extra
+        #snap-to-the-locators thing we're adding just above (which is, itself, fixing other, different, clipping issues)
+        middle_curve = cmds.duplicate(blink_curve, name='{0}_{1}_middle_CTL_CRV'.format(self.prefix, self.name))[0]
+        cmds.blendShape(blink_blendshape, edit=True, inBetween=True, inBetweenType='relative', t=(blink_curve, 1, middle_curve, 0.5))
+
+        if not self.separateControls:
+            python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), self.joint_dict['baseJoint'], True)
+            cmds.inheritTransform(logic_group, off=False)
+            logic_children = cmds.listRelatives(logic_group)
+            for node in logic_children:
+                if '_CRV' not in node:
+                    cmds.inheritTransform(node, off=True)
+            cmds.inheritTransform(upper_locators_group, off=False)
+            cmds.inheritTransform(lower_locators_group, off=False)
+            for joint in upper_base_objects:
+                cmds.inheritTransform(joint['locatorGroup'], off=False)
+            for joint in lower_base_objects:
+                cmds.inheritTransform(joint['locatorGroup'], off=False)
+            base_children = cmds.listRelatives(self.joint_dict['baseJoint'], allDescendents=True, type='joint')
+            for child in base_children:
+                cmds.setAttr('{0}.segmentScaleCompensate'.format(child), False)
+            
 
         cmds.delete(self.control_place_joint) 
 

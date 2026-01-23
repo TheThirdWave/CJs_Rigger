@@ -81,9 +81,8 @@ class IKFK4Joint(maya_base_module.MayaBaseModule):
         # Create KEY joints
         for joint_dict in joint_list:
             python_utils.zeroJointOrient(joint_dict['fk_joint'])
-            key_joint = cmds.duplicate(joint_dict['fk_joint'], name=joint_dict['fk_joint'].replace('FK', 'KEY'), parentOnly=True)[0]
+            key_joint = cmds.joint(joint_dict['fk_place'], name=joint_dict['fk_joint'].replace('FK', 'KEY'))
             joint_dict['fk_key_joint'] = key_joint
-            cmds.parent(key_joint, joint_dict['fk_place'])
             cmds.parent(joint_dict['fk_control'], key_joint)
             python_utils.zeroJointOrient(key_joint)
 
@@ -98,7 +97,7 @@ class IKFK4Joint(maya_base_module.MayaBaseModule):
         ik_handle, ik_effector = cmds.ikHandle( name='{0}_{1}_base_IKRP_HDL'.format(self.prefix, self.name),
                                                 startJoint=start_ik_joint,
                                                 endEffector=end_ik_joint,
-                                                solver='ikSCsolver' )
+                                                solver='ikRPsolver' )
         ik_effector = cmds.rename(ik_effector, '{0}_{1}_base_IKRP_EFF'.format(self.prefix, self.name))
         # Create IK Controls
         ik_control_group = cmds.group(name='{0}_{1}_ik_ctls_HOLD_GRP'.format(self.prefix, self.name), parent=ik_group, empty=True)
@@ -108,6 +107,7 @@ class IKFK4Joint(maya_base_module.MayaBaseModule):
         if self.prefix == 'R':
             cmds.setAttr('{0}.scale'.format(end_ik_control_place), -1, -1, -1)
         cmds.parent(ik_handle, end_ik_control)
+        cmds.setAttr('{0}.poleVector'.format(ik_handle), 0.0, 0.0, -1.0)
         #python_utils.constrainTransformByMatrix(end_ik_control, ik_handle, True, False, ['translate'])
         python_utils.constrainTransformByMatrix(end_ik_control, end_ik_joint, True, False, ['rotate'])
         cmds.connectAttr('{0}.scale'.format(end_ik_control), '{0}.scale'.format(end_ik_joint))

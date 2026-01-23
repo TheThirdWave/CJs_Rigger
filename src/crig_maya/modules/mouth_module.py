@@ -19,6 +19,11 @@ class MouthModule(maya_base_module.MayaBaseModule):
         self.joint_dict['rightBackJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_right_back_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
         self.joint_dict['rightFrontJoint'] = cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_right_front_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
 
+        if 'separateControls' in self.componentVars:
+            self.separateControls = self.componentVars['separateControls']
+        else:
+            self.separateControls = True
+
         if 'numControls' in self.componentVars:
             num_controls = self.componentVars['numControls']
         else:
@@ -471,6 +476,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
             cmds.parent(parent_joint, object['zeroFrontRibbonJoint'])
             object['superFineFrontRibbonJoint'] = parent_joint
             object['proxyGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'PRX_GRP'), empty=True)
+            cmds.matchTransform(object['proxyGroup'], object['backRibbonJoint'])
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], upper_base_ribbon)
             object['staticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
             cmds.matchTransform(object['staticGroup'], object['proxyGroup'])
@@ -502,6 +508,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
             cmds.parent(parent_joint, object['zeroFrontRibbonJoint'])
             object['superFineFrontRibbonJoint'] = parent_joint
             object['proxyGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'PRX_GRP'), empty=True)
+            cmds.matchTransform(object['proxyGroup'], object['backRibbonJoint'])
             mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], lower_base_ribbon)
             object['staticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
             cmds.matchTransform(object['staticGroup'], object['proxyGroup'])
@@ -525,15 +532,19 @@ class MouthModule(maya_base_module.MayaBaseModule):
         # Create an ungodly series of rube goldberg transforms to connect the actual user controls and the rough joints in just the right way.
         # There was probably a more efficient way to go about this.
         mirror_offset_mult_nodes = []
+        # I don't know, man.
+        control_nodes_that_need_fixing = []
         i = 1
         for object in upper_control_objects:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['control'])
             control_zero_group = cmds.group(name='{0}_{1}_{2}_PAR_GRP'.format(prefix, component_name, joint_name), parent=object['placeGroup'], empty=True)
             cmds.matchTransform(control_zero_group, object['control'])
             cmds.parent(object['control'], control_zero_group)
-            python_utils.mirrorOffset(upper_rough_joints[i]['positionGroup'], upper_rough_joints[i]['parentGroup'], object['placeGroup'], control_zero_group)
+            python_utils.mirrorOffset(upper_rough_joints[i]['positionGroup'], upper_rough_joints[i]['parentGroup'], object['placeGroup'], control_zero_group, liveParent=True, liveTParent=True)
             object['controlParentGroup'] = control_zero_group
-            mirror_offset_mult_nodes.append(python_utils.mirrorOffset(object['controlParentGroup'], object['control'], upper_rough_joints[i]['parentGroup'], upper_rough_joints[i]['joint'], liveParent=True, liveTParent=True))
+            matrix_mult = python_utils.mirrorOffset(object['controlParentGroup'], object['control'], upper_rough_joints[i]['parentGroup'], upper_rough_joints[i]['joint'], liveParent=True, liveTParent=True)
+            mirror_offset_mult_nodes.append(matrix_mult)
+            control_nodes_that_need_fixing.append(matrix_mult)
             i += 1
 
 
@@ -543,9 +554,11 @@ class MouthModule(maya_base_module.MayaBaseModule):
             control_zero_group = cmds.group(name='{0}_{1}_{2}_PAR_GRP'.format(prefix, component_name, joint_name), parent=object['placeGroup'], empty=True)
             cmds.matchTransform(control_zero_group, object['control'])
             cmds.parent(object['control'], control_zero_group)
-            python_utils.mirrorOffset(lower_rough_joints[i]['positionGroup'], lower_rough_joints[i]['parentGroup'], object['placeGroup'], control_zero_group)
+            python_utils.mirrorOffset(lower_rough_joints[i]['positionGroup'], lower_rough_joints[i]['parentGroup'], object['placeGroup'], control_zero_group, liveParent=True, liveTParent=True)
             object['controlParentGroup'] = control_zero_group
-            mirror_offset_mult_nodes.append(python_utils.mirrorOffset(object['controlParentGroup'], object['control'], lower_rough_joints[i]['parentGroup'], lower_rough_joints[i]['joint'], liveParent=True, liveTParent=True))
+            matrix_mult = python_utils.mirrorOffset(object['controlParentGroup'], object['control'], lower_rough_joints[i]['parentGroup'], lower_rough_joints[i]['joint'], liveParent=True, liveTParent=True)
+            mirror_offset_mult_nodes.append(matrix_mult)
+            control_nodes_that_need_fixing.append(matrix_mult)
             i += 1
 
         # Create ultra fine controls for individual vertex level tweaks.
@@ -566,7 +579,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
             cmds.matchTransform(control_zero_group, object['tweakControl'])
             cmds.parent(object['tweakControl'], control_zero_group)
             object['tweakControlPar'] = control_zero_group
-            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group)
+            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroBackRibbonJoint'], object['superFineBackRibbonJoint'], liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroFrontRibbonJoint'], object['superFineFrontRibbonJoint'], liveParent=True, liveTParent=True)
             if (i > 0 and i < (len(upper_objects) - 1)):
@@ -591,7 +604,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
             cmds.matchTransform(control_zero_group, object['tweakControl'])
             cmds.parent(object['tweakControl'], control_zero_group)
             object['tweakControlPar'] = control_zero_group
-            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group)
+            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroBackRibbonJoint'], object['superFineBackRibbonJoint'], liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroFrontRibbonJoint'], object['superFineFrontRibbonJoint'], liveParent=True, liveTParent=True)
             if (i > 0 and i < (len(upper_objects) - 1)):
@@ -601,15 +614,24 @@ class MouthModule(maya_base_module.MayaBaseModule):
         # Create controls for the corners of the mouth using a rube goldberg machine of MATRIX MULTIPLICATIONS, uses openmaya, took twice as long to figure out, I am smart.
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(left_objects['controlPlaceGroup'])
         left_objects['controlJawGroup'] = cmds.group(parent=left_objects['controlPlaceGroup'], name=left_objects['controlPlaceGroup'].replace('left_PLC_GRP', 'left_jaw_PAR_GRP'), empty=True)
-        mult_matrix = python_utils.mirrorOffset(left_halfway_loc, left_objects['rotationGroup'], left_objects['controlPlaceGroup'], left_objects['controlJawGroup'])
+        mult_matrix = python_utils.mirrorOffset(left_halfway_loc, left_objects['rotationGroup'], left_objects['controlPlaceGroup'], left_objects['controlJawGroup'], liveParent=True, liveTParent=True)
         cmds.matchTransform(left_objects['controlJawGroup'], left_objects['control'])
         cmds.parent(left_objects['control'], left_objects['controlJawGroup'])
+        left_objects['controlPosLoc'] = cmds.spaceLocator(name='{0}_{1}_left_POS_LOC'.format(self.prefix, self.name))[0]
+        cmds.matchTransform(left_objects['controlPosLoc'], left_objects['controlJawGroup'])
+        cmds.parent(left_objects['controlPosLoc'], left_objects['controlJawGroup'])
+        cmds.connectAttr('{0}.translate'.format(left_objects['control']), '{0}.translate'.format(left_objects['controlPosLoc']))
+
 
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(right_objects['controlPlaceGroup'])
         right_objects['controlJawGroup'] = cmds.group(parent=right_objects['controlPlaceGroup'], name=right_objects['controlPlaceGroup'].replace('right_PLC_GRP', 'right_jaw_PAR_GRP'), empty=True)
-        mult_matrix = python_utils.mirrorOffset(right_halfway_loc, right_objects['rotationGroup'], right_objects['controlPlaceGroup'], right_objects['controlJawGroup'])
+        mult_matrix = python_utils.mirrorOffset(right_halfway_loc, right_objects['rotationGroup'], right_objects['controlPlaceGroup'], right_objects['controlJawGroup'], liveParent=True, liveTParent=True)
         cmds.matchTransform(right_objects['controlJawGroup'], right_objects['control'])
         cmds.parent(right_objects['control'], right_objects['controlJawGroup'])
+        right_objects['controlPosLoc'] = cmds.spaceLocator(name='{0}_{1}_right_POS_LOC'.format(self.prefix, self.name))[0]
+        cmds.matchTransform(right_objects['controlPosLoc'], right_objects['controlJawGroup'])
+        cmds.parent(right_objects['controlPosLoc'], right_objects['controlJawGroup'])
+        cmds.connectAttr('{0}.translate'.format(right_objects['control']), '{0}.translate'.format(right_objects['controlPosLoc']))
 
 
         centerUpRoughControlPlace, centerUpRoughControl = python_utils.makeControl(left_objects['control'].replace('left', 'up_rough_control'), 0.1, curveType="circle")
@@ -622,11 +644,13 @@ class MouthModule(maya_base_module.MayaBaseModule):
         cmds.parent(centerUpRoughControlPlace, upper_controls_group)
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(centerUpRoughControl)
         centerUpJawGroup = cmds.group(parent=centerUpRoughControlPlace, name='{0}_{1}_{2}_jaw_PAR_GRP'.format(prefix, component_name, joint_name), empty=True)
-        mult_matrix = python_utils.mirrorOffset(upper_very_rough_joints[1]['positionGroup'], upper_very_rough_joints[1]['parentGroup'], centerUpRoughControlPlace, centerUpJawGroup)
+        mult_matrix = python_utils.mirrorOffset(upper_very_rough_joints[1]['positionGroup'], upper_very_rough_joints[1]['parentGroup'], centerUpRoughControlPlace, centerUpJawGroup, liveParent=True, liveTParent=True)
         cmds.matchTransform(centerUpJawGroup, centerUpRoughControl)
         cmds.parent(centerUpRoughControl, centerUpJawGroup)
 
-        mirror_offset_mult_nodes.append(python_utils.mirrorOffset(centerUpJawGroup, centerUpRoughControl, upper_very_rough_joints[1]['parentGroup'], upper_very_rough_joints[1]['joint'], liveParent=True, liveTParent=True))
+        matrix_mult = python_utils.mirrorOffset(centerUpJawGroup, centerUpRoughControl, upper_very_rough_joints[1]['parentGroup'], upper_very_rough_joints[1]['joint'], liveParent=True, liveTParent=True)
+        mirror_offset_mult_nodes.append(matrix_mult)
+        control_nodes_that_need_fixing.append(matrix_mult)
 
         centerDownRoughControlPlace, centerDownRoughControl = python_utils.makeControl(left_objects['control'].replace('left', 'down_rough_control'), 0.1, curveType="circle")
         jointControlDiffVec = python_utils.getTransformDiffVec(jaw_control, jaw_parent_joint)
@@ -638,11 +662,13 @@ class MouthModule(maya_base_module.MayaBaseModule):
         cmds.parent(centerDownRoughControlPlace, lower_controls_group)
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(centerDownRoughControl)
         centerDownJawGroup = cmds.group(parent=centerDownRoughControlPlace, name='{0}_{1}_{2}_jaw_PAR_GRP'.format(prefix, component_name, joint_name), empty=True)
-        mult_matrix = python_utils.mirrorOffset(lower_very_rough_joints[1]['positionGroup'], lower_very_rough_joints[1]['parentGroup'], centerDownRoughControlPlace, centerDownJawGroup)
+        mult_matrix = python_utils.mirrorOffset(lower_very_rough_joints[1]['positionGroup'], lower_very_rough_joints[1]['parentGroup'], centerDownRoughControlPlace, centerDownJawGroup, liveParent=True, liveTParent=True)
         cmds.matchTransform(centerDownJawGroup, centerDownRoughControl)
         cmds.parent(centerDownRoughControl, centerDownJawGroup)
 
-        mirror_offset_mult_nodes.append(python_utils.mirrorOffset(centerDownJawGroup, centerDownRoughControl, lower_very_rough_joints[1]['parentGroup'], lower_very_rough_joints[1]['joint'], liveParent=True, liveTParent=True))
+        matrix_mult = python_utils.mirrorOffset(centerDownJawGroup, centerDownRoughControl, lower_very_rough_joints[1]['parentGroup'], lower_very_rough_joints[1]['joint'], liveParent=True, liveTParent=True)
+        mirror_offset_mult_nodes.append(matrix_mult)
+        control_nodes_that_need_fixing.append(matrix_mult)
 
         # Oh yeah and get around to connecting up the jaw control.
         python_utils.connectTransforms(jaw_control, jaw_parent_joint)
@@ -729,17 +755,19 @@ class MouthModule(maya_base_module.MayaBaseModule):
         left_objects['groupMoveGroup'] = cmds.group(parent=left_objects['rotationGroup'], name=left_objects['controlJoint'].replace('left_control_BND_JNT', 'left_control_PAR_GRP'), empty=True)
         cmds.parent(left_objects['controlJoint'], left_objects['groupMoveGroup'])
         matrix_mult = python_utils.mirrorOffset(left_objects['controlJawGroup'], left_objects['control'], left_objects['rotationGroup'], left_objects['groupMoveGroup'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
         cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(left_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         left_objects['groupMoveRoughUpGroup'] = cmds.group(parent=left_objects['roughUpJointParent'], name=left_objects['controlJoint'].replace('left_control_BND_JNT', 'up_left_rough_PAR_GRP'), empty=True)
         cmds.parent(left_objects['roughUpJoint'], left_objects['groupMoveRoughUpGroup'])
         matrix_mult = python_utils.mirrorOffset(left_objects['controlJawGroup'], left_objects['control'], left_objects['roughUpJointParent'], left_objects['groupMoveRoughUpGroup'], liveParent=True, liveTParent=True, pivotTransform=left_objects['groupMoveGroup'])
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
         cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(left_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
 
         matrix_mult = python_utils.mirrorOffset(left_objects['roughUpPlace'], left_objects['roughUpControl'], left_objects['groupMoveRoughUpGroup'], left_objects['roughUpJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         left_objects['groupMoveUpGroup'] = cmds.group(parent=left_objects['fineUpJointParent'], name=left_objects['controlJoint'].replace('left_control_BND_JNT', 'up_left_control_PAR_GRP'), empty=True)
         cmds.parent(left_objects['fineUpJoint'], left_objects['groupMoveUpGroup'])
@@ -749,11 +777,12 @@ class MouthModule(maya_base_module.MayaBaseModule):
         left_objects['groupMoveRoughDownGroup'] = cmds.group(parent=left_objects['roughDownJointParent'], name=left_objects['controlJoint'].replace('left_control_BND_JNT', 'down_left_rough_PAR_GRP'), empty=True)
         cmds.parent(left_objects['roughDownJoint'], left_objects['groupMoveRoughDownGroup'])
         matrix_mult = python_utils.mirrorOffset(left_objects['controlJawGroup'], left_objects['control'], left_objects['roughDownJointParent'], left_objects['groupMoveRoughDownGroup'], liveParent=True, liveTParent=True, pivotTransform=left_objects['groupMoveGroup'])
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
         cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(left_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
 
         matrix_mult = python_utils.mirrorOffset(left_objects['roughDownPlace'], left_objects['roughDownControl'], left_objects['groupMoveRoughDownGroup'], left_objects['roughDownJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         left_objects['groupMoveDownGroup'] = cmds.group(parent=left_objects['fineDownJointParent'], name=left_objects['controlJoint'].replace('left_control_BND_JNT', 'down_left_control_PAR_GRP'), empty=True)
         cmds.parent(left_objects['fineDownJoint'], left_objects['groupMoveDownGroup'])
@@ -763,17 +792,19 @@ class MouthModule(maya_base_module.MayaBaseModule):
         right_objects['groupMoveGroup'] = cmds.group(parent=right_objects['rotationGroup'], name=right_objects['controlJoint'].replace('right_control_BND_JNT', 'right_control_PAR_GRP'), empty=True)
         cmds.parent(right_objects['controlJoint'], right_objects['groupMoveGroup'])
         matrix_mult = python_utils.mirrorOffset(right_objects['controlJawGroup'], right_objects['control'], right_objects['rotationGroup'], right_objects['groupMoveGroup'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
         cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(right_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         right_objects['groupMoveRoughUpGroup'] = cmds.group(parent=right_objects['roughUpJointParent'], name=right_objects['controlJoint'].replace('right_control_BND_JNT', 'up_right_rough_PAR_GRP'), empty=True)
         cmds.parent(right_objects['roughUpJoint'], right_objects['groupMoveRoughUpGroup'])
         matrix_mult = python_utils.mirrorOffset(right_objects['controlJawGroup'], right_objects['control'], right_objects['roughUpJointParent'], right_objects['groupMoveRoughUpGroup'], liveParent=True, liveTParent=True, pivotTransform=right_objects['groupMoveGroup'])
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
         cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(right_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
 
         matrix_mult = python_utils.mirrorOffset(right_objects['roughUpPlace'], right_objects['roughUpControl'], right_objects['groupMoveRoughUpGroup'], right_objects['roughUpJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         right_objects['groupMoveUpGroup'] = cmds.group(parent=right_objects['fineUpJointParent'], name=right_objects['controlJoint'].replace('right_control_BND_JNT', 'up_right_control_PAR_GRP'), empty=True)
         cmds.parent(right_objects['fineUpJoint'], right_objects['groupMoveUpGroup'])
@@ -783,12 +814,12 @@ class MouthModule(maya_base_module.MayaBaseModule):
         right_objects['groupMoveRoughDownGroup'] = cmds.group(parent=right_objects['roughDownJointParent'], name=right_objects['controlJoint'].replace('right_control_BND_JNT', 'down_right_rough_PAR_GRP'), empty=True)
         cmds.parent(right_objects['roughDownJoint'], right_objects['groupMoveRoughDownGroup'])
         matrix_mult = python_utils.mirrorOffset(right_objects['controlJawGroup'], right_objects['control'], right_objects['roughDownJointParent'], right_objects['groupMoveRoughDownGroup'], liveParent=True, liveTParent=True, pivotTransform=right_objects['groupMoveGroup'])
-        mirror_offset_mult_nodes.append(matrix_mult)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
         cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(right_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
 
         matrix_mult = python_utils.mirrorOffset(right_objects['roughDownPlace'], right_objects['roughDownControl'], right_objects['groupMoveRoughDownGroup'], right_objects['roughDownJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         right_objects['groupMoveDownGroup'] = cmds.group(parent=right_objects['fineDownJointParent'], name=right_objects['controlJoint'].replace('right_control_BND_JNT', 'down_right_control_PAR_GRP'), empty=True)
         cmds.parent(right_objects['fineDownJoint'], right_objects['groupMoveDownGroup'])
@@ -796,21 +827,27 @@ class MouthModule(maya_base_module.MayaBaseModule):
         #cmds.connectAttr('{0}.parentInverseMatrix[0]'.format(right_objects['control']), '{0}.matrixIn[5]'.format(matrix_mult), force=True)
 
         matrix_mult = python_utils.mirrorOffset(left_objects['fineCornerPlace'], left_objects['fineControl'], left_objects['groupMoveGroup'], left_objects['controlJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
         matrix_mult = python_utils.mirrorOffset(left_objects['fineUpPlace'], left_objects['fineUpControl'], left_objects['groupMoveUpGroup'], left_objects['fineUpJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
         matrix_mult = python_utils.mirrorOffset(left_objects['fineDownPlace'], left_objects['fineDownControl'], left_objects['groupMoveDownGroup'], left_objects['fineDownJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
         matrix_mult = python_utils.mirrorOffset(right_objects['fineCornerPlace'], right_objects['fineControl'], right_objects['groupMoveGroup'], right_objects['controlJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
         matrix_mult = python_utils.mirrorOffset(right_objects['fineUpPlace'], right_objects['fineUpControl'], right_objects['groupMoveUpGroup'], right_objects['fineUpJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
         matrix_mult = python_utils.mirrorOffset(right_objects['fineDownPlace'], right_objects['fineDownControl'], right_objects['groupMoveDownGroup'], right_objects['fineDownJoint'], liveParent=True, liveTParent=True)
-        mirror_offset_mult_nodes.append(matrix_mult)
+        #mirror_offset_mult_nodes.append(matrix_mult)
+        #control_nodes_that_need_fixing.append(matrix_mult)
 
 
-        python_utils.constrainTransformByMatrix(left_objects['controlJoint'], left_objects['backJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotateq', 'scale', 'translate', 'shear'])
+        python_utils.constrainTransformByMatrix(left_objects['controlJoint'], left_objects['backJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
         cmds.parent(left_objects['frontJoint'], left_objects['backJoint'])
         #cmds.delete(left_objects['frontJoint'])
 
@@ -846,6 +883,49 @@ class MouthModule(maya_base_module.MayaBaseModule):
                     cmds.disconnectAttr('{0}.outputMatrix'.format(matrix_recompose), connections[i])
                     attr = cmds.getAttr('{0}.outputMatrix'.format(matrix_recompose))
                     cmds.setAttr('{0}.matrixIn[2]'.format(mult_node), attr, type='matrix')
+        # There was some rotation mismatch between these controls and the joints they control that doing this fixes. That mirroroffset code doesn't do what I 
+        # think it does, clearly.
+        for mult_node in control_nodes_that_need_fixing:
+            connections = cmds.listConnections(mult_node, connections=True, source=True, plugs=True)
+            for i in range(0, len(connections), 2):
+                if connections[i] == '{0}.matrixIn[1]'.format(mult_node):
+                    cmds.disconnectAttr(connections[i+1], connections[i])
+                    attr = cmds.getAttr(connections[i+1])
+                    cmds.setAttr('{0}.matrixIn[1]'.format(mult_node), attr, type='matrix')
+                if connections[i] == '{0}.matrixIn[7]'.format(mult_node):
+                    cmds.disconnectAttr(connections[i+1], connections[i])
+                    attr = cmds.getAttr(connections[i+1])
+                    cmds.setAttr('{0}.matrixIn[7]'.format(mult_node), attr, type='matrix')
+
+        # If separate controls is false we do some rearranging to deal with double-transforms.
+        if not self.separateControls:
+            #for group in cmds.listRelatives(self.baseGroups['placement_group']):
+                #if group != jaw_place_group:
+                    #cmds.inheritTransform(group, off=True)
+            #mult_matrix = cmds.createNode('multMatrix', name='{0}_MCNST_MMULT'.format(left_halfway_loc))
+            #cmds.connectAttr('{0}.worldMatrix[0]'.format(self.baseGroups['parent_group']), '{0}.matrixIn[0]'.format(mult_matrix))
+            #cmds.connectAttr('{0}.matrix'.format(self.baseGroups['placement_group']), '{0}.matrixIn[1]'.format(mult_matrix))
+            matrix_decompose = cmds.createNode('decomposeMatrix', name='{0}_MCNST_DCOMP'.format(left_halfway_loc))
+            cmds.connectAttr('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), '{0}.inputMatrix'.format(matrix_decompose))
+            #cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.inputMatrix'.format(matrix_decompose))
+            cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.rotate'.format(left_halfway_loc))
+            cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.rotate'.format(right_halfway_loc))
+            python_utils.constrainTransformByMatrix(jaw_place_group, self.jaw_place_joint)
+
+            python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), self.joint_dict['baseJoint'], True)
+            python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), ribbon_joints_group, True)
+            python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), control_joints_group, True)
+
+            incoming = cmds.listConnections('{0}.offsetParentMatrix'.format(left_objects['controlJawGroup']), plugs=True)[0]
+            cmds.disconnectAttr('{0}'.format(incoming), '{0}.offsetParentMatrix'.format(left_objects['controlJawGroup']))
+            python_utils.constrainTransformByMatrix(left_objects['rotationGroup'], left_objects['controlJawGroup'], True, True)
+
+            incoming = cmds.listConnections('{0}.offsetParentMatrix'.format(right_objects['controlJawGroup']), plugs=True)[0]
+            cmds.disconnectAttr('{0}'.format(incoming), '{0}.offsetParentMatrix'.format(right_objects['controlJawGroup']))
+            python_utils.constrainTransformByMatrix(right_objects['rotationGroup'], right_objects['controlJawGroup'], True, True)
+            
+        cmds.setAttr('{0}.segmentScaleCompensate'.format(jaw_parent_joint), False)
+        cmds.setAttr('{0}.segmentScaleCompensate'.format(self.jaw_joint), False)
 
         # Make the proxy attrs for all the controls that don't have them yet.
         for object in upper_control_objects:

@@ -17,14 +17,12 @@ class UtilityModule(maya_base_module.MayaBaseModule):
             return
 
         # Create the stuff that goes under the "controls_GRP", which is pretty much all of the logic and user interface curves.
-        base_control = python_utils.makeCircleControl('{0}_{1}_base_CTL_CRV'.format(self.prefix, self.name), 2)
-        base_placement = cmds.group(name='{0}_{1}_base_PLC_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'], empty=True)
-        cmds.matchTransform(base_placement, base_control)
-        cmds.parent(base_control, base_placement)
+        base_placement, base_control = python_utils.makeControl('{0}_{1}_base_CTL_CRV'.format(self.prefix, self.name), 2)
+        cmds.parent(base_placement, self.baseGroups['placement_group'])
 
         # Match the control to the place joint then delete the joint.
         cmds.matchTransform(base_placement, self.place_joint)
-        cmds.delete(self.place_joint)
+        mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(base_control, self.place_joint)
 
         for attr in self.outputAttrs:
             if attr['internalAttr']:
@@ -35,7 +33,9 @@ class UtilityModule(maya_base_module.MayaBaseModule):
                     # If it ain't actually an attr we ignore it (yes this is silly)
                     continue
                 if nodeAttr not in cmds.listAttr(base_control):
-                    cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True)
+                    cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True, hidden=False)
+                    if attr['attrType'] == 'enum' and 'enumVals' in attr:
+                        python_utils.addEnumNames(base_control, nodeAttr, attr['enumVals'])
 
         for attr in self.inputAttrs:
             if attr['internalAttr']:
@@ -46,7 +46,9 @@ class UtilityModule(maya_base_module.MayaBaseModule):
                     # If it ain't actually an attr we ignore it (yes this is silly)
                     continue
                 if nodeAttr not in cmds.listAttr(base_control):
-                    cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True)
+                    cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True, hidden=False)
+                    if attr['attrType'] == 'enum' and 'enumVals' in attr:
+                        python_utils.addEnumNames(base_control, nodeAttr, attr['enumVals'])
 
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 

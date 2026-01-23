@@ -10,7 +10,7 @@ very rough running list of the things that I can think of:
  
  Only after you set up the curve weights should you start skinning the individual lip joints, so the process goes like:
 
- Skin the jaw joint to the mesh -> copy the mesh weights to the dense curves in the moth component -> save out weights -> skin the rest of the mouth joints
+ Skin the jaw joint to the mesh -> copy the mesh weights to the dense curves in the mouth component -> save out weights -> skin the rest of the mouth joints
 
 -Also for the mouth component, there's a proximityWrap node attached to the "upper_DEF_RBN" NURBS ribbon, you'll probably have to adjust the parameters of that
  to get better deformations.

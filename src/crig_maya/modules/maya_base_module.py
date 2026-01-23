@@ -126,6 +126,8 @@ class MayaBaseModule(base_module.BaseModule):
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], parent=attr['parent'])
             else:
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
+            if attr['attrType'] == 'enum' and 'enumVals' in attr:
+                python_utils.addEnumNames(output_group, attr['attrName'], attr['enumVals'])
         cmds.select(input_group)
         for attr in self.inputAttrs:
             if 'proxy' in attr and attr['proxy']:
@@ -134,6 +136,8 @@ class MayaBaseModule(base_module.BaseModule):
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], parent=attr['parent'])
             else:
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
+            if attr['attrType'] == 'enum' and 'enumVals' in attr:
+                python_utils.addEnumNames(input_group, attr['attrName'], attr['enumVals'])
 
     def connectInputandOutputAttrs(self, output_group, input_group):
         cmds.select(output_group)
@@ -208,6 +212,8 @@ class MayaBaseModule(base_module.BaseModule):
         if not cmds.attributeQuery(internalAttr.split('.')[1], node=internalAttr.split('.')[0], exists=True) and len(internalAttr.split('[')) <= 1:
             node, attr = internalAttr.split('.')
             cmds.addAttr(node, longName=attr, attributeType=attr_data['attrType'])
+            if attr_data['attrType'] == 'enum' and 'enumVals' in attr_data:
+                cmds.addAttr('{0}.{1}'.format(node, attr), edit=True, type='enum', enumName=':'.join(attr_data['enumVals']))
         
         # Add attribute limits if specified.
         if 'min' in attr_data:
@@ -224,6 +230,26 @@ class MayaBaseModule(base_module.BaseModule):
         for proxy_node in proxy_list:
             proxy_node_full = '{0}_{1}_{2}'.format(self.prefix, self.name, proxy_node)
             cmds.addAttr(proxy_node_full, longName=attribute, proxy=internalAttr)
+
+    def parentChildDeformJoints(self):
+        for child in self.children:
+            if child['connectionType'] != 'none':
+                child_def_group = '{0}_{1}_deform_GRP'.format(child['childPrefix'], child['childName'])
+                child_def_joints = cmds.listRelatives(child_def_group, children=True, type='joint')
+                child_par_group = '{0}_{1}_parentSpace_PAR_GRP'.format(child['childPrefix'], child['childName'])
+                if child_def_joints:
+                    connection_path = python_utils.searchForNode(self.baseGroups['output_group'], '{0}.offsetParentMatrix'.format(child_par_group), 4)
+                    if connection_path:
+                        parent_joint = cmds.listConnections(connection_path[-1], source=True, destination=False)[0]
+                        if cmds.ls(parent_joint, type='joint'):
+                            for joint in child_def_joints:
+                                par_mmult = cmds.ls('{0}_MCNST_MMULT'.format(joint))
+                                if par_mmult:
+                                    cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(parent_joint), '{0}.matrixIn[2]'.format(par_mmult[0]), force=True)
+                                cmds.connectJoint(joint, parent_joint, pm=True)
+                                cmds.setAttr('{0}.jointOrient'.format(joint), *[0,0,0])
+                                cmds.setAttr('{0}.segmentScaleCompensate'.format(joint), False)
+                            
 
 
     def getFullName(self):

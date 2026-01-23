@@ -21,8 +21,9 @@ PREV_RIG_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..
 class ConnectionTypes(NamedTuple):
     parent: str
     translateConstraint: str
+    blendParent: str
     spaceSwitch: str
-CONNECTION_TYPES = ConnectionTypes('parent', 'translateconstraint', 'spaceswitch')
+CONNECTION_TYPES = ConnectionTypes('parent', 'translateconstraint', 'blendparent', 'spaceswitch')
 
 class AttrConnectionTypes(NamedTuple):
     direct: str
@@ -34,14 +35,28 @@ class AttrConnectionTypes(NamedTuple):
     parent: str
     parentOffset: str
     parentOffsetTranslate: str
+    blendParent: str
     spaceSwitch: str
-ATTR_CONNECTION_TYPES = AttrConnectionTypes('direct', 'directtransform', 'directTranslate', 'copy', 'copytransform', 'proxy', 'parent', 'parentoffset', 'parentoffsettranslate', 'spaceswitch')
+ATTR_CONNECTION_TYPES = AttrConnectionTypes(
+    'direct',
+    'directtransform',
+    'directTranslate',
+    'copy',
+    'copytransform',
+    'proxy',
+    'parent',
+    'parentoffset',
+    'parentoffsettranslate',
+    'blendparent',
+    'spaceswitch'
+    )
 
 # Basic groups that the controller assumes exist in the maya scene.
 class BaseRigGroups(NamedTuple):
     geometry: str
     rig: str
-DEFAULT_GROUPS = BaseRigGroups('geometry_GRP', 'rig_GRP')
+    deform: str
+DEFAULT_GROUPS = BaseRigGroups('geometry_GRP', 'rig_GRP', 'deform_GRP')
 
 # This is a list of the modules that are compatible with the "joint to vertex" tool I made
 # to quickly snap groups of joints to a vertex/bunch of vertices
@@ -78,6 +93,7 @@ VERTEX_JOINT_COMPONENTS = [
 
 # MAYA SPECIFIC CONSTANTS
 POSITION_SAVE_ATTRS = {
+    'rotateOrder',
     'translateX',
     'translateY',
     'translateZ',

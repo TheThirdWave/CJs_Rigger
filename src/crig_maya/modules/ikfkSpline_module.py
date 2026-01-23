@@ -17,10 +17,16 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             num_joints = self.componentVars['numJoints']
         else:
             num_joints = 6
+
+        if 'reverseFK' in self.componentVars:
+            self.reverseFK = self.componentVars['reverseFK']
+        else:
+            self.reverseFK = False
+
         self.bind_joints = [cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_base_BND_JNT'.format(self.prefix, self.name), position=(0, 0, 0), scaleCompensate=False)]
-        cmds.xform(self.bind_joints[0], rotation=(0, 0, 90))
+        cmds.xform(self.bind_joints[0], rotation=(0, 0, 0))
         for joint_idx in range(num_joints - 1):
-            self.bind_joints.append(cmds.joint(self.bind_joints[joint_idx], name='{0}_{1}_{2}_BND_JNT'.format(self.prefix, self.name, joint_idx + 1), position=(1, 0, 0), relative=True, scaleCompensate=False))
+            self.bind_joints.append(cmds.joint(self.bind_joints[joint_idx], name='{0}_{1}_{2}_BND_JNT'.format(self.prefix, self.name, joint_idx + 1), position=(0, 1, 0), relative=True, scaleCompensate=False))
         self.bind_joints[-1] = cmds.rename(self.bind_joints[-1], '{0}_{1}_end_BND_JNT'.format(self.prefix, self.name))
 
     def createControlRig(self):
@@ -312,7 +318,13 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             ik_rough_control_joints.append(new_rough_control_joint)
         ik_rough_control_joints.append(end_rough_control_joint)
         rough_param_list.append(rough_curve_max_param)
-        cmds.skinCluster(ik_rough_control_joints, ik_rough_curve, toSelectedBones=True, bindMethod=0, maximumInfluences=2, obeyMaxInfluences=True, dropoffRate=7)
+        # Create the rough curves and use them to drive the originals with a wire deformer
+        ik_rough_control_curve = cmds.duplicate(ik_rough_curve, name='{0}_{1}_ik_rough_DEF_CRV'.format(self.prefix, self.name))[0]
+        cmds.rebuildCurve(ik_rough_control_curve, constructionHistory=False, degree=3, spans=((len(ik_rough_control_joints) - 1) * 2), keepTangents=False)
+        cmds.wire(ik_rough_curve, wire=ik_rough_control_curve, name='{0}_{1}_ik_rough_DEF_WIRD'.format(self.prefix, self.name), dropoffDistance=[0,10])
+        #cmds.skinCluster(ik_rough_control_joints, ik_rough_control_curve, toSelectedBones=True, bindMethod=0, maximumInfluences=2, obeyMaxInfluences=True, dropoffRate=7)
+        cmds.skinCluster(ik_rough_control_joints, ik_rough_control_curve, toSelectedBones=True, bindMethod=0, maximumInfluences=2, obeyMaxInfluences=True, dropoffRate=7)
+        cmds.addAttr(ik_rough_control_curve, longName=constants.BOUND_GEO_ATTR, attributeType='bool', defaultValue=True)
 
         parent = joint_objects[idx]['ik_rough_joint']
 
@@ -392,9 +404,53 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         parent = fk_joints[0]
         for joint in fk_joints:
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(joint)
-            control_place_group, joint_control = python_utils.makeDirectControl('{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'FK', 'CTL', 'CRV'), joint, 1.0, 'square')
+            control_place_group, joint_control = python_utils.makeDirectControl('{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'FK', 'CTL', 'CRV'), joint, 1.25, 'square')
             fk_base_controls.append(joint_control)
             fk_base_place_groups.append(control_place_group)
+
+        # If reverseFK is asked for, we create a new joint chain going in reverse (the base is parented under the end) underneath
+        # the forward fk chain, parent the joints under *those* controls, and do some double-parenting to make the reverse fk
+        # chain follow the forward fk chain.
+        if self.reverseFK:
+            fk_forward_controls = fk_base_controls
+            fk_forward_place_groups = fk_base_place_groups
+            fk_reverse_controls = [None] * len(fk_joints)
+            fk_reverse_place_groups = [None] * len(fk_joints)
+            fk_reverse_parent_groups = [None] * len(fk_joints)
+            fk_reverse_mult_node = [None] * len(fk_joints)
+            fk_reverse_par_mult_node = [None] * len(fk_joints)
+            reverse_parent = fk_forward_controls[-1]
+            for i in range(len(fk_joints)-1, -1, -1):
+                joint = fk_joints[i]
+                prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(joint)
+                place_group, control = python_utils.makeControl('{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'rev_FK', 'CTL', 'CRV'), 1.0, curveType="cross")
+                cmds.matchTransform(place_group, fk_forward_place_groups[i])
+                cmds.parent(place_group, reverse_parent)
+                parent_group = cmds.group(name='{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'rev_FK', 'PAR', 'GRP'), empty=True)
+                cmds.matchTransform(parent_group, place_group)
+                cmds.parent(parent_group, place_group)
+                cmds.parent(control, parent_group)
+                fk_reverse_parent_groups[i] = parent_group
+                # We get the joint out of the forward chain because otherwise you can't parent it to
+                # the bottom.
+                if i < (len(fk_joints) - 1):
+                    cmds.parent(fk_forward_place_groups[i + 1], fk_forward_controls[i])
+                cmds.parent(joint, control)
+                reverse_parent = joint
+                fk_reverse_controls[i] = control
+                fk_reverse_place_groups[i] = place_group
+
+                mult_node = cmds.createNode('multMatrix', name='{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'rev_FK', 'SAS', 'MMULT'))
+                fk_reverse_mult_node[i] = mult_node
+                cmds.connectAttr('{0}.matrixSum'.format(mult_node), '{0}.offsetParentMatrix'.format(fk_reverse_place_groups[i]))
+                par_mult_node = cmds.createNode('multMatrix', name='{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'rev_par_FK', 'SAS', 'MMULT'))
+                fk_reverse_par_mult_node[i] = par_mult_node
+                cmds.connectAttr('{0}.matrixSum'.format(par_mult_node), '{0}.offsetParentMatrix'.format(fk_reverse_parent_groups[i]))
+                # Make the reverse controls follow the forward controls.
+                if i < (len(fk_joints) - 1):
+                    cmds.connectAttr('{0}.inverseMatrix'.format(fk_forward_controls[i + 1]), '{0}.matrixIn[1]'.format(mult_node))
+
+
 
         # Implement FK Squash and Stretch
         # As control Y translate increases, the X and Z scale values should decrease. (and vice-versa)
@@ -414,11 +470,13 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
         #   S = S1 + S2
         multByScaleFactorNodes = []
         roughControlHookNodes = []
+        sasGroups = []
         for i in range(len(fk_base_place_groups)):
             # Create squash and stretch parent group
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(fk_base_controls[i])
             new_sas_group = cmds.group(fk_base_place_groups[i], name='{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'SAS', 'PAR', 'GRP'))
             cmds.matchTransform(new_sas_group, fk_base_place_groups[i], piv=True)
+            sasGroups.append(new_sas_group)
 
             # Add length and scale factor attributes to the FK control.
             currentControl = fk_base_controls[i]
@@ -518,9 +576,14 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             cmds.connectAttr('{0}.outFloat'.format(invertScaling), '{0}.inputScaleX'.format(composeMatrix))
             cmds.connectAttr('{0}.outFloat'.format(invertScaling), '{0}.inputScaleZ'.format(composeMatrix))
 
-            if i < len(fk_base_place_groups) - 1:
-                cmds.connectAttr('{0}.outputMatrix'.format(composeMatrix), '{0}.offsetParentMatrix'.format(fk_base_place_groups[i + 1]))
-
+            if not self.reverseFK:
+                if i < len(fk_base_place_groups) - 1:
+                    cmds.connectAttr('{0}.outputMatrix'.format(composeMatrix), '{0}.offsetParentMatrix'.format(fk_base_place_groups[i + 1]))    
+            else:
+                cmds.addAttr(fk_reverse_controls[i], longName='Length', attributeType='float', proxy='{0}.Length'.format(currentControl), defaultValue=1.0, minValue=0.0001, keyable=True, hidden=False)
+                if i > 0:
+                    cmds.connectAttr('{0}.outputMatrix'.format(composeMatrix), '{0}.matrixIn[2]'.format(fk_reverse_mult_node[i - 1]))
+                    cmds.connectAttr('{0}.inverseMatrix'.format(sasGroups[i]), '{0}.matrixIn[0]'.format(fk_reverse_mult_node[i - 1]))
         # After making the base fk controls, make higher order controls that can smoothly rotate multiple joints.
         # Get the number of rough controls (half the regular controls rounded up.)
         rough_control_group = cmds.group(name='{0}_{1}_RC1_HOLD_GRP'.format(self.prefix, self.name), parent=fk_group, empty=True)
@@ -532,6 +595,9 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             num_higher_controls = int((len(fk_base_place_groups) / 2)) + 1
         fk_rough_controls_1 = []
         control_placement_indicies = []
+        if self.reverseFK:
+            fk_reverse_rough_controls = [None] * num_higher_controls
+            fk_reverse_rough_place_groups = [None] * num_higher_controls
 
         # Generate rough controls and use them to drive the fine controls.
         for i in range(num_higher_controls):
@@ -542,7 +608,7 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                 if j == control_placement_indicies[i]:
                     # Get base control name components and make rough control and placement group.
                     prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(control)
-                    rough_control = python_utils.makeSquareControl('{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'RC1', 'CTL', 'CRV'), 1.5)
+                    rough_control = python_utils.makeSquareControl('{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'RC1', 'CTL', 'CRV'), 2)
                     rough_place_group = cmds.group(rough_control, name='{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'RC1', 'PLC', 'GRP'))
                     cmds.matchTransform(rough_place_group, control)
                     cmds.parent(rough_place_group, parent)
@@ -558,6 +624,20 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
                     # Parent constrain the rough place group to the base place group it's on top of
                     # to get the rough control to follow the chain properly.
                     cmds.parentConstraint(fk_base_place_groups[j], rough_place_group, maintainOffset=True)
+                    if self.reverseFK:
+                        cmds.connectAttr('{0}.inverseMatrix'.format(base_control_new_parent), '{0}.matrixIn[1]'.format(fk_reverse_par_mult_node[j]))
+                        reverse_rough_place, reverse_rough_control = python_utils.makeControl('{0}_{1}_{2}_{3}_{4}_{5}'.format(prefix, component_name, joint_name, 'rev_RC1', 'CTL', 'CRV'), 1.5, curveType="cross")
+                        fk_reverse_rough_controls[i] = reverse_rough_control
+                        fk_reverse_rough_place_groups[i] = reverse_rough_place
+                        cmds.matchTransform(reverse_rough_place, rough_place_group)
+                        if i > 0:
+                            cmds.parent(fk_reverse_rough_place_groups[i - 1], reverse_rough_control)
+                        if i == num_higher_controls - 1:
+                            cmds.parent(reverse_rough_place, rough_control)
+                        python_utils.connectTransforms(reverse_rough_control, fk_reverse_parent_groups[j])
+                        cmds.parentConstraint(fk_reverse_place_groups[j], reverse_rough_place, maintainOffset=True)
+                        
+                        
                     j = j + 1
                     break
                 j = j + 1
@@ -591,15 +671,19 @@ class IKFKSpine(maya_base_module.MayaBaseModule):
             new_parent_group = cmds.group(fk_base_controls[i], name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PAR', 'GRP'))
             cmds.matchTransform(new_parent_group, fk_base_controls[i], piv=True)
             python_utils.createMatrixSwitch(fk_rough_controls_1[cur_placement_index], fk_rough_controls_1[next_placement_index], new_parent_group, False, next_control_weight)
+            if self.reverseFK:
+                cmds.connectAttr('{0}.inverseMatrix'.format(new_parent_group), '{0}.matrixIn[1]'.format(fk_reverse_par_mult_node[i]))
+                python_utils.createMatrixSwitch(fk_reverse_rough_controls[cur_placement_index], fk_reverse_rough_controls[next_placement_index], fk_reverse_parent_groups[i], False, next_control_weight)
+
 
             
         # Create a locator to hold the ik/fk switch attribute along with whatever else we might need later.
         data_locator = cmds.spaceLocator(name='{0}_{1}_ikfkspine_DAT_LOC'.format(self.prefix, self.name))[0]
         data_locator = cmds.parent(data_locator, fk_joints[0], relative=True)[0]
         cmds.select(data_locator)
-        cmds.addAttr(longName='ikfkswitch', defaultValue=0.0, minValue=0.0, maxValue=1.0)
-        cmds.addAttr(longName='ikFineControls', defaultValue=0.0, minValue=0.0, maxValue=1.0)
-        cmds.addAttr(longName='fkFineControls', defaultValue=0.0, minValue=0.0, maxValue=1.0)
+        cmds.addAttr(longName='ikfkswitch', keyable=True, hidden=False, defaultValue=0.0, minValue=0.0, maxValue=1.0)
+        cmds.addAttr(longName='ikFineControls', keyable=True, hidden=False, defaultValue=0.0, minValue=0.0, maxValue=1.0)
+        cmds.addAttr(longName='fkFineControls', keyable=True, hidden=False, defaultValue=0.0, minValue=0.0, maxValue=1.0)
 
         cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=0, value=1)
         cmds.setDrivenKeyframe('{0}.visibility'.format(ik_group), currentDriver='{0}.ikfkswitch'.format(data_locator), driverValue=1, value=0)

@@ -52,9 +52,15 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
 
         cmds.select(base_control)
         cmds.addAttr(longName='length', attributeType='float', defaultValue=1.0, minValue=0.0, keyable=True, hidden=False)
-        cmds.addAttr(longName='ikfkswitch', defaultValue=1.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
+        cmds.addAttr(longName='zlock', defaultValue=1.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
+        cmds.addAttr(longName='rotlock', defaultValue=0.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
 
-        python_utils.constrainTransformByMatrix(base_control, end_ik_joint, connectAttrs=['rotate'])
+        mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(base_control, end_ik_joint, connectAttrs=['rotate'])
+        blend_color = cmds.shadingNode('blendColors', name='{0}_BLND_BLNDC'.format(matrix_decompose), asUtility=True)
+        cmds.setAttr('{0}.color1'.format(blend_color), *cmds.getAttr('{0}.outputRotate'.format(matrix_decompose))[0])
+        cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.color2'.format(blend_color))
+        cmds.connectAttr('{0}.rotlock'.format(base_control), '{0}.blender'.format(blend_color))
+        cmds.connectAttr('{0}.output'.format(blend_color), '{0}.rotate'.format(end_ik_joint), force=True)
 
         # Create single solver ik system.
         ik_handle, ik_effector = cmds.ikHandle( name='{0}_{1}_base_IKS_HDL'.format(self.prefix, self.name),
@@ -140,7 +146,7 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
                 '{0}.outFloat'.format(divScaleLen),
                 '{0}.translateY'.format(end_ik_joint),
                 0.0)
-        cmds.connectAttr('{0}.ikfkswitch'.format(base_control), '{0}.blender'.format(scalar_blend_node))
+        cmds.connectAttr('{0}.zlock'.format(base_control), '{0}.blender'.format(scalar_blend_node))
 
 
         # Connect control to bind joint.

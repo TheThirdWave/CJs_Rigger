@@ -7,8 +7,8 @@ from .. import base_controller, constants, graph_utils
 
 class MayaController(base_controller.BaseController):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, uistate):
+        super().__init__(uistate)
         self._modulePath = constants.MAYA_MODULES_PATH
         self._dccPath = constants.MAYA_CRIG_PATH
         self._components = []
@@ -16,6 +16,7 @@ class MayaController(base_controller.BaseController):
         self._componentGraph = None
         self._bindPositionData = {}
         self._controlsData = {}
+        self.postScripts = []
         self._utils = python_utils
 
     @property
@@ -75,6 +76,14 @@ class MayaController(base_controller.BaseController):
         self._controlsData = c
 
     @property
+    def postScripts(self):
+        return self._postScripts
+    
+    @postScripts.setter
+    def postScripts(self, ps):
+        self._postScripts = ps
+
+    @property
     def utils(self):
         return self._utils
     
@@ -114,7 +123,7 @@ class MayaController(base_controller.BaseController):
 
         #Attributes that were just copied between components rather than directly plugged in might not have been
         #initialized properly due to ordering issues.  We re-copy them here in order to make sure they're correct.
-        self.refreshCopiedAttrs()
+        iter.breadthFirstIteration(self.componentGraph, self.refreshCopiedAttrs)
 
         #After all the parent-child relationships are propagated properly, loop through again to set up
         #The attribute limits.
@@ -135,13 +144,35 @@ class MayaController(base_controller.BaseController):
         # You'd think this would be in the bindSkin function, but it's not.  For reasons.
         self.handleSpecialBindOps()
 
+        # Unreal engine has some restrictions that we can try to correct for.
+        if self._uistate.unrealCheck.isChecked():
+            # Move all of the individual deform joints into one
+            # hierarchy for Unreal compatibility.
+            #self.buildDeformSkeleton()
+            root_joint = cmds.joint(constants.DEFAULT_GROUPS.deform, name='C_unreal_root_BND_JNT')
+            iter = graph_utils.ComponentGraphIterator()
+            iter.breadthFirstIteration(self.componentGraph, self.parentDeformJoints)
+            self.parentJointsToRoot(root_joint)
+
         self.setControlColors()
+        self.setJointLabels()
+
+        # REFRESH ALL THE THINGS
+        iter.breadthFirstIteration(self.componentGraph, self.refreshCopiedAttrs)
+        iter.breadthFirstIteration(self.componentGraph, self.refreshBlendParents)
+        iter.breadthFirstIteration(self.componentGraph, self.refreshCopiedAttrs)
+
+        # Run post generation scripts.
+        self.runPostGenerationScripts()
+
 
 
     def callControlRigAndConnect(self, component):
         component.createControlRig()
         self.connectModuleToChildren(component)
 
+    def parentDeformJoints(self, component):
+        component.parentChildDeformJoints()
 
     # Loads skin data from the bind_skin .json file and binds it to the bind joints
     def bindSkin(self, skin_data_path):
@@ -156,9 +187,26 @@ class MayaController(base_controller.BaseController):
                         self.connectParentLogic(child, ccomponent, component)
 
 
-    def refreshCopiedAttrs(self):
-        for component in self.components:
-            component.refreshCopiedAttrs()
+    def refreshCopiedAttrs(self, component):
+        component.refreshCopiedAttrs()
+
+
+    def refreshBlendParents(self, component):
+        for child in component.children:
+            if child['connectionType'].lower() == constants.CONNECTION_TYPES.blendParent:
+                parentMatrixNode = '{0}_{1}_SPC_PARM'.format(child['childPrefix'], child['childName'])
+                max_idx = python_utils.findNextAvailableMultiIndex('{0}.target'.format(parentMatrixNode), 0, 'targetMatrix')
+                for i in range(max_idx):
+                    # We set all the offsetMatrix values to the inverse rotation of the targetMatrix, because the target matrices may have changed.
+                    cmds.setAttr('{0}.target[{1}].offsetMatrix'.format(parentMatrixNode, i),
+                                  cmds.matrixUtil(
+                                      *cmds.matrixUtil(
+                                          *cmds.getAttr('{0}.target[{1}].targetMatrix'.format(parentMatrixNode, i)), query=True, inverse=True, rotation=False),
+                                           edit=True,
+                                           translation=[0,0,0]
+                                           ),
+                                       type='matrix'
+                                       )
 
 
     def handleSpecialBindOps(self):
@@ -170,6 +218,14 @@ class MayaController(base_controller.BaseController):
                     self.keepChildPositionsBind(component, bind)
                 else:
                     constants.RIGGER_LOG.error('Unknown component bindGeometry type {0} in component {1}!  I don\'t actually use this for much.'.format(bind['bindType'], component.name))
+
+    def buildDeformSkeleton(self):
+        root_joint = cmds.joint(constants.DEFAULT_GROUPS.deform, name='C_unreal_root_BND_JNT')
+        for component in self.components:
+            component_joints = cmds.listRelatives(component.baseGroups['deform_group'], children=True)
+            if component_joints:
+                for joint in component_joints:
+                    cmds.parent(joint, root_joint)
 
     def setControlColors(self):
         controls = cmds.ls('*_CTL_CRV')
@@ -184,7 +240,28 @@ class MayaController(base_controller.BaseController):
             else:
                 cmds.setAttr('{0}.overrideColorRGB'.format(control), 0.0, 0.0, 1.0)
 
+    def setJointLabels(self):
+        for component in self.components:
+            component_joints = cmds.listRelatives(component.baseGroups['deform_group'], allDescendents=True, type='joint')
+            if component_joints:
+                for joint in component_joints:
+                    prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(joint)
+                    cmds.setAttr('{0}.type'.format(joint), 18)
+                    if prefix == 'C':
+                        cmds.setAttr('{0}.side'.format(joint), 0)
+                    elif prefix == 'L':
+                        cmds.setAttr('{0}.side'.format(joint), 1)
+                    elif prefix == 'R':
+                        cmds.setAttr('{0}.side'.format(joint), 2)
+                    cmds.setAttr('{0}.otherType'.format(joint), '{0}_{1}_{2}_{3}'.format(component_name, joint_name, node_purpose, node_type), type='string')
     
+    def parentJointsToRoot(self, root_joint):
+        for component in self.components:
+            component_joints = cmds.listRelatives(component.baseGroups['deform_group'], children=True, type='joint')
+            if component_joints:
+                for joint in component_joints:
+                    cmds.parent(joint, root_joint)
+
     def offsetParentMatrixBind(self, component, bindData):
         geometry_name = '{0}_{1}'.format(component.prefix, bindData['bindGeo'])
         joint_name = '{0}_{1}_{2}'.format(component.prefix, component.name, bindData['bindJoint'])
@@ -209,7 +286,12 @@ class MayaController(base_controller.BaseController):
             bind_joints = []
             for vertex, touple in data.items():
                 [bind_joints.append(x[0]) for x in touple if x[0] not in bind_joints and cmds.ls(x[0])]
-            skinCluster = mel.eval('findRelatedSkinCluster ' + shape)
+
+            try:
+                skinCluster = mel.eval('findRelatedSkinCluster ' + shape)
+            except:
+                constants.RIGGER_LOG.warning('{0} shape does not exist, could not bind skin data.'.format(shape))
+                continue
             if not skinCluster:
                 try:
                     skinCluster = cmds.skinCluster(bind_joints, shape, name='{0}'.format(shape.split('|')[-1].replace('GEOShape', 'SCLST')), maximumInfluences=3, dropoffRate=7, toSelectedBones=True)[0]
@@ -252,18 +334,22 @@ class MayaController(base_controller.BaseController):
                     keys = python_utils.getDrivenKeys(child)
                     if keys:
                         keys_dict['{0}_{1}'.format(component.prefix, component.name)][child] = keys
-                if cmds.attributeQuery(constants.SAVE_ATTR_LIST_ATTR, node=child, exists=True):
-                    # If there are attributes to save, we save them out.
-                    attribute_string = cmds.getAttr('{0}.{1}'.format(child, constants.SAVE_ATTR_LIST_ATTR))
-                    attribute_list = attribute_string.split(',')
-                    dictionized_attrs = python_utils.dictionizeAttrs([child], attribute_list, type=True)
-                    if '{0}_{1}'.format(component.prefix, component.name) not in attrs_dict:
-                        attrs_dict['{0}_{1}'.format(component.prefix, component.name)] = {}
-                    attrs_dict['{0}_{1}'.format(component.prefix, component.name)][child] = dictionized_attrs[child]
-                    # Save out the list of saved attributes.
-                    attrs_dict['{0}_{1}'.format(component.prefix, component.name)][child][constants.SAVE_ATTR_LIST_ATTR] = {}
-                    attrs_dict['{0}_{1}'.format(component.prefix, component.name)][child][constants.SAVE_ATTR_LIST_ATTR]['data'] = attribute_string
-                    attrs_dict['{0}_{1}'.format(component.prefix, component.name)][child][constants.SAVE_ATTR_LIST_ATTR]['type'] = 'string'
+        # Check everything (yikes) for "theJuice"
+        everything = cmds.ls('*.{0}'.format(constants.SAVE_ATTR_LIST_ATTR), flatten=True)
+        for thing in everything:
+            if cmds.attributeQuery(constants.SAVE_ATTR_LIST_ATTR, node=thing, exists=True):
+                # If there are attributes to save, we save them out.
+                node, attr = thing.split('.')
+                attribute_string = cmds.getAttr(thing)
+                attribute_list = attribute_string.split(',')
+                dictionized_attrs = python_utils.dictionizeAttrs([node], attribute_list, type=True)
+                if '{0}_{1}'.format(component.prefix, component.name) not in attrs_dict:
+                    attrs_dict['{0}_{1}'.format(component.prefix, component.name)] = {}
+                attrs_dict['{0}_{1}'.format(component.prefix, component.name)][node] = dictionized_attrs[node]
+                # Save out the list of saved attributes.
+                attrs_dict['{0}_{1}'.format(component.prefix, component.name)][node][constants.SAVE_ATTR_LIST_ATTR] = {}
+                attrs_dict['{0}_{1}'.format(component.prefix, component.name)][node][constants.SAVE_ATTR_LIST_ATTR]['data'] = attribute_string
+                attrs_dict['{0}_{1}'.format(component.prefix, component.name)][node][constants.SAVE_ATTR_LIST_ATTR]['type'] = 'string'
         self.controlsData[constants.CONTROL_DATA_KEYS.curves] = curves_dict
         self.controlsData[constants.CONTROL_DATA_KEYS.drivenKeys] = keys_dict
         self.controlsData[constants.CONTROL_DATA_KEYS.attributes] = attrs_dict
@@ -293,15 +379,34 @@ class MayaController(base_controller.BaseController):
                 self.connectModuleAttrs(child, module)
 
     def updateControlCurves(self):
+        if not 'curves' in self.controlsData:
+            return
         for component, component_data in self.controlsData['curves'].items():
             for name in component_data:
                 if cmds.ls(name):
                     curve = om2.MFnNurbsCurve(python_utils.getDagPath(name))
-                    curve.setCVPositions(component_data[name]['points'])
-                    curve.setKnots(component_data[name]['knots'], 0 , len(component_data[name]['knots']) - 1)
-                    curve.updateCurve()
+                    degree = curve.degree
+                    if 'degree' in component_data[name]:
+                        degree = component_data[name]['degree']
+                    periodic = False
+                    if 'form' in component_data[name] and component_data[name]['form'] == 3:
+                        periodic = True
+                    knots = curve.knots()
+                    if 'knots' in component_data[name]:
+                        knots = component_data[name]['knots']
+                    
+                    new_curve = cmds.curve(name='temp_update_curve', degree=degree, point=component_data[name]['points'], knot=knots, periodic=periodic)
+                    python_utils.copyCurve(new_curve, [name])
+                    cmds.delete(new_curve)
+                    #curve = om2.MFnNurbsCurve(python_utils.getDagPath(name))
+                    #curve.setCVPositions(component_data[name]['points'])
+                    #if 'knots' in component_data[name]:
+                        #curve.setKnots(component_data[name]['knots'], 0 , len(component_data[name]['knots']) - 1)
+                    #curve.updateCurve()
 
     def createDrivenKeys(self):
+        if not constants.CONTROL_DATA_KEYS.drivenKeys in self.controlsData:
+            return
         components = self.controlsData[constants.CONTROL_DATA_KEYS.drivenKeys]
         for component, nodes in components.items():
             for node, attrs in nodes.items():
@@ -326,6 +431,8 @@ class MayaController(base_controller.BaseController):
                                 cmds.setInfinity(attr, preInfinite=keyData['infinites'][0].lower(), postInfinite=keyData['infinites'][1].lower())
 
     def setSavedAttrs(self):
+        if not constants.CONTROL_DATA_KEYS.attributes in self.controlsData:
+            return
         components = self.controlsData[constants.CONTROL_DATA_KEYS.attributes]
         for component, nodes in components.items():
             for node, attrs in nodes.items():
@@ -375,12 +482,59 @@ class MayaController(base_controller.BaseController):
             except:
                 constants.RIGGER_LOG.error('{0} and {1} could not be disconnected. This is weird and shouldn\'t happen here.(connectParentLogic)'.format(out_world, in_world))
             python_utils.decomposeAndRecompose(out_inv_world, in_inv_world, ['translate'])
+        elif connection_type == constants.CONNECTION_TYPES.blendParent:
+            self.handleBlendParent(child, childModule, parentModule)
         elif connection_type == constants.CONNECTION_TYPES.spaceSwitch:
             self.handleSpaceSwitch(child, childModule, parentModule)
         else:
             constants.RIGGER_LOG.info('{0} connection to child {1} not defined, skipping connection.'.format(parentModule.getFullName(), child['childName']))
         
         return
+
+    def handleBlendParent(self, child, childModule, parentModule):
+        out_group = '{0}_output_GRP'.format(parentModule.getFullName())
+        in_world = '{0}_input_GRP.{1}'.format(childModule.getFullName(), constants.DEFAULT_ATTRS.inWorld)
+        out_inv_world = '{0}_output_GRP.{1}'.format(parentModule.getFullName(), constants.DEFAULT_ATTRS.outInverseWorld)
+        in_inv_world = '{0}_input_GRP.{1}'.format(childModule.getFullName(), constants.DEFAULT_ATTRS.inInverseWorld)
+        input_group = '{0}_input_GRP'.format(childModule.getFullName())
+
+        # The blendparent node needs a target node in the child module to get offset data
+        # from, otherwise rotations/scaling won't work well.
+        target_node = '{0}_{1}'.format(childModule.getFullName(), childModule.componentVars['blendParentTarget'])
+        child_mat_om = om2.MMatrix(cmds.getAttr('{0}.worldMatrix'.format(target_node)))
+        in_om = om2.MMatrix(cmds.getAttr(in_world))
+        child_mat_om = child_mat_om * in_om.inverse()
+        
+        parent_matrix_name = '{0}_SPC_PARM'.format(childModule.getFullName())
+        inverse_matrix_name = '{0}_SPC_IMAT'.format(childModule.getFullName())
+        child_in_connections = cmds.listConnections(in_world, source=True, destination=False, plugs=True)
+        if not child_in_connections or not (parent_matrix_name in child_in_connections[0]):
+            # create matrix switch
+            parent_matrix = cmds.createNode('parentMatrix', name=parent_matrix_name)
+            # the in_world can only have one input and we don't want it to be whatever it was before.
+            cmds.connectAttr('{0}.outputMatrix'.format(parent_matrix_name), in_world, force=True)
+            # create inverse matrix
+            inverse_matrix = cmds.createNode('inverseMatrix', name=inverse_matrix_name)
+            cmds.connectAttr('{0}.outputMatrix'.format(parent_matrix_name), '{0}.inputMatrix'.format(inverse_matrix_name))
+            cmds.connectAttr('{0}.outputMatrix'.format(inverse_matrix_name), in_inv_world, force=True)
+
+        # Loop through attributes and add them to the parent matrix
+        for i in range(0, len(child['parentAttrs']), 2):
+            par_mat = child['parentAttrs'][i]
+            par_inv_mat = child['parentAttrs'][i+1]
+            # Add parent to matrix switch.
+            # find the next-available target slot
+            free_index = python_utils.findNextAvailableMultiIndex('{0}.target'.format(parent_matrix_name), 0, 'targetMatrix')
+
+            # We have to get the offset between the parent matrix and the target_node
+            par_mat_om = om2.MMatrix(cmds.getAttr('{0}.{1}'.format(out_group, par_mat)))
+            offset_mat_om = child_mat_om * par_mat_om.inverse()
+
+            # Plug in everything and hope.
+            cmds.connectAttr('{0}.{1}'.format(out_group, par_mat), '{0}.target[{1}].targetMatrix'.format(parent_matrix_name, free_index))
+            cmds.setAttr('{0}.target[{1}].offsetMatrix'.format(parent_matrix_name, free_index), [offset_mat_om.getElement(i, j) for i in range(4) for j in range(4)], type='matrix')
+            cmds.setAttr('{0}.target[{1}].weight'.format(parent_matrix_name, free_index), 1.0)
+
 
     def handleSpaceSwitch(self, child, childModule, parentModule):
         out_world = '{0}_output_GRP.{1}'.format(parentModule.getFullName(), constants.DEFAULT_ATTRS.outWorld)
@@ -652,14 +806,19 @@ class MayaController(base_controller.BaseController):
 
 
     def getVertexWeights(self, shape, skinCluster, ignoreThreshold=0.001):
+        newThreshold = ignoreThreshold
         if cmds.objectType(shape) == 'mesh':
             vertices = cmds.ls('{0}.vtx[*]'.format(shape), flatten=True)
         else:
             vertices = cmds.ls('{0}.cv[*]'.format(shape), flatten=True)
+            newThreshold = 0
         weightDict = {}
         for vertex in vertices:
-            influenceNames = cmds.skinPercent(skinCluster, vertex, query=True, transform=None, ignoreBelow=ignoreThreshold)
-            influenceValues = cmds.skinPercent(skinCluster, vertex, query=True, value=True, ignoreBelow=ignoreThreshold)
+            influenceNames = cmds.skinPercent(skinCluster, vertex, query=True, transform=None, ignoreBelow=newThreshold)
+            influenceValues = cmds.skinPercent(skinCluster, vertex, query=True, value=True, ignoreBelow=newThreshold)
             if influenceNames and influenceValues:
-                weightDict[vertex] = list(zip(influenceNames, influenceValues))
+                if newThreshold == 0:
+                    weightDict[vertex] = [x for x in list(zip(influenceNames, influenceValues)) if x[1] > ignoreThreshold]
+                else:
+                    weightDict[vertex] = list(zip(influenceNames, influenceValues))
         return weightDict

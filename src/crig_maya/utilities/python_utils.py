@@ -5,6 +5,7 @@ import maya.OpenMaya as om
 import maya.api.OpenMaya as om2
 
 from ... import constants
+from ... import graph_utils
 
 
 def setNodesFromDict(node_dict):
@@ -35,6 +36,78 @@ def zeroOutLocal(node):
         cmds.setAttr('{0}.scale'.format(node), 1,1,1)
     except:
         constants.RIGGER_LOG.info('couldn\'t zero out {0}.scale')
+
+def findDeepestChild(node, depth=0):
+    children = cmds.listRelatives(node, children=True, fullPath=True)
+    if not children:
+        return node, depth
+    end_child = node
+    end_depth = depth
+    for child in children:
+        out_child, out_depth = findDeepestChild(child, depth + 1)
+        if out_depth > end_depth:
+            end_child = out_child
+            end_depth = out_depth
+    return end_child, end_depth
+
+def searchForNode(upstream_obj, downstream_obj, depth=1):
+
+    upstream_node, upstream_attr = getNodeAndAttr(upstream_obj)
+    downstream_node, downstream_attr = getNodeAndAttr(downstream_obj)
+    
+    connections = [makeGraphNode(None, None, upstream_node, upstream_obj)]
+    return_path = []
+    brk = False
+    j = 0
+    # We set a maximum depth to search for sanity's sake.
+    for i in  range(depth):
+        # We loop through all the currently existing connections from where j ended in the last loop.
+        endj = len(connections)
+        while j < endj:
+            # We get all the new connections for this node, and append them to the connections list.
+            new_connections = cmds.listConnections(connections[j]['node'], plugs=True, connections=True, source=False, destination=True)
+            if new_connections:
+                for k in range(0, len(new_connections), 2):
+                    node, attr = getNodeAndAttr(new_connections[k+1])
+                    cur_node = makeGraphNode(connections[j], new_connections[k], node, new_connections[k+1])
+                    connections.append(cur_node)
+    
+                    # If the new connection is the one we're looking for, we follow the path back and put it into a list we return, then break out of all the loops.
+                    if new_connections[k+1] == downstream_obj:
+                        return_path.append(cur_node['attr'])
+                        return_path.append(cur_node['parentAttr'])
+                        while cur_node['parent']['attr'] != upstream_obj:
+                            cur_node = cur_node['parent']
+                            return_path.append(cur_node['attr'])
+                            return_path.append(cur_node['parentAttr'])
+                        brk = True
+                    if brk:
+                        break
+
+            if brk:
+                break
+            j += 1
+
+        if brk:
+            break
+    return return_path
+
+def getNodeAndAttr(obj):
+    split = obj.split('.', 1)
+    node = split[0]
+    attr = ''
+    if len(split) > 1:
+        downstream_attr = split[1]
+    return node, attr
+
+def makeGraphNode(parent, parentAttr, obj, attr):
+    node = {
+             'parent': parent,
+             'parentAttr': parentAttr,
+             'node': obj,
+             'attr': attr
+            }
+    return node
 
 def zeroJointOrient(joint):
     # Get rotation and the joint orient.
@@ -113,6 +186,32 @@ def connectTransforms(parent, child):
     cmds.connectAttr('{0}.translate'.format(parent), '{0}.translate'.format(child))
     cmds.connectAttr('{0}.rotate'.format(parent), '{0}.rotate'.format(child))
     cmds.connectAttr('{0}.scale'.format(parent), '{0}.scale'.format(child))
+
+# For the record, this function only exists because cmds.addAttr is bugged in Maya 2024 and doesn't let you
+# add enumNames to an empty enum attr after creation.
+def addEnumNames(node, attribute, enumList):
+    #First check if the attribute is actually an enum.
+    attrType = cmds.addAttr('{0}.{1}'.format(node, attribute), query=True, attributeType=True)
+    if attrType != 'enum':
+        constants.RIGGER_LOG.error('Attribute {0}.{1} is not an "enum", cannot add an enumName to it.'.format(node, attribute))
+        return
+    # Create new enum value
+    # First check if any values have already been created
+    input_depend_node = getDependNode(node)
+    dependNodeFn = om2.MFnDependencyNode(input_depend_node)
+    attrFn = om2.MFnEnumAttribute(dependNodeFn.attribute(attribute))
+    max = attrFn.getMax()
+    min = attrFn.getMin()
+    # If the minimum is higher than the max, no enum values have been defined for the attr yet, this would pose a problem if I
+    # was doing anything else with the attr, but the default max value for an undefined enum attr is -1, so it all works out.
+    # Because you can define an enum's value to whatever you want, it's possible for the next available enum value to actually be
+    # between the min and the max, which means we'd have to loop through all the values until we threw an exception to find the
+    # lowest free slot.  But that's work, so we'll just add the new value as "max + 1"
+    for enum in enumList:
+        next_value = max + 1
+        attrFn.addField(enum, next_value)
+        max = next_value
+
 
 def createMatrixSwitch(parent1, parent2, child, world_matrix=True, weight=0.0):
     if world_matrix:
@@ -222,9 +321,9 @@ def createScalarBlend(attr1, attr2, child, weight=0.0):
     cmds.connectAttr('{0}.outputR'.format(blend_color), child)
     return blend_color
 
-def constrainTransformByMatrix(parent, child, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear']):
+def constrainTransformByMatrix(parent, child, maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'], world_space=True):
     offset_matrix = getLocalOffset(parent, child)
-    mult_matrix, matrix_decompose = constrainByMatrix('{0}.worldMatrix'.format(parent), child, maintain_offset, use_parent_offset, connectAttrs)
+    mult_matrix, matrix_decompose = constrainByMatrix('{0}.worldMatrix'.format(parent), child, maintain_offset, use_parent_offset, connectAttrs, world_space)
     
     if maintain_offset:
         cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), [offset_matrix.getElement(i, j) for i in range(4) for j in range(4)], type="matrix")
@@ -619,9 +718,13 @@ def getCurveData(node):
     curve = om2.MFnNurbsCurve(getDagPath(node))
     point_array = curve.cvPositions()
     knot_array = curve.knots()
+    degree = curve.degree
+    form = curve.form
     out_dict = {
         'points': [],
-        'knots': []
+        'knots': [],
+        'degree': degree,
+        'form': form
     }
     for point in point_array:
         out_dict['points'].append([point[0], point[1], point[2]])
@@ -676,10 +779,16 @@ def insertJointAtParent(parent_joint, child_joint):
     return new_parent_joint
 
 def  makeCircleControl(name, scale):
+    curveType="circle"
     curve_points = constants.DEFAULT_CURVE_TEMPLATES['circle']['points']
     scaled_points = [[num*scale for num in point] for point in curve_points]
-    control = cmds.curve(name=name, d=constants.DEFAULT_CURVE_TEMPLATES['circle']['degree'], p=scaled_points)
-    cmds.closeCurve(name, ch=False, ps=False, rpo=True)
+    periodic = False
+    if 'form' in constants.DEFAULT_CURVE_TEMPLATES[curveType] and constants.DEFAULT_CURVE_TEMPLATES[curveType]['form'] == 3:
+        periodic = True
+    if 'knots' in constants.DEFAULT_CURVE_TEMPLATES[curveType]:
+        control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points, knot=constants.DEFAULT_CURVE_TEMPLATES[curveType]['knots'], periodic=periodic)
+    else:
+        control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points)
     return control
 
 def makeSquareControl(name, scale):
@@ -692,13 +801,48 @@ def makeSquareControl(name, scale):
 def makeControl(name, scale, curveType="circle"):
     curve_points = constants.DEFAULT_CURVE_TEMPLATES[curveType]['points']
     scaled_points = [[num*scale for num in point] for point in curve_points]
+    periodic = False
+    if 'form' in constants.DEFAULT_CURVE_TEMPLATES[curveType] and constants.DEFAULT_CURVE_TEMPLATES[curveType]['form'] == 3:
+        periodic = True
     if 'knots' in constants.DEFAULT_CURVE_TEMPLATES[curveType]:
-        control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points, knot=constants.DEFAULT_CURVE_TEMPLATES[curveType]['knots'])
+        control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points, knot=constants.DEFAULT_CURVE_TEMPLATES[curveType]['knots'], periodic=periodic)
     else:
         control = cmds.curve(name=name, degree=constants.DEFAULT_CURVE_TEMPLATES[curveType]['degree'], point=scaled_points)
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(name)
     position_group = cmds.group(control, name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, 'PLC', 'GRP'))
     return position_group, control
+
+def copyCurve(source, dest):
+    for dest in dest:
+        source_dupe = cmds.duplicate(source)[0]
+        source_shape_dupe = cmds.listRelatives(source_dupe, shapes=True, fullPath=True)[0]
+        dest_shape = cmds.listRelatives(dest, shapes=True, fullPath=True)[0]
+        parent_out = cmds.parent(source_shape_dupe, dest, shape=True, relative=True)[0]
+        parent_out_shape = parent_out.split('|')[-1]
+        dest_shapes = cmds.listRelatives(dest, shapes=True, fullPath=True)
+        new_shape_name = parent_out_shape
+        for shape in dest_shapes:
+            shape_name = shape.split('|')[-1]
+            if shape_name == parent_out_shape:
+                new_shape_name = shape
+                break
+        copyConnections(dest_shape, new_shape_name)
+        cmds.delete(dest_shape)
+        cmds.delete(source_dupe)
+
+def copyConnections(source, dest):
+    incoming_connections = cmds.listConnections(source, plugs=True, destination=False, connections=True)
+    outgoing_connections = cmds.listConnections(source, plugs=True, source=False, connections=True)
+    if incoming_connections:
+        for i in range(0, len(incoming_connections), 2):
+            source_node, source_attr = incoming_connections[i].split('.', 1)
+            incoming_node, incoming_attr = incoming_connections[i + 1].split('.', 1)
+            cmds.connectAttr('{0}.{1}'.format(incoming_node, incoming_attr), '{0}.{1}'.format(dest, source_attr), force=True)
+    if outgoing_connections:
+        for i in range(0, len(outgoing_connections), 2):
+            source_node, source_attr = outgoing_connections[i].split('.', 1)
+            outgoing_node, outgoing_attr = outgoing_connections[i + 1].split('.', 1)
+            cmds.connectAttr('{0}.{1}'.format(dest, source_attr), '{0}.{1}'.format(outgoing_node, outgoing_attr), force=True)
 
 def makeDirectControl(name, controlledNode, scale, curveType="circle", matchTransform=''):
     position_group, control = makeControl(name, scale, curveType)

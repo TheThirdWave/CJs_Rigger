@@ -80,35 +80,79 @@ class UtilsController(utils_controller.UtilsController):
                 continue
             # Get animCurve nodes driving attr
             for attr in driven_attrs:
-                drivers = cmds.listConnections(attr, source=True, type='animCurve')
-                # for each driver get the connections, then copy it and connect it to the opposite nodes.
-                for driver in drivers:
-                    driver_split = list(python_utils.getNodeNameParts(driver))
-                    d_connections = cmds.listConnections(driver, destination=False, connections=True, plugs=True)
-                    s_connections = cmds.listConnections(driver, source=False, connections=True, plugs=True)
-                    opposite_driver = cmds.duplicate(driver, name='{0}_{1}_{2}_{3}_{4}'.format(opposite_prefix, driver_split[1], driver_split[2], driver_split[3], driver_split[4]))
-                    for i in range(0, len(d_connections), 2):
-                        driver_connection = list(python_utils.getNodeNameParts(d_connections[i]))
-                        source_connection = list(python_utils.getNodeNameParts(d_connections[i + 1]))
-                        if source_connection[0] == 'R':
-                            source_connection[0] = 'L'
-                        elif source_connection[0] == 'L':
-                            source_connection[0] = 'R'
-                        cmds.connectAttr(
-                            '{0}_{1}_{2}_{3}_{4}'.format(source_connection[0], source_connection[1], source_connection[2], source_connection[3], source_connection[4]),
-                            '{0}_{1}_{2}_{3}_{4}'.format(opposite_prefix, driver_connection[1], driver_connection[2], driver_connection[3], driver_connection[4]),
-                        )
-                    for i in range(0, len(s_connections), 2):
-                        driver_connection = list(python_utils.getNodeNameParts(s_connections[i]))
-                        dest_connection = list(python_utils.getNodeNameParts(s_connections[i + 1]))
-                        if dest_connection[0] == 'R':
-                            dest_connection[0] = 'L'
-                        elif dest_connection[0] == 'L':
-                            dest_connection[0] = 'R'
-                        cmds.connectAttr(
-                            '{0}_{1}_{2}_{3}_{4}'.format(opposite_prefix, driver_connection[1], driver_connection[2], driver_connection[3], driver_connection[4]),
-                            '{0}_{1}_{2}_{3}_{4}'.format(dest_connection[0], dest_connection[1], dest_connection[2], dest_connection[3], dest_connection[4])
-                        )
+                drivers = cmds.listConnections(attr, source=True, type='animCurve', skipConversionNodes=True)
+                if drivers:
+                    # for each driver get the connections, then copy it and connect it to the opposite nodes.
+                    for driver in drivers:
+                        driver_split = list(python_utils.getNodeNameParts(driver))
+                        d_connections = cmds.listConnections(driver, destination=False, connections=True, plugs=True)
+                        s_connections = cmds.listConnections(driver, source=False, connections=True, plugs=True)
+                        opposite_driver = cmds.duplicate(driver, name='{0}_{1}_{2}_{3}_{4}'.format(opposite_prefix, driver_split[1], driver_split[2], driver_split[3], driver_split[4]))
+                        for i in range(0, len(d_connections), 2):
+                            driver_connection = list(python_utils.getNodeNameParts(d_connections[i]))
+                            source_connection = list(python_utils.getNodeNameParts(d_connections[i + 1]))
+                            if source_connection[0] == 'R':
+                                source_connection[0] = 'L'
+                            elif source_connection[0] == 'L':
+                                source_connection[0] = 'R'
+                            cmds.connectAttr(
+                                '{0}_{1}_{2}_{3}_{4}'.format(source_connection[0], source_connection[1], source_connection[2], source_connection[3], source_connection[4]),
+                                '{0}_{1}_{2}_{3}_{4}'.format(opposite_prefix, driver_connection[1], driver_connection[2], driver_connection[3], driver_connection[4]),
+                            )
+                        for i in range(0, len(s_connections), 2):
+                            driver_connection = list(python_utils.getNodeNameParts(s_connections[i]))
+                            dest_connection = list(python_utils.getNodeNameParts(s_connections[i + 1]))
+                            if dest_connection[0] == 'R':
+                                dest_connection[0] = 'L'
+                            elif dest_connection[0] == 'L':
+                                dest_connection[0] = 'R'
+                            cmds.connectAttr(
+                                '{0}_{1}_{2}_{3}_{4}'.format(opposite_prefix, driver_connection[1], driver_connection[2], driver_connection[3], driver_connection[4]),
+                                '{0}_{1}_{2}_{3}_{4}'.format(dest_connection[0], dest_connection[1], dest_connection[2], dest_connection[3], dest_connection[4])
+                            )
+
+                blends = cmds.listConnections(attr, source=True, type='blendWeighted', skipConversionNodes=True)
+                if blends:
+                    for blend in blends:
+                        opposite_blend = cmds.duplicate(blend)[0]
+                        numInputs = python_utils.findNextAvailableMultiIndex('{0}.input'.format(blend), 0)
+                        for idx in range(numInputs):
+                            drivers = cmds.listConnections('{0}.input[{1}]'.format(blend, idx), source=True, type='animCurve', skipConversionNodes=True)
+                            for driver in drivers:
+                                d_connections = cmds.listConnections(driver, destination=False, connections=True, plugs=True, skipConversionNodes=True)
+                                s_connections = cmds.listConnections(driver, source=False, connections=True, plugs=True, skipConversionNodes=True)
+                                opposite_driver = cmds.duplicate(driver)[0]
+                                for i in range(0, len(d_connections), 2):
+                                    driver_connection = d_connections[i].split('.')
+                                    source_connection = list(python_utils.getNodeNameParts(d_connections[i + 1]))
+                                    if source_connection[0] == 'R':
+                                        source_connection[0] = 'L'
+                                    elif source_connection[0] == 'L':
+                                        source_connection[0] = 'R'
+                                    cmds.connectAttr(
+                                        '{0}_{1}_{2}_{3}_{4}'.format(source_connection[0], source_connection[1], source_connection[2], source_connection[3], source_connection[4]),
+                                        '{0}.{1}'.format(opposite_driver, driver_connection[1])
+                                    )
+                                for i in range(0, len(s_connections), 2):
+                                    driver_connection = s_connections[i].split('.')
+                                    dest_connection = s_connections[i + 1].split('.')
+                                    if dest_connection[0] == 'R':
+                                        dest_connection[0] = 'L'
+                                    elif dest_connection[0] == 'L':
+                                        dest_connection[0] = 'R'
+                                    cmds.connectAttr(
+                                        '{0}.{1}'.format(opposite_driver, driver_connection[1]),
+                                        '{0}.{1}'.format(opposite_blend, dest_connection[1])
+                                    )
+                        s_connections = cmds.listConnections(blend, source=False, connections=True, plugs=True, skipConversionNodes=True)
+                        for i in range(0, len(s_connections), 2):
+                            driver_connection = s_connections[i].split('.')
+                            dest_connection = s_connections[i+1].split('.')
+                            if dest_connection[0] == 'R':
+                                dest_connection[0] = 'L'
+                            elif dest_connection[0] == 'L':
+                                dest_connection[0] = 'R'
+                            cmds.connectAttr('{0}.{1}'.format(opposite_blend, driver_connection[1]), '{0}.{1}'.format(opposite_node[0], dest_connection[1]))
 
     def generateVertexJoints(self, component, joint_data):
         # Get selected vertices.

@@ -18,8 +18,12 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
             num_joints = self.componentVars['numJoints']
         else:
             num_joints = 1
+        if 'separateControls' in self.componentVars:
+            self.separateControls = self.componentVars['separateControls']
+        else:
+            self.separateControls = True
 
-        self.joint_dict['baseJoint'] = cmds.group(name='{0}_{1}_base_PAR_GRP'.format(self.prefix, self.name), parent=self.baseGroups['deform_group'], empty=True)
+        self.joint_dict['baseJoint'] = cmds.group(parent=self.baseGroups['deform_group'], name='{0}_{1}_base_BND_JNT'.format(self.prefix, self.name), empty=True)
         for i in range(num_joints):
             self.joint_dict['bindJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_base_{2}_BND_JNT'.format(self.prefix, self.name, i), position=(0, 0, 0)))
 
@@ -33,7 +37,12 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         if not self.baseGroups:
             constants.RIGGER_LOG.warning('Base groups for component {0} not found, run "Generate Bind Joints" first.')
             return
-        
+
+        # delete "base joint" because it's messy and lame
+        for joint in self.joint_dict['bindJoints']:
+            cmds.parent(joint, self.baseGroups['deform_group'])
+        cmds.delete(self.joint_dict['baseJoint'])
+
         # Create user controls at placement joints.
         inner_place_group, inner_control = python_utils.replaceJointWithControl(self.inner_control_place_joint, 'inner', self.baseGroups['placement_group'])
         middle_place_group, middle_control = python_utils.replaceJointWithControl(self.middle_control_place_joint, 'middle', self.baseGroups['placement_group'])
@@ -44,7 +53,9 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         cmds.group(name=logic_group, parent=self.baseGroups['placement_group'], empty=True)
         cmds.inheritTransform(logic_group, off=True)
 
-        base_objects = [ {'joint': x} for x in self.joint_dict['bindJoints'] ]
+        base_objects = [ { 'bindJoint': x, 'joint': cmds.duplicate(x, name=x.replace('BND_JNT', 'CTL_JNT'))[0] } for x in self.joint_dict['bindJoints'] ]
+        for object in base_objects:
+            cmds.parent(object['joint'], logic_group)
 
         # Create the dense curve
         for object in base_objects:
@@ -63,7 +74,8 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         # Create the rough curve and use it to drive the original with a wire deformer
         rough_curve = cmds.duplicate(dense_curve, name='{0}_{1}_rough_DEF_CRV'.format(self.prefix, self.name))[0]
         cmds.rebuildCurve(rough_curve, constructionHistory=False, degree=3, spans=4, keepTangents=False)
-        cmds.wire(dense_curve, wire=rough_curve, name='{0}_{1}_base_DEF_WIRD'.format(self.prefix, self.name))
+        wire_def = cmds.wire(dense_curve, wire=rough_curve, name='{0}_{1}_base_DEF_WIRD'.format(self.prefix, self.name))[0]
+        cmds.setAttr('{0}.dropoffDistance[0]'.format(wire_def), 20)
 
         # Create controls/joints for rough curve
         num_controls = 3
@@ -71,6 +83,7 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
         rough_joints = []
         user_controls_place = [inner_place_group, middle_place_group, outer_place_group]
         user_controls = [inner_control, middle_control, outer_control]
+        control_stuff = []
         for idx in range(num_controls):
             pointOnCurve = python_utils.getPointAlongCurve((control_percent * idx), rough_curve)
             rough_joint = cmds.joint(logic_group, name='{0}_{1}_rough_{2}_CTL_JNT'.format(self.prefix, self.name, idx), position=[pointOnCurve.x, pointOnCurve.y, pointOnCurve.z])
@@ -84,8 +97,11 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
             cmds.setAttr('{0}.scale'.format(pos_group), *control_scale)
             rough_joints.append(rough_joint)
 
-            cmds.parent(user_controls[idx], all_control)
+            control_par = cmds.group(name=user_controls_place[idx].replace('PLC_GRP', 'PAR_GRP'), parent=all_control, empty=True)
+            cmds.matchTransform(control_par, user_controls_place[idx])
+            cmds.parent(user_controls[idx], control_par)
             python_utils.mirrorOffset(user_controls_place[idx], user_controls[idx], pos_group, rough_joint, liveParent=True)
+            control_stuff.append({ 'parentGroup': pos_group, 'control': rough_joint })
             #cmds.connectAttr('{0}.translate'.format(user_controls[idx]), '{0}.translate'.format(rough_joint))
             #cmds.connectAttr('{0}.rotate'.format(user_controls[idx]), '{0}.rotate'.format(rough_joint))
             #cmds.connectAttr('{0}.scale'.format(user_controls[idx]), '{0}.scale'.format(rough_joint))
@@ -93,6 +109,18 @@ class EyebrowsModule(maya_base_module.MayaBaseModule):
 
         # Then skin the rough joints to the rough curve.
         cmds.skinCluster(rough_joints, rough_curve, toSelectedBones=False, bindMethod=0, maximumInfluences=2, obeyMaxInfluences=True, dropoffRate=7, name='{0}_{1}_rough_CTL_SCST'.format(self.prefix, self.name))
+
+        if not self.separateControls:
+            cmds.inheritTransform(logic_group, off=False)
+            for object in base_objects:
+                cmds.inheritTransform(object['joint'], off=True)
+                python_utils.constrainTransformByMatrix(logic_group, object['joint'], maintain_offset=True, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'shear'], world_space=False)
+            for object in control_stuff:
+                cmds.inheritTransform(object['parentGroup'], off=True)
+            
+
+        for object in base_objects:
+            python_utils.constrainTransformByMatrix(object['joint'], object['bindJoint'], maintain_offset=False, use_parent_offset=False, connectAttrs=['rotate', 'scale', 'translate', 'shear'])
 
 
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])

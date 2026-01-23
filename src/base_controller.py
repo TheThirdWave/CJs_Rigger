@@ -12,9 +12,18 @@ from . import graph_utils
 
 class BaseController(ABC):
 
-    def __init__(self):
+    def __init__(self, uistate):
         constants.DEFAULT_CURVE_TEMPLATES = self.loadJSON(constants.CURVE_TEMPLATES_PATH)
+        self._uistate = uistate
         return
+
+    @property
+    def uiState(self):
+        return self._uistate
+
+#    @uiState.setter
+#    def uiState(self, ui):
+#        self._uistate = ui
 
     @property
     @abstractmethod
@@ -84,6 +93,16 @@ class BaseController(ABC):
     @controlsData.setter
     @abstractmethod
     def controlsData(self, c):
+        pass
+
+    @property
+    @abstractmethod
+    def postScripts(self):
+        return []
+    
+    @postScripts.setter
+    @abstractmethod
+    def postScripts(self, ps):
         pass
 
     @property
@@ -161,13 +180,20 @@ class BaseController(ABC):
                         self.loadedBlueprints[blueprint_type]['blueprintAliases'] = []
                     self.loadedBlueprints[blueprint_type]['blueprintAliases'].append(name)
                     for blueprint_component_name, blueprint_component_data in self.loadedBlueprints[blueprint_type]['components'].items():
-                        if not blueprint_component_data['prefix']:
-                            blueprint_component_data['prefix'] = data['prefix']
-                        for child in blueprint_component_data['children']:
+                        new_component = copy.deepcopy(blueprint_component_data)
+                        if not new_component['prefix']:
+                            new_component['prefix'] = data['prefix']
+                        for child in new_component['children']:
                             child['childName'] = '{0}{1}'.format(name, child['childName'])
                             if not child['childPrefix']:
                                 child['childPrefix'] = data['prefix']
-                        new_components['{0}{1}'.format(name, blueprint_component_name)] = blueprint_component_data
+                        if blueprint_component_name == self.loadedBlueprints[blueprint_type]['variables']['inputComponents'][0]:
+                            # Until I come up with a better idea, any children/attrs/etc. assigned to the blueprint by the
+                            # parent template will be added to the first inputcomponent
+                            new_component['inputAttrs'].extend(data['inputAttrs'])
+                            new_component['outputAttrs'].extend(data['outputAttrs'])
+                            new_component['children'].extend(data['children'])
+                        new_components['{0}{1}'.format(name, blueprint_component_name)] = new_component
         templates.update(new_components)
 
 
@@ -205,15 +231,36 @@ class BaseController(ABC):
                     new_component = copy.deepcopy(component)
                     new_component.prefix = 'L'
                     self.components.append(new_component)
+                new_children = []
                 for child in component.children:
                     if child['childPrefix'] == 'LR' or child['childPrefix'] == 'RL':
                         child['childPrefix'] = component.prefix
+                    elif (child['childPrefix'] == 'L' and component.prefix == 'R') or (child['childPrefix'] == 'R' and component.prefix == 'L'):
+                        continue
+                    new_children.append(child)
+                component.children = new_children
+                new_children = []
                 for child in new_component.children:
                     if child['childPrefix'] == 'LR' or child['childPrefix'] == 'RL':
                         child['childPrefix'] = new_component.prefix
+                    elif (child['childPrefix'] == 'L' and new_component.prefix == 'R') or (child['childPrefix'] == 'R' and new_component.prefix == 'L'):
+                        continue
+                    new_children.append(child)
+            if component.prefix == 'C':
+                new_children = []
+                for child in component.children:
+                    if child['childPrefix'] == 'LR' or child['childPrefix'] == 'RL':
+                        child['childPrefix'] = 'L'
+                        new_child = copy.deepcopy(child)
+                        new_child['childPrefix'] = 'R'
+                        new_children.append(new_child)
+                component.children.extend(new_children)
 
 
-            
+    def runPostGenerationScripts(self):
+        for script in self.postScripts:
+            exec(open(script).read())
+
 
     def importBindJointPositions(self, positions_path):
         if not self.components:
@@ -224,6 +271,11 @@ class BaseController(ABC):
         if not self.components:
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
         self.controlsData = self.loadJSON(control_data_path)
+
+    def importPostScripts(self, postscripts_path):
+        if not self.components:
+            constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
+        self.postScripts = self.loadLSV(postscripts_path)
 
     @abstractmethod
     def saveBindJointPositions(self, positions_path):
@@ -251,7 +303,14 @@ class BaseController(ABC):
         with open(path, 'r') as file:
             templates = yaml.safe_load(file)
         return templates
-    
+
+    def loadLSV(self, path):
+        lines = []
+        with open(path, 'r') as file:
+            for line in file:
+                lines.append(line.rstrip())
+        return lines
+
     def isComponent(self, cName, cPrefix, checkNodeData):
         if cName == checkNodeData.name and checkNodeData.prefix in cPrefix:
             return True

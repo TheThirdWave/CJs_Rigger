@@ -54,47 +54,47 @@ class KeepOutBelt(maya_base_module.MayaBaseModule):
             self.collisionObjects.append({'geometry': geo, 'cMuscle': muscle})
 
 
+        if (False):
+            # Actually load the plugin and create the Keep Out Disk node (should I load the plugin somewhere else? Probably.)
+            cmds.loadPlugin('Keep_Out_Disk.mll')
+            keep_out_disk_node = cmds.createNode('keepOutDisk', name='keepOutDiskNode')
 
-        # Actually load the plugin and create the Keep Out Disk node (should I load the plugin somewhere else? Probably.)
-        cmds.loadPlugin('Keep_Out_Disk.mll')
-        keep_out_disk_node = cmds.createNode('keepOutDisk', name='keepOutDiskNode')
+            # Everything in the plugin should act relative to the transform of the center_group
+            cmds.connectAttr('{0}.matrix'.format(center_group), '{0}.center'.format(keep_out_disk_node))
+            cmds.setAttr('{0}.centerWorld'.format(keep_out_disk_node), cmds.getAttr('{0}.worldMatrix[0]'.format(center_group)), type='matrix')
+            # Connect up the curve
+            cmds.connectAttr('{0}.local'.format(self.kod_curve), '{0}.edgeCurve'.format(keep_out_disk_node))
 
-        # Everything in the plugin should act relative to the transform of the center_group
-        cmds.connectAttr('{0}.matrix'.format(center_group), '{0}.center'.format(keep_out_disk_node))
-        cmds.setAttr('{0}.centerWorld'.format(keep_out_disk_node), cmds.getAttr('{0}.worldMatrix[0]'.format(center_group)), type='matrix')
-        # Connect up the curve
-        cmds.connectAttr('{0}.local'.format(self.kod_curve), '{0}.edgeCurve'.format(keep_out_disk_node))
+            joint_list = []
+            idx = 0
+            for joint_chain in self.joint_dict['keepOutJoints']:
+                # Create the control locs for the keep out disk
+                joint_chain['edgeLoc'] = python_utils.createLocAt(joint_chain['pivotJoint'], keep_out_disk_group, 'EDG')
+                cmds.connectAttr('{0}.matrix'.format(joint_chain['edgeLoc']), '{0}.edgeMatrix[{1}]'.format(keep_out_disk_node, idx))
 
-        joint_list = []
-        idx = 0
-        for joint_chain in self.joint_dict['keepOutJoints']:
-            # Create the control locs for the keep out disk
-            joint_chain['edgeLoc'] = python_utils.createLocAt(joint_chain['pivotJoint'], keep_out_disk_group, 'EDG')
-            cmds.connectAttr('{0}.matrix'.format(joint_chain['edgeLoc']), '{0}.edgeMatrix[{1}]'.format(keep_out_disk_node, idx))
+                joint_chain['measureLoc'] = python_utils.createLocAt(joint_chain['locatorJoint'], keep_out_disk_group, 'MEA')
+                # Create the KeepOut groups and connect them to the collision geometry
+                joint_chain['muscleKeepOut'], joint_chain['keepOutShape'], joint_chain['keepOutGroup'] = python_utils.rigForCMuscleKeepOut(joint_chain['measureLoc'], 'COLI')
+                jdx = 0 
+                for object in self.collisionObjects:
+                    cmds.connectAttr('{0}.muscleData'.format(object['cMuscle']), '{0}.muscleData[{1}]'.format(joint_chain['keepOutShape'], jdx))
+                    jdx += 1
+                # Because of the way the keep out stuff works we have to do a matrix mult to get the moving group into the locator space
+                mult_matrix = cmds.createNode('multMatrix', name='{0}_{1}_keepOut_{2}_ACNST_MMULT'.format(self.prefix, self.name, idx))
+                cmds.connectAttr('{0}.worldMatrix[0]'.format(joint_chain['keepOutGroup']), '{0}.matrixIn[0]'.format(mult_matrix))
+                cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(center_group), '{0}.matrixIn[1]'.format(mult_matrix))
+                cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.measureMatrix[{1}]'.format(keep_out_disk_node, idx))
 
-            joint_chain['measureLoc'] = python_utils.createLocAt(joint_chain['locatorJoint'], keep_out_disk_group, 'MEA')
-            # Create the KeepOut groups and connect them to the collision geometry
-            joint_chain['muscleKeepOut'], joint_chain['keepOutShape'], joint_chain['keepOutGroup'] = python_utils.rigForCMuscleKeepOut(joint_chain['measureLoc'], 'COLI')
-            jdx = 0 
-            for object in self.collisionObjects:
-                cmds.connectAttr('{0}.muscleData'.format(object['cMuscle']), '{0}.muscleData[{1}]'.format(joint_chain['keepOutShape'], jdx))
-                jdx += 1
-            # Because of the way the keep out stuff works we have to do a matrix mult to get the moving group into the locator space
-            mult_matrix = cmds.createNode('multMatrix', name='{0}_{1}_keepOut_{2}_ACNST_MMULT'.format(self.prefix, self.name, idx))
-            cmds.connectAttr('{0}.worldMatrix[0]'.format(joint_chain['keepOutGroup']), '{0}.matrixIn[0]'.format(mult_matrix))
-            cmds.connectAttr('{0}.worldInverseMatrix[0]'.format(center_group), '{0}.matrixIn[1]'.format(mult_matrix))
-            cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.measureMatrix[{1}]'.format(keep_out_disk_node, idx))
+                # Make sure the keep out shape has it's movement vector match the center_group's "up" direction.
+                center_group_transform = om2.MFnTransform(python_utils.getDagPath(center_group))
+                up_vec = om2.MVector.kYaxisVector.rotateBy(center_group_transform.rotation(om2.MSpace.kWorld, asQuaternion=True))
+                keepOutGroup_matrix = python_utils.getDagPath(joint_chain['keepOutGroup']).inclusiveMatrixInverse()
+                up_vec = up_vec * keepOutGroup_matrix
+                cmds.setAttr('{0}.inDirection'.format(joint_chain['keepOutShape']), *up_vec)
 
-            # Make sure the keep out shape has it's movement vector match the center_group's "up" direction.
-            center_group_transform = om2.MFnTransform(python_utils.getDagPath(center_group))
-            up_vec = om2.MVector.kYaxisVector.rotateBy(center_group_transform.rotation(om2.MSpace.kWorld, asQuaternion=True))
-            keepOutGroup_matrix = python_utils.getDagPath(joint_chain['keepOutGroup']).inclusiveMatrixInverse()
-            up_vec = up_vec * keepOutGroup_matrix
-            cmds.setAttr('{0}.inDirection'.format(joint_chain['keepOutShape']), *up_vec)
-
-            idx += 1
-        
-        cmds.connectAttr('{0}.outCenterMatrix'.format(keep_out_disk_node), '{0}.offsetParentMatrix'.format(base_control_joint))
+                idx += 1
+            
+            cmds.connectAttr('{0}.outCenterMatrix'.format(keep_out_disk_node), '{0}.offsetParentMatrix'.format(base_control_joint))
 
         # Set up the "bendy" motion of the belt that'll blend with the rigid KOD group
         bend_joints_group = cmds.group(name='{0}_{1}_bend_PAR_GRP'.format(self.prefix, self.name), empty=True, parent=self.baseGroups['placement_group'])

@@ -76,6 +76,7 @@ class FootControlModule(maya_base_module.MayaBaseModule):
 
         # Then parent handle to a group underneath the ankle.
         toe_wiggle_group = cmds.group(name='{0}_{1}_toe_wiggle_PAR_GRP'.format(self.prefix, self.name), parent=toe_locator, empty=True)
+        cmds.matchTransform(toe_wiggle_group, ball_locator)
         cmds.parent(toe_ik_handle, toe_wiggle_group)
 
         # Now we create all the attributes that control the various ik movements.
