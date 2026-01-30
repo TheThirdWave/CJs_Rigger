@@ -35,6 +35,7 @@ class AttrConnectionTypes(NamedTuple):
     parent: str
     parentOffset: str
     parentOffsetTranslate: str
+    localParentOffset: str
     blendParent: str
     spaceSwitch: str
 ATTR_CONNECTION_TYPES = AttrConnectionTypes(
@@ -47,6 +48,7 @@ ATTR_CONNECTION_TYPES = AttrConnectionTypes(
     'parent',
     'parentoffset',
     'parentoffsettranslate',
+    'localparentoffset',
     'blendparent',
     'spaceswitch'
     )

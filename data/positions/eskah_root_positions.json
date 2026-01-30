@@ -85,7 +85,7 @@
             "translateX": 5.997677326202393,
             "rotateZ": 0.0
         },
-        "L_headeyeBrow_base_PAR_GRP": {
+        "L_headeyeBrow_base_BND_JNT": {
             "scaleZ": 1.0,
             "scaleX": 1.0,
             "translateZ": 0.0,
@@ -4287,7 +4287,7 @@
             "translateX": -5.997677326202393,
             "rotateZ": 0.0
         },
-        "R_headeyeBrow_base_PAR_GRP": {
+        "R_headeyeBrow_base_BND_JNT": {
             "scaleZ": 1.0,
             "scaleX": 1.0,
             "translateZ": 0.0,

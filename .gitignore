@@ -151,3 +151,35 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+data/blueprints/full_hand.yaml
+data/blueprints/rocky_head_simple copy.yaml
+data/blueprints/rocky_head_simple.yaml
+data/blueprints/rocky_leg.yaml
+data/controls/arm_curves.json
+data/controls/axe_curves.json
+data/controls/rocky_controls copy.json
+data/controls/rocky_controls.json
+data/controls/wardrobe_curves.json
+data/positions/arm_positions.json
+data/positions/axe_positions.json
+data/positions/rocky_positions copy.json
+data/positions/rocky_positions.json
+data/positions/wardrobe_positions.json
+data/templates/arm_rig.yaml
+data/templates/eskah_unreal_rig.yaml
+data/templates/prop_template.yaml
+data/templates/rocky_rig.yaml
+data/templates/spine_test_rig.yaml
+data/templates/wardrobe_rig.yaml
+data/weights/axe_weights.json
+data/weights/eskah_unreal_weights_1.json
+data/weights/eskah_weights_1.json
+data/weights/rocky_weights copy.json
+data/weights/rocky_weights.json
+data/weights/spine_test_weights.json
+data/weights/wardrobe_weights.json
+data/previous_rig_paths.json
+data/defaults/curve_data.json
+data/positions/eskah_root_positions_backup.json
+data/positions/eskah_root_positions.json
+data/weights/eskah_weights_1.json

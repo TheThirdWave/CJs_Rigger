@@ -213,11 +213,13 @@ def addEnumNames(node, attribute, enumList):
         max = next_value
 
 
-def createMatrixSwitch(parent1, parent2, child, world_matrix=True, weight=0.0):
+def createMatrixSwitch(parent1, parent2, child, world_matrix=True, weight=0.0, dag=False):
     if world_matrix:
         attr = 'worldMatrix[0]'
     else:
         attr = 'matrix'
+    if dag:
+        attr = 'dagLocalMatrix'
     mult_matrix = None
     blend_matrix = cmds.createNode('blendMatrix', name='{0}_BLND_SWTCHM'.format(child))
     cmds.connectAttr('{0}.{1}'.format(parent1, attr), '{0}.inputMatrix'.format(blend_matrix))
@@ -252,7 +254,7 @@ def addParentToSpaceSwitch(enum_attr, enum_name, new_parent_matrix, base_parent_
     new_parent_inverse_matrix = '{0}.outputMatrix'.format(inverse_mat_node)
 
     # Create parent mult-matrix
-    mult_matrix = cmds.createNode('multMatrix', name='{0}_{1}_PSWTCH_MMUL'.format(child_transform, free_index))
+    mult_matrix = cmds.createNode('multMatrix', name='{0}_{1}_PSWTCH_MMULT'.format(child_transform, free_index))
 
     initial_child_matrix = cmds.getAttr(base_parent_matrix)
     cmds.setAttr('{0}.matrixIn[0]'.format(mult_matrix), initial_child_matrix, type='matrix')

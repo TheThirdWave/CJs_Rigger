@@ -909,7 +909,9 @@ class MouthModule(maya_base_module.MayaBaseModule):
             cmds.connectAttr('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), '{0}.inputMatrix'.format(matrix_decompose))
             #cmds.connectAttr('{0}.matrixSum'.format(mult_matrix), '{0}.inputMatrix'.format(matrix_decompose))
             cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.rotate'.format(left_halfway_loc))
+            cmds.connectAttr('{0}.outputScale'.format(matrix_decompose), '{0}.scale'.format(left_halfway_loc))
             cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.rotate'.format(right_halfway_loc))
+            cmds.connectAttr('{0}.outputScale'.format(matrix_decompose), '{0}.scale'.format(right_halfway_loc))
             python_utils.constrainTransformByMatrix(jaw_place_group, self.jaw_place_joint)
 
             python_utils.constrainByMatrix('{0}.worldMatrix[0]'.format(self.baseGroups['placement_group']), self.joint_dict['baseJoint'], True)

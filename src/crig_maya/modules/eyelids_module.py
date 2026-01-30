@@ -398,7 +398,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
         blink_locs = []
         # Create an intermediate curve that will go between the blink curve and the pointOnCurveInfo nodes because the Evaluation Manager hates me.
         pin_curve = cmds.duplicate(blink_curve, name='{0}_{1}_pin_DEF_CRV'.format(self.prefix, self.name))[0]
-        pin_shape = cmds.listRelatives(pin_curve)[0]
+        pin_shape = cmds.listRelatives(pin_curve, fullPath=True)[0]
         cmds.connectAttr('{0}.outputGeometry[0]'.format(blink_blendshape), '{0}.create'.format(pin_shape))
         for idx in range(1, num_controls - 1):
             pointOnCurve = python_utils.getPointAlongCurve((control_percent * idx), blink_curve)

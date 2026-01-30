@@ -128,6 +128,8 @@ class MayaBaseModule(base_module.BaseModule):
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
             if attr['attrType'] == 'enum' and 'enumVals' in attr:
                 python_utils.addEnumNames(output_group, attr['attrName'], attr['enumVals'])
+            if 'defaultVal' in attr:
+                cmds.addAttr('{0}.{1}'.format(output_group, attr['attrName']), edit=True, defaultValue=attr['defaultVal'])
         cmds.select(input_group)
         for attr in self.inputAttrs:
             if 'proxy' in attr and attr['proxy']:
@@ -138,6 +140,8 @@ class MayaBaseModule(base_module.BaseModule):
                 cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
             if attr['attrType'] == 'enum' and 'enumVals' in attr:
                 python_utils.addEnumNames(input_group, attr['attrName'], attr['enumVals'])
+            if 'defaultVal' in attr:
+                cmds.addAttr('{0}.{1}'.format(output_group, attr['attrName']), edit=True, defaultValue=attr['defaultVal'])
 
     def connectInputandOutputAttrs(self, output_group, input_group):
         cmds.select(output_group)

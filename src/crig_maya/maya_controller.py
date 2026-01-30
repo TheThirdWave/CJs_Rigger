@@ -696,11 +696,15 @@ class MayaController(base_controller.BaseController):
                     if lower_connection_type == constants.ATTR_CONNECTION_TYPES.parentOffset:
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
-                        python_utils.constrainByMatrix(new_attr, final_attr_path, True, False)
+                        python_utils.constrainByMatrix(new_attr, final_attr_path, True, True)
                     if lower_connection_type == constants.ATTR_CONNECTION_TYPES.parentOffsetTranslate:
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
                         python_utils.constrainByMatrix(new_attr, final_attr_path, True, False, ['translate'])
+                    if lower_connection_type == constants.ATTR_CONNECTION_TYPES.localParentOffset:
+                        new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
+                        final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
+                        python_utils.constrainByMatrix(new_attr, final_attr_path, False, True, ['rotate', 'scale', 'translate', 'shear'], False)
                     if lower_connection_type == constants.ATTR_CONNECTION_TYPES.spaceSwitch:
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])

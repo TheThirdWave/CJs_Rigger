@@ -15,6 +15,8 @@ class EmptyJointModule(maya_base_module.MayaBaseModule):
             constants.RIGGER_LOG.warning('Base groups for component {0} not found, run "Generate Bind Joints" first.')
             return
 
+        mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(self.baseGroups['placement_group'], self.bind_joint, True)
+
         self.connectInputandOutputAttrs(self.baseGroups['output_group'], self.baseGroups['input_group'])
 
         return
