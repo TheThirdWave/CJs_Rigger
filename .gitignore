@@ -183,3 +183,5 @@ data/defaults/curve_data.json
 data/positions/eskah_root_positions_backup.json
 data/positions/eskah_root_positions.json
 data/weights/eskah_weights_1.json
+data/previous_rig_paths.json
+data/blueprints/rocky_cape.yaml
