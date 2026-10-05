@@ -500,6 +500,20 @@ def duplicateBindJoint(bind_joint, parent, new_purpose_suffix):
                     )
     return new_joint
 
+def duplicateBindJointNew(bind_joint, parent, new_purpose_suffix):
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(bind_joint)
+    parent_world_matrix = om2.MTransformationMatrix(getDagPath(parent).inclusiveMatrix())
+    joint_world_matrix = om2.MTransformationMatrix(getDagPath(bind_joint).inclusiveMatrix())
+    parentSpaceMat = om2.MTransformationMatrix(joint_world_matrix.asMatrix() * parent_world_matrix.asMatrixInverse())
+    new_joint = cmds.joint(
+                        parent,
+                        name='{0}_{1}_{2}_{3}_{4}'.format(prefix, component_name, joint_name, new_purpose_suffix, node_type),
+                        radius=cmds.getAttr('{0}.radius'.format(bind_joint))
+                    )
+    transformFunc = om2.MFnTransform(getDagPath(new_joint))
+    transformFunc.setTransformation(parentSpaceMat)
+    return new_joint
+
 def duplicateBindChain(bind_joint, parent, new_purpose_suffix):
     prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(bind_joint)
     dupe_joints = cmds.duplicate(bind_joint, name=bind_joint.replace(node_purpose, new_purpose_suffix))
@@ -706,7 +720,7 @@ def getDrivenKeys(node):
             upstream_node_history = cmds.listHistory(upstream_node)
             for downstream_node in downstream_nodes:
                 downstream_node_history = cmds.listHistory(downstream_node, future=True)
-                common_nodes = [x for x in downstream_node_history if x in upstream_node_history and 'animCurve' in cmds.nodeType(x)]
+                common_nodes = [x for x in downstream_node_history if x in upstream_node_history and 'animCurveU' in cmds.nodeType(x)]
                 # If there's anything in common_nodes as near as I can tell it *has* to be the animCurve node we want.
                 if common_nodes:
                     dict[driver]['keyframes'] = cmds.keyframe(common_nodes[0], query=True, floatChange=True, valueChange=True, absolute=True, index=())
@@ -714,6 +728,24 @@ def getDrivenKeys(node):
                     dict[driver]['infinites'] = []
                     dict[driver]['infinites'].append(cmds.getAttr('{0}.preInfinity'.format(common_nodes[0]), asString=True))
                     dict[driver]['infinites'].append(cmds.getAttr('{0}.postInfinity'.format(common_nodes[0]), asString=True))
+    return keys_dict
+
+def getAnimKeys(node):
+    keys_dict = {}
+    incoming_connections = cmds.listConnections(node, connections=True, destination=False, plugs=True)
+    if incoming_connections:
+        for i in range(0, len(incoming_connections), 2):
+            attr = incoming_connections[i].split('.')[-1]
+            animCurves = cmds.keyframe(node, query=True, attribute=attr, name=True)
+            if animCurves:
+                for animCurve in animCurves:
+                    if 'animCurveT' in cmds.nodeType(animCurve):
+                        keys_dict[incoming_connections[i]] = {}
+                        keys_dict[incoming_connections[i]]['keyframes'] = cmds.keyframe(node, query=True, attribute=attr, timeChange=True, valueChange=True, absolute=True, index=())
+                        keys_dict[incoming_connections[i]]['keytangents'] = cmds.keyTangent(node, query=True, attribute=attr, inAngle=True, inTangentType=True, outAngle=True, outTangentType=True, index=())
+                        keys_dict[incoming_connections[i]]['infinites'] = []
+                        keys_dict[incoming_connections[i]]['infinites'].append(cmds.getAttr('{0}.preInfinity'.format(animCurve), asString=True))
+                        keys_dict[incoming_connections[i]]['infinites'].append(cmds.getAttr('{0}.postInfinity'.format(animCurve), asString=True))
     return keys_dict
 
 def getCurveData(node):
@@ -890,10 +922,11 @@ def replaceJointWithControl(joint, control_name, parent, shape="circle"):
         return placement_group, control
 
 def createRibbonFromJoints(front_joints, back_joints, parent_node, name):
-    temp_curve_1 = cmds.curve(name='{0}_{1}_temp_1_DEF_CRV'.format(self.prefix, self.name), point=front_joints, degree=1)
-    temp_curve_2 = cmds.curve(name='{0}_{1}_temp_2_DEF_CRV'.format(self.prefix, self.name), point=back_joints, degree=1)
+    prefix, component_name, joint_name, node_purpose, node_type = getNodeNameParts(parent_node)
+    temp_curve_1 = cmds.curve(name='{0}_{1}_temp_1_DEF_CRV'.format(prefix, component_name), point=front_joints, degree=1)
+    temp_curve_2 = cmds.curve(name='{0}_{1}_temp_2_DEF_CRV'.format(prefix, component_name), point=back_joints, degree=1)
     
-    new_ribbon = cmds.loft(temp_curve_1, temp_curve_2, constructionHistory=False, degree=1, name='{0}_{1}_{2}_DEF_RBN'.format(self.prefix, self.name, name))[0]
+    new_ribbon = cmds.loft(temp_curve_1, temp_curve_2, constructionHistory=False, degree=1, name='{0}_{1}_{2}_DEF_RBN'.format(prefix, component_name, name))[0]
     cmds.parent(new_ribbon, parent_node)
     cmds.xform(new_ribbon, centerPivots=True)
     cmds.delete(temp_curve_1)

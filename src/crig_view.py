@@ -1,43 +1,46 @@
 import os
-import shiboken2
-#import shiboken6
+#import shiboken2
+import copy
+import shiboken6
+import importlib
 
 import maya.OpenMayaUI as OpenMayaUI
-import maya.cmds as cmds
 
-from PySide2 import QtGui
-from PySide2 import QtCore
-from PySide2 import QtWidgets
+#from PySide2 import QtGui
+#from PySide2 import QtCore
+#from PySide2 import QtWidgets
 
-#from PySide6 import QtGui
-#from PySide6 import QtCore
-#from PySide6 import QtWidgets
+from PySide6 import QtGui
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 from . import constants
 from . import joint_widget_view
+from . import graph_utils
+from .crig_bifrost import bifrost_controller, bifrost_utils_controller
+from .crig_bifrost.views import tree_context_menu
 from .crig_maya import maya_controller, maya_utils_controller
-from .crig_maya.modules import root_module
 
 def get_maya_window():
     ptr = OpenMayaUI.MQtUtil.mainWindow()
-    return shiboken2.wrapInstance(int(ptr), QtWidgets.QWidget)
+    #return shiboken2.wrapInstance(int(ptr), QtWidgets.QWidget)
 
-    #return shiboken6.wrapInstance(int(ptr), QtWidgets.QWidget)
+    return shiboken6.wrapInstance(int(ptr), QtWidgets.QWidget)
 
 class ModularRigger(QtWidgets.QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, platform="maya", parent=None):
         QtWidgets.QMainWindow.__init__(self, parent=parent)
 
         self.__class__.instance = self
+        self.platform = platform
 
-        self.controller = maya_controller.MayaController(UI_STATE)
-        self.utils = maya_utils_controller.UtilsController()
+        self.loadControllers()
         self.filepaths_dict = {}
         self.maya_main_window = get_maya_window()
         self.setParent(self.maya_main_window)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setObjectName("CJ's Rigger")
+        self.setObjectName("CJ's Rigger -- {0}".format(platform))
 
         self.main_widget = QtWidgets.QWidget(self)
         self.setCentralWidget(self.main_widget)
@@ -50,9 +53,18 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.initUtilsWidgets()
         self.initMainPanelWidgets()
         self.initBuildButtonWidgets()
+        self.initDependentWidgets()
 
         self.setLayout(self.main_layout)
         self.main_widget.setLayout(self.main_layout)
+
+    def loadControllers(self):
+        if self.platform=="maya":
+            self.controller = maya_controller.MayaController(UI_STATE)
+            self.utils = maya_utils_controller.UtilsController()
+        elif self.platform=="bifrost":
+            self.controller = bifrost_controller.BifrostController(UI_STATE)
+            self.utils = bifrost_utils_controller.UtilsController()
 
     def initFileWidgets(self):
         # Set up template/position file browsers
@@ -61,6 +73,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.template_button = QtWidgets.QPushButton('Load Template')
         self.template_button.clicked.connect(self.getTemplatePath)
         self.template_save_button = QtWidgets.QPushButton('Save Template')
+        self.template_save_button.clicked.connect(self.saveTemplatesPath)
         self.template_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.template_layout)
         self.template_layout.addWidget(self.template_label)
@@ -115,7 +128,7 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.script_divider.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.main_layout.addWidget(self.script_divider)
 
-        self.postscript_label = QtWidgets.QLabel('Post Generation Scripts:')
+        self.postscript_label = QtWidgets.QLabel('Post Controls Scripts:')
         self.postscript_pathbox = QtWidgets.QLineEdit()
         self.postscript_button = QtWidgets.QPushButton('Load PostScripts')
         self.postscript_button.clicked.connect(self.getPostScriptPath)
@@ -124,6 +137,26 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.postscript_layout.addWidget(self.postscript_label)
         self.postscript_layout.addWidget(self.postscript_pathbox)
         self.postscript_layout.addWidget(self.postscript_button)
+
+        self.skinPostscript_label = QtWidgets.QLabel('Post Skinning Scripts:')
+        self.skinPostscript_pathbox = QtWidgets.QLineEdit()
+        self.skinPostscript_button = QtWidgets.QPushButton('Load skinning scripts')
+        self.skinPostscript_button.clicked.connect(self.getSkinPostscriptPath)
+        self.skinPostscript_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.skinPostscript_layout)
+        self.skinPostscript_layout.addWidget(self.skinPostscript_label)
+        self.skinPostscript_layout.addWidget(self.skinPostscript_pathbox)
+        self.skinPostscript_layout.addWidget(self.skinPostscript_button)
+
+        self.deletePostscript_label = QtWidgets.QLabel('Post Deletion Scripts:')
+        self.deletePostscript_pathbox = QtWidgets.QLineEdit()
+        self.deletePostscript_button = QtWidgets.QPushButton('Load delete scripts')
+        self.deletePostscript_button.clicked.connect(self.getDeletePostscriptPath)
+        self.deletePostscript_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.deletePostscript_layout)
+        self.deletePostscript_layout.addWidget(self.deletePostscript_label)
+        self.deletePostscript_layout.addWidget(self.deletePostscript_pathbox)
+        self.deletePostscript_layout.addWidget(self.deletePostscript_button)
 
     def initUtilsWidgets(self):
         # Init buttons
@@ -154,45 +187,64 @@ class ModularRigger(QtWidgets.QMainWindow):
 
 
     def initMainPanelWidgets(self):
-        self.component_list = QtWidgets.QListView()
-        self.placebo1 = QtWidgets.QLabel('placeholder 1')
-        self.placebo2 = QtWidgets.QLabel('placeholder 2')
-        self.placebo3 = QtWidgets.QLabel('placeholder 3')
-        self.placebo4 = QtWidgets.QLabel('placeholder 4')
+        self.component_model = QtGui.QStandardItemModel()
+        iter = graph_utils.ComponentGraphIterator()
+        iter.breadthFirstNodesIteration(self.controller.displayGraph, self.addToItemModel)
+        self.component_tree = QtWidgets.QTreeView()
+        self.component_tree.setModel(self.component_model)
+        self.component_tree.header().hide()
+        self.component_tree.clicked.connect(self.updateComponentLabel)
+        self.placebo1 = QtWidgets.QTextEdit('placeholder 1')
+        self.placebo1.setReadOnly(True)
         self.data_layout = QtWidgets.QVBoxLayout()
         self.data_layout.addWidget(self.placebo1)
-        self.data_layout.addWidget(self.placebo2)
-        self.data_layout.addWidget(self.placebo3)
-        self.data_layout.addWidget(self.placebo4)
         self.main_panel_layout = QtWidgets.QHBoxLayout()
-        self.main_panel_layout.addWidget(self.component_list)
+        self.main_panel_layout.addWidget(self.component_tree)
         self.main_panel_layout.addLayout(self.data_layout)
         self.main_layout.addLayout(self.main_panel_layout)
 
     def initBuildButtonWidgets(self):
         self.loc_button = QtWidgets.QPushButton('Generate Bind Joints')
-        self.loc_button.clicked.connect(self.controller.generateLocs)
+        self.loc_button.clicked.connect(self.callBuildLocs)
         self.joint_button = QtWidgets.QPushButton('Generate Components')
         self.joint_button.clicked.connect(self.callBuildControls)
         self.skin_button = QtWidgets.QPushButton('Bind Skin')
         self.skin_button.clicked.connect(self.callBindSkin)
+        self.delete_button = QtWidgets.QPushButton('Delete Rig')
+        self.delete_button.clicked.connect(self.callDelete)
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addWidget(self.loc_button)
         self.button_layout.addWidget(self.joint_button)
         self.button_layout.addWidget(self.skin_button)
+        self.button_layout.addWidget(self.delete_button)
         self.main_layout.addLayout(self.button_layout)
 
+    def initDependentWidgets(self):
+        if self.platform=="maya":
+            pass
+        elif self.platform=="bifrost":
+            tree_context_menu.addBifrostContextMenu(self)
+
+    def refreshComponentTreeView(self):
+        self.component_model.clear()
+        iter = graph_utils.ComponentGraphIterator()
+        iter.breadthFirstNodesIteration(self.controller.displayGraph, self.addToItemModel)
+
     def loadFilepathDicts(self):
+        self.filepaths_dict = self.controller.loadJSON(constants.PREV_RIG_DATA_PATH)
+        
+        self.catchFileInitError('template_path', self.initTemplateStuff)
+        self.catchFileInitError('positions_path', self.initPositionsStuff)
+        self.catchFileInitError('curves_path', self.initCurvesStuff)
+        self.catchFileInitError('skin_path', self.initSkinStuff)
+        self.catchFileInitError('postscript_path', self.postscript_pathbox.setText)
+        self.catchFileInitError('deletescript_path', self.deletePostscript_pathbox.setText)
+
+    def catchFileInitError(self, filepath, function):
         try:
-            self.filepaths_dict = self.controller.loadJSON(constants.PREV_RIG_DATA_PATH)
-            self.initTemplateStuff(self.filepaths_dict['template_path'])
-            self.initPositionsStuff(self.filepaths_dict['positions_path'])
-            self.initCurvesStuff(self.filepaths_dict['curves_path'])
-            self.initSkinStuff(self.filepaths_dict['skin_path'])
-            self.postscript_pathbox.setText(self.filepaths_dict['postscript_path'])
+            function(self.filepaths_dict[filepath])
         except:
-            constants.RIGGER_LOG.info('Previous rig data not found at {0}, leaving filepaths blank.'.format(constants.PREV_RIG_DATA_PATH))
-            self.filepaths_dict = {}
+            constants.RIGGER_LOG.info('LOAD_FAILURE: Previous rig data not found at {0}'.format(filepath))
 
     def saveFilepathDicts(self):
         try:
@@ -206,15 +258,24 @@ class ModularRigger(QtWidgets.QMainWindow):
         constants.TEMPLATES_PATH,
         'YAML files (*.yaml)'
         )
-        self.filepaths_dict['template_path'] = filename
-        self.saveFilepathDicts()
-        self.initTemplateStuff(filename)
+        if filename:
+            self.filepaths_dict['template_path'] = filename
+            self.saveFilepathDicts()
+            self.initTemplateStuff(filename)
+            self.refreshComponentTreeView()
+
+    def saveTemplatesPath(self):
+        filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
+        'Select Template File',
+        self.template_pathbox.text(),
+        'YAML files (*.yaml)'
+        )
+        if filename:
+            self.controller.saveTemplateData(filename)
 
     def initTemplateStuff(self, filename):
         self.template_pathbox.setText(filename)
-        self.controller.importModules(filename)
-        self.controller.duplicateLRComponents()
-        self.controller.buildComponentGraph()
+        self.initController()
 
     def getPositionsPath(self):
         filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
@@ -222,13 +283,13 @@ class ModularRigger(QtWidgets.QMainWindow):
         constants.POSITIONS_PATH,
         'JSON files (*.json)'
         )
-        self.filepaths_dict['positions_path'] = filename
-        self.saveFilepathDicts()
-        self.initPositionsStuff(filename)
+        if filename:
+            self.filepaths_dict['positions_path'] = filename
+            self.saveFilepathDicts()
+            self.initPositionsStuff(filename)
 
     def initPositionsStuff(self, filename):
         self.position_pathbox.setText(filename)
-        self.controller.importBindJointPositions(filename)
 
     def savePositionsPath(self):
         filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
@@ -236,8 +297,9 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.position_pathbox.text(),
         'JSON files (*.json)'
         )
-        self.position_pathbox.setText(filename)
-        self.controller.saveBindJointPositions(filename)
+        if filename:
+            self.position_pathbox.setText(filename)
+            self.controller.saveBindJointPositions(filename)
 
     def getCurvesPath(self):
         filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
@@ -245,9 +307,10 @@ class ModularRigger(QtWidgets.QMainWindow):
         constants.CONTROLS_PATH,
         'JSON files (*.json)'
         )
-        self.filepaths_dict['curves_path'] = filename
-        self.saveFilepathDicts()
-        self.initCurvesStuff(filename)
+        if filename:
+            self.filepaths_dict['curves_path'] = filename
+            self.saveFilepathDicts()
+            self.initCurvesStuff(filename)
 
     def initCurvesStuff(self, filename):
         self.curves_pathbox.setText(filename)
@@ -259,8 +322,9 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.curves_pathbox.text(),
         'JSON files (*.json)'
         )
-        self.curves_pathbox.setText(filename)
-        self.controller.saveControlData(filename)
+        if filename:
+            self.curves_pathbox.setText(filename)
+            self.controller.saveControlData(filename)
 
     def getSkinPath(self):
         filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
@@ -268,22 +332,13 @@ class ModularRigger(QtWidgets.QMainWindow):
         constants.SKIN_DATA_PATH,
         'JSON files (*.json)'
         )
-        self.filepaths_dict['skin_path'] = filename
-        self.saveFilepathDicts()
-        self.initSkinStuff(filename)
+        if filename:
+            self.filepaths_dict['skin_path'] = filename
+            self.saveFilepathDicts()
+            self.initSkinStuff(filename)
 
     def initSkinStuff(self, filename):
         self.bind_pathbox.setText(filename)
-
-    def getPostScriptPath(self):
-        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
-        'Post Script Data File',
-        constants.SKIN_DATA_PATH,
-        'Text files (*.txt)'
-        )
-        self.filepaths_dict['postscript_path'] = filename
-        self.saveFilepathDicts()
-        self.postscript_pathbox.setText(filename)
 
     def saveSkinPath(self):
         filename, filter = QtWidgets.QFileDialog.getSaveFileName(self,
@@ -291,23 +346,142 @@ class ModularRigger(QtWidgets.QMainWindow):
         self.bind_pathbox.text(),
         'JSON files (*.json)'
         )
-        self.bind_pathbox.setText(filename)
-        self.controller.saveBindSkinData(filename)
+        if filename:
+            self.bind_pathbox.setText(filename)
+            self.controller.saveBindSkinData(filename)
+
+    def getPostScriptPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Post Script Data File',
+        constants.POSTSCRIPTS_PATH,
+        'Text files (*.txt)'
+        )
+        if filename:
+            self.filepaths_dict['postscript_path'] = filename
+            self.saveFilepathDicts()
+            self.postscript_pathbox.setText(filename)
+
+    def getSkinPostscriptPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Post Skin Bind Script Data File',
+        constants.POSTSCRIPTS_PATH,
+        'Text files (*.txt)'
+        )
+        if filename:
+            self.filepaths_dict['postscript_path'] = filename
+            self.saveFilepathDicts()
+            self.skinPostscript_pathbox.setText(filename)
+
+    def getDeletePostscriptPath(self):
+        filename, filter = QtWidgets.QFileDialog.getOpenFileName(self,
+        'Post Script Data File',
+        constants.POSTSCRIPTS_PATH,
+        'Text files (*.txt)'
+        )
+        if filename:
+            self.filepaths_dict['deletescript_path'] = filename
+            self.saveFilepathDicts()
+            self.deletePostscript_pathbox.setText(filename)
+
+    def callBuildLocs(self):
+        try:
+            self.controller.importBindJointPositions(self.position_pathbox.text())
+        except:
+            constants.RIGGER_LOG.info('Could not load joint positions.')
+        self.controller.generateLocs()
 
     def callBuildControls(self):
         try:
-            self.controller.importPostScripts(self.postscript_pathbox.text())
+            self.controller.importPostScripts(self.postscript_pathbox.text(), constants.POSTSCRIPT_TYPES.controlGeneration)
         except:
             constants.RIGGER_LOG.info('Post script load failed for some reason.')
         self.controller.generateJoints()
 
     def callBindSkin(self):
+        try:
+            self.controller.importPostScripts(self.skinPostscript_pathbox.text(), constants.POSTSCRIPT_TYPES.skinBind)
+        except:
+            constants.RIGGER_LOG.info('Post bind script load failed for some reason.')
         self.controller.bindSkin(self.bind_pathbox.text())
+
+    def callDelete(self):
+        try:
+            self.controller.importPostScripts(self.deletePostscript_pathbox.text(), constants.POSTSCRIPT_TYPES.deletion)
+        except:
+            constants.RIGGER_LOG.info('Post script load failed for some reason.')
+        self.controller.delete()
+        self.controller = None
+        self.reloadLibs()
+        self.loadControllers()
+        self.loadFilepathDicts()
+        #self.initController()
+
+    def reloadLibs(self):
+        if self.platform=="maya":
+            importlib.reload(maya_controller)
+            importlib.reload(maya_utils_controller)
+        elif self.platform=="bifrost":
+            importlib.reload(bifrost_controller)
+            importlib.reload(bifrost_utils_controller)
+
+    def initController(self):
+        filename = self.template_pathbox.text()
+        self.controller.loadDisplayComponents(filename)
+        self.controller.buildDisplayGraph()
+        self.controller.importModules(filename)
+        self.controller.duplicateLRComponents()
+        self.controller.buildComponentGraph()
+        self.controller.mirrorComponentGraph()
 
     def activateVertexJointWidget(self):
         self.jointWidgetWindow = joint_widget_view.VertexJointUIPopup(self.controller, self.utils, self.filepaths_dict, self)
         self.jointWidgetWindow.show()
         self.jointWidgetWindow.resize(300, 150)
+
+    def updateComponentLabel(self, index):
+        clicked_item = self.component_model.itemFromIndex(index)
+        clicked_component = clicked_item.data(QtCore.Qt.UserRole)
+        component_dict = {}
+        for key, value in clicked_component.__dict__.items():
+            if '_' in key:
+                component_dict[key.replace('_', '')] = value
+            else:
+                component_dict[key] = value
+
+        yaml_string = self.controller.toYaml(component_dict)
+        self.placebo1.setText(yaml_string)
+
+    def addToItemModel(self, node):
+        if not node.parents:
+            parentItem = self.component_model.invisibleRootItem()
+        else:
+            parentItem = node.parents[0].qtItem
+        node.qtItem = QtGui.QStandardItem('{0}_{1}'.format(node.component.prefix, node.component.name))
+        node.qtItem.setData(node.component, QtCore.Qt.UserRole)
+        node.qtItem.setEditable(False)
+        parentItem.appendRow(node.qtItem)
+
+    def addBifrostContextMenu(self):
+        self.component_tree.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.ActionsContextMenu)
+
+        publish_action = QtGui.QAction(self)
+        publish_action.setText('publish_module')
+        publish_action.triggered.connect(self.publishModule)
+        self.component_tree.addAction(publish_action)
+
+    def publishModule(self):
+        clicked_item = self.component_model.itemFromIndex(self.component_tree.selectedIndexes()[0])
+        clicked_component = clicked_item.data(QtCore.Qt.UserRole)
+        component_dict = {}
+        for key, value in clicked_component.__dict__.items():
+            if '_' in key:
+                component_dict[key.replace('_', '')] = value
+            else:
+                component_dict[key] = value
+        component = self.controller.getComponent(component_dict['prefix'], component_dict['name'])
+        node = component.bifNode
+        constants.RIGGER_LOG.warning('hello, node is {}'.format(node))
+
 
 # Turns out I might need to pass some UI state to the controller, rather than doing some parent
 # pointer thing or passing what I need in the function calls, I'm going to make this holder class. Because reasons.
@@ -315,9 +489,9 @@ class UIState():
     unrealCheck: QtWidgets.QCheckBox
 UI_STATE = UIState()
 
-def run():
-        win = ModularRigger()
-        win.setWindowTitle("CJ's Rigger")
+def run(rigPlatform="maya"):
+        win = ModularRigger(rigPlatform)
+        win.setWindowTitle("CJ's Rigger -- {0}".format(rigPlatform))
         win.resize(900, 700)
         win.show()
         return win

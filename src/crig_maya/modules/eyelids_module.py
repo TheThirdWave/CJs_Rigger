@@ -507,7 +507,7 @@ class EyelidsModule(maya_base_module.MayaBaseModule):
 
         #Then we sneak in a "middle" curve that will act as an adjustable inbetween blend shape, this is needed to correct clipping issues from that extra
         #snap-to-the-locators thing we're adding just above (which is, itself, fixing other, different, clipping issues)
-        middle_curve = cmds.duplicate(blink_curve, name='{0}_{1}_middle_CTL_CRV'.format(self.prefix, self.name))[0]
+        middle_curve = cmds.duplicate(blink_curve, name='{0}_{1}_middle_DEF_CRV'.format(self.prefix, self.name))[0]
         cmds.blendShape(blink_blendshape, edit=True, inBetween=True, inBetweenType='relative', t=(blink_curve, 1, middle_curve, 0.5))
 
         if not self.separateControls:

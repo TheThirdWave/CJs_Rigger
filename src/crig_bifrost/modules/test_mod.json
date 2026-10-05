@@ -1,0 +1,2612 @@
+{
+    "header": {
+        "metadata": [
+            {
+                "metaName": "adskFileFormatVersion",
+                "metaValue": "100L"
+            }
+        ]
+    },
+    "namespaces": [],
+    "types": [],
+    "compounds": [
+        {
+            "name": "Rigging::CRIG::test_mod",
+            "metadata": [
+                {
+                    "metaName": "rigging_module",
+                    "metaType": "string",
+                    "metaValue": "True"
+                },
+                {
+                    "metaName": "documentation",
+                    "metaType": "string",
+                    "metaValue": "../docs/${language}/Rigging_Module_template_module.md"
+                },
+                {
+                    "metaName": "icon",
+                    "metaType": "string",
+                    "metaValue": "../icons/generic_rigging_module.svg"
+                },
+                {
+                    "metaName": "io_nodes",
+                    "metadata": [
+                        {
+                            "metaName": "io_inodes",
+                            "metadata": [
+                                {
+                                    "metaName": "user_setup_inputs",
+                                    "metadata": [
+                                        {
+                                            "metaName": "DisplayMode",
+                                            "metaType": "string",
+                                            "metaValue": "2"
+                                        },
+                                        {
+                                            "metaName": "LayoutPos",
+                                            "metaType": "string",
+                                            "metaValue": "-2424.92 -410.406"
+                                        },
+                                        {
+                                            "metaName": "io_ports"
+                                        },
+                                        {
+                                            "metaName": "zValue",
+                                            "metaType": "string",
+                                            "metaValue": "31.000000"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "Diagnostics_inputs",
+                                    "metadata": [
+                                        {
+                                            "metaName": "DisplayMode",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "LayoutPos",
+                                            "metaType": "string",
+                                            "metaValue": "-106.809 -651.295"
+                                        },
+                                        {
+                                            "metaName": "io_ports",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "display_pins"
+                                                },
+                                                {
+                                                    "metaName": "display_controls"
+                                                },
+                                                {
+                                                    "metaName": "display_joints"
+                                                },
+                                                {
+                                                    "metaName": "display_transforms"
+                                                },
+                                                {
+                                                    "metaName": "axes_shape"
+                                                },
+                                                {
+                                                    "metaName": "axes_scale"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "metaName": "zValue",
+                                            "metaType": "string",
+                                            "metaValue": "36.000000"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "General_inputs",
+                                    "metadata": [
+                                        {
+                                            "metaName": "DisplayMode",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "LayoutPos",
+                                            "metaType": "string",
+                                            "metaValue": "-2995.62 -623.83"
+                                        },
+                                        {
+                                            "metaName": "io_ports",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "inputs"
+                                                },
+                                                {
+                                                    "metaName": "parents"
+                                                },
+                                                {
+                                                    "metaName": "name"
+                                                },
+                                                {
+                                                    "metaName": "state"
+                                                },
+                                                {
+                                                    "metaName": "profile_evaluation"
+                                                },
+                                                {
+                                                    "metaName": "edit_mode"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "metaName": "zValue",
+                                            "metaType": "string",
+                                            "metaValue": "33.000000"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "User_animation_inputs",
+                                    "metadata": [
+                                        {
+                                            "metaName": "io_ports"
+                                        },
+                                        {
+                                            "metaName": "DisplayMode",
+                                            "metaType": "string",
+                                            "metaValue": "2"
+                                        },
+                                        {
+                                            "metaName": "LayoutPos",
+                                            "metaType": "string",
+                                            "metaValue": "-1056.41 -414.395"
+                                        },
+                                        {
+                                            "metaName": "zValue",
+                                            "metaType": "string",
+                                            "metaValue": "32.000000"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "io_onodes",
+                            "metadata": [
+                                {
+                                    "metaName": "outputs_output",
+                                    "metadata": [
+                                        {
+                                            "metaName": "DisplayMode",
+                                            "metaType": "string",
+                                            "metaValue": "2"
+                                        },
+                                        {
+                                            "metaName": "LayoutPos",
+                                            "metaType": "string",
+                                            "metaValue": "398.613 -761.113"
+                                        },
+                                        {
+                                            "metaName": "io_ports",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "outputs"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "metaName": "zValue",
+                                            "metaType": "string",
+                                            "metaValue": "37.000000"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "metaName": "backdrop5",
+                    "metadata": [
+                        {
+                            "metaName": "type",
+                            "metaType": "string",
+                            "metaValue": "backdrop"
+                        },
+                        {
+                            "metaName": "color",
+                            "metaType": "string",
+                            "metaValue": "#ff222933"
+                        },
+                        {
+                            "metaName": "coords",
+                            "metaType": "string",
+                            "metaValue": "-1084.88 -645.981 568.545 456.709"
+                        },
+                        {
+                            "metaName": "title",
+                            "metaType": "string",
+                            "metaValue": "User animation compound"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "backdrop2",
+                    "metadata": [
+                        {
+                            "metaName": "type",
+                            "metaType": "string",
+                            "metaValue": "backdrop"
+                        },
+                        {
+                            "metaName": "color",
+                            "metaType": "string",
+                            "metaValue": "#ff222933"
+                        },
+                        {
+                            "metaName": "title",
+                            "metaType": "string",
+                            "metaValue": "User setup compound"
+                        },
+                        {
+                            "metaName": "coords",
+                            "metaType": "string",
+                            "metaValue": "-2443.86 -639.971 554.923 448.002"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "backdrop7",
+                    "metadata": [
+                        {
+                            "metaName": "type",
+                            "metaType": "string",
+                            "metaValue": "backdrop"
+                        },
+                        {
+                            "metaName": "color",
+                            "metaType": "string",
+                            "metaValue": "#ff4a5564"
+                        },
+                        {
+                            "metaName": "title",
+                            "metaType": "string",
+                            "metaValue": "Solve module animation"
+                        },
+                        {
+                            "metaName": "coords",
+                            "metaType": "string",
+                            "metaValue": "-1464.36 -879.2 1306.58 746.226"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "backdrop8",
+                    "metadata": [
+                        {
+                            "metaName": "type",
+                            "metaType": "string",
+                            "metaValue": "backdrop"
+                        },
+                        {
+                            "metaName": "color",
+                            "metaType": "string",
+                            "metaValue": "#ff4a5564"
+                        },
+                        {
+                            "metaName": "title",
+                            "metaType": "string",
+                            "metaValue": "Move data to outputs and display diagnostic geometries"
+                        },
+                        {
+                            "metaName": "coords",
+                            "metaType": "string",
+                            "metaValue": "-122.13 -859.395 765.943 356.714"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "backdrop3",
+                    "metadata": [
+                        {
+                            "metaName": "type",
+                            "metaType": "string",
+                            "metaValue": "backdrop"
+                        },
+                        {
+                            "metaName": "color",
+                            "metaType": "string",
+                            "metaValue": "#ff4a5564"
+                        },
+                        {
+                            "metaName": "title",
+                            "metaType": "string",
+                            "metaValue": "Define and compute module setup"
+                        },
+                        {
+                            "metaName": "coords",
+                            "metaType": "string",
+                            "metaValue": "-3045.63 -879.403 1544.14 747.118"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "NodeWidthOffset",
+                    "metaType": "string",
+                    "metaValue": "0"
+                },
+                {
+                    "metaName": "NodeValueDisplay",
+                    "metadata": [
+                        {
+                            "metaName": "show",
+                            "metaType": "string",
+                            "metaValue": "1"
+                        },
+                        {
+                            "metaName": "format",
+                            "metaType": "string",
+                            "metaValue": "{name} module"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "ViewportRect",
+                    "metaType": "string",
+                    "metaValue": "-3354.76 -1038.68 3822.19 1223.19"
+                },
+                {
+                    "metaName": "ParamEditorScrollbarPos",
+                    "metaType": "string",
+                    "metaValue": "0"
+                },
+                {
+                    "metaName": "UILayout",
+                    "metaType": "string",
+                    "metaValue": "{\n    \"NodeLayout\": {\n        \"hideUndeclaredPorts\": false,\n        \"items\": [\n            {\n                \"condition\": {\n                    \"action\": \"show\",\n                    \"op\": \"==\",\n                    \"port\": \"selection_method\",\n                    \"value\": \"\"\n                },\n                \"group\": \"Show based on: parent_selection_mode\",\n                \"items\": [\n                    {\n                        \"port\": \"inputs\"\n                    },\n                    {\n                        \"port\": \"parents\"\n                    }\n                ],\n                \"unique_id\": 99\n            },\n            {\n                \"expanded\": false,\n                \"group\": \"General\",\n                \"items\": [\n                    {\n                        \"port\": \"name\"\n                    },\n                    {\n                        \"port\": \"state\"\n                    },\n                    {\n                        \"expanded\": false,\n                        \"group\": \"Diagnostics\",\n                        \"items\": [\n                            {\n                                \"port\": \"display_pins\"\n                            },\n                            {\n                                \"port\": \"display_controls\"\n                            },\n                            {\n                                \"port\": \"display_joints\"\n                            },\n                            {\n                                \"port\": \"display_transforms\"\n                            },\n                            {\n                                \"condition\": {\n                                    \"action\": \"show\",\n                                    \"op\": \"==\",\n                                    \"port\": \"display_transforms\",\n                                    \"value\": \"\"\n                                },\n                                \"group\": \"Show based on: display_transforms\",\n                                \"items\": [\n                                    {\n                                        \"port\": \"axes_shape\"\n                                    },\n                                    {\n                                        \"port\": \"axes_scale\"\n                                    }\n                                ],\n                                \"unique_id\": 271\n                            }\n                        ],\n                        \"unique_id\": 203\n                    },\n                    {\n                        \"expanded\": false,\n                        \"group\": \"Evaluation\",\n                        \"items\": [\n                            {\n                                \"port\": \"profile_evaluation\"\n                            },\n                            {\n                                \"port\": \"edit_mode\"\n                            }\n                        ],\n                        \"unique_id\": 75\n                    }\n                ],\n                \"unique_id\": 15\n            }\n        ]\n    }\n}\n"
+                },
+                {
+                    "metaName": "PortExpandedState",
+                    "metadata": [
+                        {
+                            "metaName": "parents",
+                            "metaType": "string",
+                            "metaValue": "0"
+                        }
+                    ]
+                },
+                {
+                    "metaName": "UUID",
+                    "metaType": "string",
+                    "metaValue": "EAEA99FE-9604-42F8-8643-3522E76A817F"
+                },
+                {
+                    "metaName": "DisplayMode",
+                    "metaType": "string",
+                    "metaValue": "2"
+                },
+                {
+                    "metaName": "zValue",
+                    "metaType": "string",
+                    "metaValue": "34.000000"
+                },
+                {
+                    "metaName": "LayoutPos",
+                    "metaType": "string",
+                    "metaValue": "208 -41"
+                }
+            ],
+            "terminalStates": [
+                {
+                    "name": "Core::Graph::terminal::diagnostic",
+                    "enabled": "false"
+                },
+                {
+                    "name": "Core::Graph::terminal::final",
+                    "enabled": "false"
+                },
+                {
+                    "name": "Core::Graph::terminal::proxy",
+                    "enabled": "false"
+                }
+            ],
+            "ports": [
+                {
+                    "portName": "inputs",
+                    "portDirection": "input",
+                    "portType": "Rigging::Module::Inputs",
+                    "portDefault": {
+                        "setup": {
+                            "pins": [
+                                {
+                                    "name": "base",
+                                    "pivot_matrix": {
+                                        "c0": {
+                                            "x": "1",
+                                            "y": "0",
+                                            "z": "0",
+                                            "w": "0"
+                                        },
+                                        "c1": {
+                                            "x": "0",
+                                            "y": "1",
+                                            "z": "0",
+                                            "w": "0"
+                                        },
+                                        "c2": {
+                                            "x": "0",
+                                            "y": "0",
+                                            "z": "1",
+                                            "w": "0"
+                                        },
+                                        "c3": {
+                                            "x": "0",
+                                            "y": "0",
+                                            "z": "0",
+                                            "w": "1"
+                                        }
+                                    }
+                                }
+                            ],
+                            "custom": {}
+                        },
+                        "animation": {
+                            "control_operator_matrices": [],
+                            "joint_operator_matrices": [],
+                            "attribute_data": {
+                                "vectors": [],
+                                "floats": [],
+                                "integers": [],
+                                "booleans": []
+                            },
+                            "custom": {}
+                        },
+                        "internal": {
+                            "module_id": "0",
+                            "setup_hash": "0"
+                        }
+                    }
+                },
+                {
+                    "portName": "parents",
+                    "portDirection": "input",
+                    "portType": "array<Rigging::Module::Outputs>",
+                    "portDefault": [],
+                    "isDefaultFanIn": "true"
+                },
+                {
+                    "portName": "name",
+                    "portDirection": "input",
+                    "portType": "string",
+                    "portDefault": "C_child"
+                },
+                {
+                    "portName": "state",
+                    "portDirection": "input",
+                    "portType": "int",
+                    "portDefault": "0L",
+                    "metadata": [
+                        {
+                            "metaName": "UIWidget",
+                            "metaType": "string",
+                            "metaValue": "ComboBox"
+                        },
+                        {
+                            "metaName": "UIWidgetProp",
+                            "metaType": "string",
+                            "metaValue": "editable=false;items={Animation=0;\"Rest (Relative)\"=1;\"Rest (Absolute)\"=2}"
+                        }
+                    ]
+                },
+                {
+                    "portName": "display_pins",
+                    "portDirection": "input",
+                    "portType": "bool",
+                    "portDefault": "true"
+                },
+                {
+                    "portName": "display_controls",
+                    "portDirection": "input",
+                    "portType": "bool",
+                    "portDefault": "true"
+                },
+                {
+                    "portName": "display_joints",
+                    "portDirection": "input",
+                    "portType": "bool",
+                    "portDefault": "true"
+                },
+                {
+                    "portName": "display_transforms",
+                    "portDirection": "input",
+                    "portType": "bool",
+                    "portDefault": "true"
+                },
+                {
+                    "portName": "axes_shape",
+                    "portDirection": "input",
+                    "portType": "Geometry::StrandShapes",
+                    "portDefault": "Ribbon"
+                },
+                {
+                    "portName": "axes_scale",
+                    "portDirection": "input",
+                    "portType": "float",
+                    "portDefault": "1f",
+                    "metadata": [
+                        {
+                            "metaName": "UISoftMin",
+                            "metaType": "string",
+                            "metaValue": "0"
+                        }
+                    ]
+                },
+                {
+                    "portName": "profile_evaluation",
+                    "portDirection": "input",
+                    "portType": "bool",
+                    "portDefault": "false"
+                },
+                {
+                    "portName": "edit_mode",
+                    "portDirection": "input",
+                    "portType": "bool",
+                    "portDefault": "false"
+                },
+                {
+                    "portName": "outputs",
+                    "portDirection": "output",
+                    "portType": "Rigging::Module::Outputs"
+                }
+            ],
+            "compounds": [
+                {
+                    "name": "user_setup",
+                    "metadata": [
+                        {
+                            "metaName": "io_nodes",
+                            "metadata": [
+                                {
+                                    "metaName": "io_inodes",
+                                    "metadata": [
+                                        {
+                                            "metaName": "input",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "DisplayMode",
+                                                    "metaType": "string",
+                                                    "metaValue": "2"
+                                                },
+                                                {
+                                                    "metaName": "io_ports",
+                                                    "metadata": [
+                                                        {
+                                                            "metaName": "setup_inputs"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "metaName": "LayoutPos",
+                                                    "metaType": "string",
+                                                    "metaValue": "-2872.31 1146.35"
+                                                },
+                                                {
+                                                    "metaName": "zValue",
+                                                    "metaType": "string",
+                                                    "metaValue": "33.000000"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "metaName": "user_setup_inputs",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "io_ports"
+                                                },
+                                                {
+                                                    "metaName": "DisplayMode",
+                                                    "metaType": "string",
+                                                    "metaValue": "2"
+                                                },
+                                                {
+                                                    "metaName": "LayoutPos",
+                                                    "metaType": "string",
+                                                    "metaValue": "-2186.06 1685.99"
+                                                },
+                                                {
+                                                    "metaName": "zValue",
+                                                    "metaType": "string",
+                                                    "metaValue": "35.000000"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "io_onodes",
+                                    "metadata": [
+                                        {
+                                            "metaName": "output",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "DisplayMode",
+                                                    "metaType": "string",
+                                                    "metaValue": "2"
+                                                },
+                                                {
+                                                    "metaName": "io_ports",
+                                                    "metadata": [
+                                                        {
+                                                            "metaName": "setup_outputs"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "metaName": "LayoutPos",
+                                                    "metaType": "string",
+                                                    "metaValue": "-431.458 1147.9"
+                                                },
+                                                {
+                                                    "metaName": "zValue",
+                                                    "metaType": "string",
+                                                    "metaValue": "34.000000"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop3",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#28d78282"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-2291.24 512.659 1511.52 1396.47"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "User Setup customization area"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop1",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#2853bc88"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "Setup outputs"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-723.76 1023.38 535.691 354.585"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop2",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#2853bc88"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "Setup inputs"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-2914.4 979.401 574.912 404.295"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#28c85252"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "You can expose extra input ports here."
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-2248.76 1584.16 376.916 280.531"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "sticky_note1",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "sticky_note"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#ffd78282"
+                                },
+                                {
+                                    "metaName": "format",
+                                    "metaType": "string",
+                                    "metaValue": "md"
+                                },
+                                {
+                                    "metaName": "text",
+                                    "metaType": "string",
+                                    "metaValue": "# Rigging Module Framework: User Setup\n\nThe `user_setup` compound is where you define the topology of a module, meaning the control and joint hierarchies to be generated by this module, as well as the rest state of their transforms.\n\n## How to create controls and joints\n\nControls and joints can be defined here using the dedicated `define_control` and `define_joint` nodes. These nodes can be daisy chained together to create transform chains. You can even create more complex hierarchies by branching them. The last node of each branch produced must be connected to the `control_definitions` or `joint_definitions` of the `set_definitions` node.\n\nNote that controls and joints are always in separate hierarchies. It is not possible to parent a control under a joint or vice versa.\n\n## How to parent something under a parent module's entity\n\nWhen you want to parent something under a parent control or a parent joint from a connected parent module, you can use the `find_parent` node. This node allows you to search a parent entity either by tags or by name expression. The first matching parent entity will be returned as `parent_definition`, which can then be connected to the `parent_*` port of the `define_control` or `define_joint` nodes.\n\n## How to use pins\n\nPins are helper transforms acting as guides that are set or passed on a module's inputs' `setup.pins`. You can use a pin's `pivot_matrix` and set it on the `pivot_matrix` of the `define_control` and `define_joint` nodes. You can manipulate them to produce new pivot matrices. For example, you could have two pins and interpolate a variable number of pivot matrices between them.\n\nPins can be accessed from the `setup_inputs`. You can access their data directly or you could use utility nodes such as `find_pin` and `find_all_pins`. These nodes allow you to find pins by searching them with name expression.\n\n## How to use custom data\n\nCustom data can be passed to the `user_setup` compound. The `custom` object on the `setup_inputs` is the same object that is passed on the module's inputs' `setup.custom`. You can use your custom data to do any kind of operations within the `user_setup`.\n\nYou can also create custom setup data which you can use in the `user_animation` compound. To do so, connect your object to the `custom` port of the `set_definitions` node. The custom setup is passed to the outputs so that it can also be used outside of this module. It can be accessed on the `outputs`' `setup.custom`.\n"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-3741.41 39.7084 1390.02 905"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "36.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "ViewportRect",
+                            "metaType": "string",
+                            "metaValue": "-3519.4 496.49 3542.8 1133.78"
+                        }
+                    ],
+                    "ports": [
+                        {
+                            "portName": "setup_inputs",
+                            "portDirection": "input",
+                            "portType": "Rigging::Module::SetupInputs"
+                        },
+                        {
+                            "portName": "setup_outputs",
+                            "portDirection": "output",
+                            "portType": "Object"
+                        }
+                    ],
+                    "compoundNodes": [
+                        {
+                            "nodeName": "value25",
+                            "valueType": "Rigging::Module::SetupInputs",
+                            "metadata": [
+                                {
+                                    "metaName": "NodeWidthOffset",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                },
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "valuenode_defaultvalue",
+                                    "metaType": "string",
+                                    "metaValue": "{}"
+                                },
+                                {
+                                    "metaName": "valuenode_defaultvalue",
+                                    "metaType": "string",
+                                    "metaValue": "{}"
+                                },
+                                {
+                                    "metaName": "valuenode_defaultvalue",
+                                    "metaType": "string",
+                                    "metaValue": "{}"
+                                },
+                                {
+                                    "metaName": "PortExpandedState",
+                                    "metadata": [
+                                        {
+                                            "metaName": "value.joints",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.states",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.controls_aux",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "output.Pins",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "output.controls",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "output.controls_aux",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.Pins",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.controls",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.joints.anchors",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.pins",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-2612.31 1073.35"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "31.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "set_definitions",
+                            "nodeType": "Rigging::Module::Setup::set_definitions",
+                            "fanInPortNames": {
+                                "control_definitions": [
+                                    "control_definition"
+                                ],
+                                "joint_definitions": [
+                                    "joint_definition"
+                                ]
+                            },
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-690.458 1125.9"
+                                },
+                                {
+                                    "metaName": "portMetadata:control_definitions.control_definition:quick_create",
+                                    "metaType": "string",
+                                    "metaValue": "Rigging::Module::Setup::define_control"
+                                },
+                                {
+                                    "metaName": "PortExpandedState",
+                                    "metadata": [
+                                        {
+                                            "metaName": "control_definitions",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "joint_definitions",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "portMetadata:joint_definitions.joint_definition:quick_create",
+                                    "metaType": "string",
+                                    "metaValue": "Rigging::Module::Setup::define_joint"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "32.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "define_control",
+                            "nodeType": "Rigging::Module::Setup::define_control",
+                            "fanInPortNames": {
+                                "attributes": []
+                            },
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-1851.68 632.509"
+                                },
+                                {
+                                    "metaName": "ParamEditorScrollbarPos",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "51.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "find_pin",
+                            "nodeType": "Rigging::Module::Setup::find_pin",
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "NodeWidthOffset",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-2188.49 1068.38"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "44.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "define_control1",
+                            "nodeType": "Rigging::Module::Setup::define_control",
+                            "fanInPortNames": {
+                                "attributes": []
+                            },
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-1498.99 695.182"
+                                },
+                                {
+                                    "metaName": "ParamEditorScrollbarPos",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "50.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "define_control2",
+                            "nodeType": "Rigging::Module::Setup::define_control",
+                            "fanInPortNames": {
+                                "attributes": []
+                            },
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-1187.45 850.034"
+                                },
+                                {
+                                    "metaName": "ParamEditorScrollbarPos",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "49.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "define_joint",
+                            "nodeType": "Rigging::Module::Setup::define_joint",
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "ParamEditorScrollbarPos",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-1567.19 1235.29"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "48.000000"
+                                }
+                            ]
+                        }
+                    ],
+                    "connections": [
+                        {
+                            "source": "set_definitions.setup_outputs",
+                            "target": ".setup_outputs"
+                        },
+                        {
+                            "source": ".setup_inputs",
+                            "target": "value25.value"
+                        },
+                        {
+                            "source": "value25.output.pins",
+                            "target": "find_pin.pins"
+                        },
+                        {
+                            "source": "find_pin.pivot_matrix",
+                            "target": "define_control.pivot_matrix"
+                        },
+                        {
+                            "source": "value25.output.name",
+                            "target": "define_control.name_prefix"
+                        },
+                        {
+                            "source": "value25.output.name",
+                            "target": "define_control1.name_prefix"
+                        },
+                        {
+                            "source": "find_pin.pivot_matrix",
+                            "target": "define_control1.pivot_matrix"
+                        },
+                        {
+                            "source": "value25.output.name",
+                            "target": "define_control2.name_prefix"
+                        },
+                        {
+                            "source": "find_pin.pivot_matrix",
+                            "target": "define_control2.pivot_matrix"
+                        },
+                        {
+                            "source": "define_control.control_definition",
+                            "target": "define_control1.parent_control"
+                        },
+                        {
+                            "source": "define_control1.control_definition",
+                            "target": "define_control2.parent_control"
+                        },
+                        {
+                            "source": "define_control2.control_definition",
+                            "target": "set_definitions.control_definitions.control_definition"
+                        },
+                        {
+                            "source": "find_pin.pivot_matrix",
+                            "target": "define_joint.pivot_matrix"
+                        },
+                        {
+                            "source": "define_joint.joint_definition",
+                            "target": "set_definitions.joint_definitions.joint_definition"
+                        },
+                        {
+                            "source": "value25.output.name",
+                            "target": "define_joint.name_prefix"
+                        }
+                    ],
+                    "values": [
+                        {
+                            "valueName": "set_definitions.control_definitions",
+                            "valueType": "array<Object>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "set_definitions.joint_definitions",
+                            "valueType": "array<Object>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "set_definitions.custom",
+                            "valueType": "Object",
+                            "value": {}
+                        },
+                        {
+                            "valueName": "define_control.name",
+                            "valueType": "string",
+                            "value": "_base"
+                        },
+                        {
+                            "valueName": "define_control.name_suffix",
+                            "valueType": "string",
+                            "value": "_CTL_CRV"
+                        },
+                        {
+                            "valueName": "define_control.shape",
+                            "valueType": "long",
+                            "value": "4"
+                        },
+                        {
+                            "valueName": "define_control.rotation",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "90f",
+                                "y": "0f",
+                                "z": "0f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control.scale",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "2f",
+                                "y": "2f",
+                                "z": "2f"
+                            }
+                        },
+                        {
+                            "valueName": "find_pin.find",
+                            "valueType": "string",
+                            "value": "base"
+                        },
+                        {
+                            "valueName": "define_control1.name",
+                            "valueType": "string",
+                            "value": "_middle"
+                        },
+                        {
+                            "valueName": "define_control1.name_prefix",
+                            "valueType": "string",
+                            "value": ""
+                        },
+                        {
+                            "valueName": "define_control1.name_suffix",
+                            "valueType": "string",
+                            "value": "_CTL_CRV"
+                        },
+                        {
+                            "valueName": "define_control1.tags",
+                            "valueType": "string",
+                            "value": ""
+                        },
+                        {
+                            "valueName": "define_control1.pivot_matrix",
+                            "valueType": "Math::double4x4",
+                            "value": {
+                                "c0": {
+                                    "x": "1",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c1": {
+                                    "x": "0",
+                                    "y": "1",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c2": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "1",
+                                    "w": "0"
+                                },
+                                "c3": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "1"
+                                }
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.parent_control",
+                            "valueType": "Object",
+                            "value": {}
+                        },
+                        {
+                            "valueName": "define_control1.attributes",
+                            "valueType": "array<Object>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "define_control1.lock_translation",
+                            "valueType": "Math::bool3",
+                            "value": {
+                                "x": "false",
+                                "y": "false",
+                                "z": "false"
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.lock_rotation",
+                            "valueType": "Math::bool3",
+                            "value": {
+                                "x": "false",
+                                "y": "false",
+                                "z": "false"
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.shape",
+                            "valueType": "long",
+                            "value": "4"
+                        },
+                        {
+                            "valueName": "define_control1.color",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "0.5f",
+                                "y": "0.5f",
+                                "z": "0.5f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.translation",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "0f",
+                                "y": "0f",
+                                "z": "0f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.rotation",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "90f",
+                                "y": "0f",
+                                "z": "0f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.scale",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "1.5f",
+                                "y": "1.5f",
+                                "z": "1.5f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.matrix",
+                            "valueType": "Math::double4x4",
+                            "value": {
+                                "c0": {
+                                    "x": "1",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c1": {
+                                    "x": "0",
+                                    "y": "1",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c2": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "1",
+                                    "w": "0"
+                                },
+                                "c3": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "1"
+                                }
+                            }
+                        },
+                        {
+                            "valueName": "define_control1.custom_geometry",
+                            "valueType": "Object",
+                            "value": {}
+                        },
+                        {
+                            "valueName": "define_control2.name",
+                            "valueType": "string",
+                            "value": "_end"
+                        },
+                        {
+                            "valueName": "define_control2.name_prefix",
+                            "valueType": "string",
+                            "value": ""
+                        },
+                        {
+                            "valueName": "define_control2.name_suffix",
+                            "valueType": "string",
+                            "value": "_CTL_CRV"
+                        },
+                        {
+                            "valueName": "define_control2.tags",
+                            "valueType": "string",
+                            "value": ""
+                        },
+                        {
+                            "valueName": "define_control2.pivot_matrix",
+                            "valueType": "Math::double4x4",
+                            "value": {
+                                "c0": {
+                                    "x": "1",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c1": {
+                                    "x": "0",
+                                    "y": "1",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c2": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "1",
+                                    "w": "0"
+                                },
+                                "c3": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "1"
+                                }
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.parent_control",
+                            "valueType": "Object",
+                            "value": {}
+                        },
+                        {
+                            "valueName": "define_control2.attributes",
+                            "valueType": "array<Object>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "define_control2.lock_translation",
+                            "valueType": "Math::bool3",
+                            "value": {
+                                "x": "false",
+                                "y": "false",
+                                "z": "false"
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.lock_rotation",
+                            "valueType": "Math::bool3",
+                            "value": {
+                                "x": "false",
+                                "y": "false",
+                                "z": "false"
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.shape",
+                            "valueType": "long",
+                            "value": "4"
+                        },
+                        {
+                            "valueName": "define_control2.color",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "0.5f",
+                                "y": "0.5f",
+                                "z": "0.5f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.translation",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "0f",
+                                "y": "0f",
+                                "z": "0f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.rotation",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "90f",
+                                "y": "0f",
+                                "z": "0f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.scale",
+                            "valueType": "Math::float3",
+                            "value": {
+                                "x": "1f",
+                                "y": "1f",
+                                "z": "1f"
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.matrix",
+                            "valueType": "Math::double4x4",
+                            "value": {
+                                "c0": {
+                                    "x": "1",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c1": {
+                                    "x": "0",
+                                    "y": "1",
+                                    "z": "0",
+                                    "w": "0"
+                                },
+                                "c2": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "1",
+                                    "w": "0"
+                                },
+                                "c3": {
+                                    "x": "0",
+                                    "y": "0",
+                                    "z": "0",
+                                    "w": "1"
+                                }
+                            }
+                        },
+                        {
+                            "valueName": "define_control2.custom_geometry",
+                            "valueType": "Object",
+                            "value": {}
+                        },
+                        {
+                            "valueName": "define_joint.name",
+                            "valueType": "string",
+                            "value": "_base"
+                        },
+                        {
+                            "valueName": "define_joint.name_suffix",
+                            "valueType": "string",
+                            "value": "_BND_JNT"
+                        }
+                    ],
+                    "reservedNodeNames": [
+                        {
+                            "name": "input"
+                        },
+                        {
+                            "name": "output"
+                        },
+                        {
+                            "name": "user_setup_inputs"
+                        }
+                    ],
+                    "libraryDependencies": {
+                        "Amino": "3.2.0.8",
+                        "bif": "3.2.0.8",
+                        "rigging": "3.2.0.8"
+                    }
+                },
+                {
+                    "name": "user_animation",
+                    "metadata": [
+                        {
+                            "metaName": "io_nodes",
+                            "metadata": [
+                                {
+                                    "metaName": "io_inodes",
+                                    "metadata": [
+                                        {
+                                            "metaName": "input",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "DisplayMode",
+                                                    "metaType": "string",
+                                                    "metaValue": "2"
+                                                },
+                                                {
+                                                    "metaName": "io_ports",
+                                                    "metadata": [
+                                                        {
+                                                            "metaName": "animation_inputs"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "metaName": "LayoutPos",
+                                                    "metaType": "string",
+                                                    "metaValue": "-2480.87 9.75358"
+                                                },
+                                                {
+                                                    "metaName": "zValue",
+                                                    "metaType": "string",
+                                                    "metaValue": "33.000000"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "metaName": "user_animation_inputs",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "io_ports"
+                                                },
+                                                {
+                                                    "metaName": "DisplayMode",
+                                                    "metaType": "string",
+                                                    "metaValue": "2"
+                                                },
+                                                {
+                                                    "metaName": "LayoutPos",
+                                                    "metaType": "string",
+                                                    "metaValue": "-1723.48 492.803"
+                                                },
+                                                {
+                                                    "metaName": "zValue",
+                                                    "metaType": "string",
+                                                    "metaValue": "35.000000"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "io_onodes",
+                                    "metadata": [
+                                        {
+                                            "metaName": "output",
+                                            "metadata": [
+                                                {
+                                                    "metaName": "DisplayMode",
+                                                    "metaType": "string",
+                                                    "metaValue": "2"
+                                                },
+                                                {
+                                                    "metaName": "io_ports",
+                                                    "metadata": [
+                                                        {
+                                                            "metaName": "animation_outputs"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "metaName": "LayoutPos",
+                                                    "metaType": "string",
+                                                    "metaValue": "296.103 -8.30506"
+                                                },
+                                                {
+                                                    "metaName": "zValue",
+                                                    "metaType": "string",
+                                                    "metaValue": "34.000000"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#28c85252"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "You can expose extra input ports here."
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-1786.18 390.969 376.916 280.531"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop1",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#287b99d5"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "Animation Outputs"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-305.83 -255.262 855.189 664.203"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop2",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#287b99d5"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "Animation Inputs"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-2542.41 -188.375 655.916 462.595"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "backdrop3",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "backdrop"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#28d78282"
+                                },
+                                {
+                                    "metaName": "title",
+                                    "metaType": "string",
+                                    "metaValue": "User Animation customization area"
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-1837.01 -469.32 1475.94 1193.75"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "sticky_note1",
+                            "metadata": [
+                                {
+                                    "metaName": "type",
+                                    "metaType": "string",
+                                    "metaValue": "sticky_note"
+                                },
+                                {
+                                    "metaName": "color",
+                                    "metaType": "string",
+                                    "metaValue": "#ffd78282"
+                                },
+                                {
+                                    "metaName": "format",
+                                    "metaType": "string",
+                                    "metaValue": "md"
+                                },
+                                {
+                                    "metaName": "text",
+                                    "metaType": "string",
+                                    "metaValue": "# Rigging Module Framework: User Animation\n\nThe `user_animation` compound is where you update the transforms to do advanced transform operations, such as solving an IK.\n\nAt this point, the transform stacks are already computed, meaning that the transforms inherited the movement coming from parent modules and were also affected by their own operator matrices. Therefore, if a module does not require an animation solve, you could leave the `user_animation` untouched.\n\n## How to access control and joint transforms\n\nYou can access a module's transforms using the dedicated `find_transform` and `find_all_transforms` nodes. These nodes allow you to search control or joint transforms either by tags or by name expression. Transform data can also be accessed directly from the `animation_inputs`.\n\n## How to access attributes\n\nYou can access a module's attributes using the dedicated `find_attribute` and `find_all_attributes` nodes. These nodes allow you to search attributes of a matching type by name expression. Attribute data can also be accessed directly from the `animation_inputs`.\n\n## How to use custom data\n\nYou can access both the custom setup and custom animation from the `animation_inputs.custom`. The `setup` object is the same object that was passed to the setup outputs in the `user_setup` compound, if any. The `animation` object is the same object that is passed to the module's inputs' `animation.custom`. You can use your animation custom data to do any kind of operations within the `user_animation` compound.\n\nYou can also create custom animation. To do so, connect your object to the `custom` port of the `set_update_settings` node. The custom animation is passed to the outputs so that it can also be used outside of this module. It can be accessed on the `outputs`' `animation.custom`."
+                                },
+                                {
+                                    "metaName": "coords",
+                                    "metaType": "string",
+                                    "metaValue": "-1791.81 -376.314 1387.07 663"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "39.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "ViewportRect",
+                            "metaType": "string",
+                            "metaValue": "-2739.85 -439.096 2681.75 858.224"
+                        }
+                    ],
+                    "ports": [
+                        {
+                            "portName": "animation_inputs",
+                            "portDirection": "input",
+                            "portType": "Rigging::Module::AnimationInputs"
+                        },
+                        {
+                            "portName": "animation_outputs",
+                            "portDirection": "output",
+                            "portType": "Rigging::Module::AnimationOutputs"
+                        }
+                    ],
+                    "compoundNodes": [
+                        {
+                            "nodeName": "value18",
+                            "valueType": "Rigging::Module::AnimationInputs",
+                            "metadata": [
+                                {
+                                    "metaName": "NodeWidthOffset",
+                                    "metaType": "string",
+                                    "metaValue": "26.6796"
+                                },
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "PortExpandedState",
+                                    "metadata": [
+                                        {
+                                            "metaName": "output.states",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output.inputs.joints",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "output.inputs.controls",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "output.inputs",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.outputs.joints",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.outputs.controls",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.outputs",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.setup.joints",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.states",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.setup.controls_aux",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.setup.controls",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "value.setup",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.controls.attribute_data",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.controls",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value.joints",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "value",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        },
+                                        {
+                                            "metaName": "output.controls.attribute_data",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output.joints",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output.internal",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output.controls",
+                                            "metaType": "string",
+                                            "metaValue": "0"
+                                        },
+                                        {
+                                            "metaName": "output.custom",
+                                            "metaType": "string",
+                                            "metaValue": "1"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-2209.36 -74.7426"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "36.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "set_transform_update_settings",
+                            "nodeType": "Rigging::Module::Animation::set_transform_update_settings",
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-262.343 -149.113"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "37.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "set_transform_update_settings1",
+                            "nodeType": "Rigging::Module::Animation::set_transform_update_settings",
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-269.343 119.887"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "31.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "set_update_settings",
+                            "nodeType": "Rigging::Module::Animation::set_update_settings",
+                            "fanInPortNames": {
+                                "update_settings": [
+                                    "update_settings",
+                                    "update_settings1"
+                                ]
+                            },
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "29.6567 -26.1131"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "32.000000"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "find_transform",
+                            "nodeType": "Rigging::Module::Animation::find_transform",
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "48.000000"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-1796.04 -138.184"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "access_transform_matrices",
+                            "nodeType": "Core::Transform::access_transform_matrices",
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "47.000000"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-1455.63 -259.69"
+                                }
+                            ]
+                        },
+                        {
+                            "nodeName": "build_array",
+                            "nodeType": "Core::Array::build_array",
+                            "multiInPortNames": [
+                                "world_matrix"
+                            ],
+                            "metadata": [
+                                {
+                                    "metaName": "DisplayMode",
+                                    "metaType": "string",
+                                    "metaValue": "2"
+                                },
+                                {
+                                    "metaName": "zValue",
+                                    "metaType": "string",
+                                    "metaValue": "52.000000"
+                                },
+                                {
+                                    "metaName": "LayoutPos",
+                                    "metaType": "string",
+                                    "metaValue": "-990.606 -61.1998"
+                                }
+                            ]
+                        }
+                    ],
+                    "connections": [
+                        {
+                            "source": "set_transform_update_settings.update_settings",
+                            "target": "set_update_settings.update_settings.update_settings"
+                        },
+                        {
+                            "source": "set_transform_update_settings1.update_settings",
+                            "target": "set_update_settings.update_settings.update_settings1"
+                        },
+                        {
+                            "source": "set_update_settings.animation_outputs",
+                            "target": ".animation_outputs"
+                        },
+                        {
+                            "source": ".animation_inputs",
+                            "target": "value18.value"
+                        },
+                        {
+                            "source": "value18.output",
+                            "target": "find_transform.animation_inputs"
+                        },
+                        {
+                            "source": "find_transform.transform",
+                            "target": "access_transform_matrices.transform"
+                        },
+                        {
+                            "source": "access_transform_matrices.world_matrix",
+                            "target": "build_array.first.world_matrix"
+                        },
+                        {
+                            "source": "build_array.array",
+                            "target": "set_transform_update_settings1.update_matrices"
+                        }
+                    ],
+                    "values": [
+                        {
+                            "valueName": "set_transform_update_settings.update_matrices",
+                            "valueType": "array<Math::double4x4>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "set_transform_update_settings.transforms_to_update",
+                            "valueType": "array<long>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "set_transform_update_settings.kind",
+                            "valueType": "int",
+                            "value": "0L"
+                        },
+                        {
+                            "valueName": "set_transform_update_settings.update_method",
+                            "valueType": "int",
+                            "value": "3L"
+                        },
+                        {
+                            "valueName": "set_transform_update_settings.overwrite",
+                            "valueType": "bool",
+                            "value": "true"
+                        },
+                        {
+                            "valueName": "set_transform_update_settings1.update_matrices",
+                            "valueType": "array<Math::double4x4>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "set_transform_update_settings1.transforms_to_update",
+                            "valueType": "array<long>",
+                            "value": []
+                        },
+                        {
+                            "valueName": "set_transform_update_settings1.kind",
+                            "valueType": "int",
+                            "value": "1L"
+                        },
+                        {
+                            "valueName": "set_transform_update_settings1.update_method",
+                            "valueType": "int",
+                            "value": "3L"
+                        },
+                        {
+                            "valueName": "set_transform_update_settings1.overwrite",
+                            "valueType": "bool",
+                            "value": "true"
+                        },
+                        {
+                            "valueName": "find_transform.kind",
+                            "valueType": "int",
+                            "value": "0L"
+                        },
+                        {
+                            "valueName": "find_transform.find",
+                            "valueType": "string",
+                            "value": "*end*"
+                        }
+                    ],
+                    "reservedNodeNames": [
+                        {
+                            "name": "input"
+                        },
+                        {
+                            "name": "user_animation_inputs"
+                        },
+                        {
+                            "name": "output"
+                        }
+                    ],
+                    "libraryDependencies": {
+                        "Amino": "3.2.0.8",
+                        "bif": "3.2.0.8",
+                        "rigging": "3.2.0.8"
+                    }
+                }
+            ],
+            "compoundNodes": [
+                {
+                    "nodeName": "user_setup",
+                    "nodeType": "user_setup",
+                    "terminalStates": [
+                        {
+                            "name": "Core::Graph::terminal::diagnostic",
+                            "enabled": "true"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "metaName": "NodeWidthOffset",
+                            "metaType": "string",
+                            "metaValue": "0"
+                        },
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "-2158.39 -544.944"
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "45.000000"
+                        }
+                    ]
+                },
+                {
+                    "nodeName": "user_animation",
+                    "nodeType": "user_animation",
+                    "terminalStates": [
+                        {
+                            "name": "Core::Graph::terminal::diagnostic",
+                            "enabled": "true"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "-795.899 -555.887"
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "44.000000"
+                        }
+                    ]
+                },
+                {
+                    "nodeName": "prepare_module",
+                    "nodeType": "Rigging::Module::Internal::prepare_module",
+                    "terminalStates": [
+                        {
+                            "name": "Core::Graph::terminal::diagnostic",
+                            "enabled": "true"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "-2742.88 -714.636"
+                        },
+                        {
+                            "metaName": "PortExpandedState",
+                            "metadata": [
+                                {
+                                    "metaName": "General",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "38.000000"
+                        }
+                    ]
+                },
+                {
+                    "nodeName": "prepare_animation",
+                    "nodeType": "Rigging::Module::Internal::prepare_animation",
+                    "metadata": [
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "-1404.48 -728.387"
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "34.000000"
+                        }
+                    ]
+                },
+                {
+                    "nodeName": "finalize_animation",
+                    "nodeType": "Rigging::Module::Internal::finalize_animation",
+                    "terminalStates": [
+                        {
+                            "name": "Core::Graph::terminal::final",
+                            "enabled": "false"
+                        },
+                        {
+                            "name": "Core::Graph::terminal::proxy",
+                            "enabled": "false"
+                        },
+                        {
+                            "name": "Core::Graph::terminal::diagnostic",
+                            "enabled": "true"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "-451.879 -753.828"
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "35.000000"
+                        }
+                    ]
+                },
+                {
+                    "nodeName": "finalize_module",
+                    "nodeType": "Rigging::Module::Internal::finalize_module",
+                    "terminalStates": [
+                        {
+                            "name": "Core::Graph::terminal::diagnostic",
+                            "enabled": "true"
+                        },
+                        {
+                            "name": "Core::Graph::terminal::final",
+                            "enabled": "true"
+                        },
+                        {
+                            "name": "Core::Graph::terminal::proxy",
+                            "enabled": "true"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "149.994 -774.076"
+                        },
+                        {
+                            "metaName": "PortExpandedState",
+                            "metadata": [
+                                {
+                                    "metaName": "Diagnotics",
+                                    "metaType": "string",
+                                    "metaValue": "0"
+                                }
+                            ]
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "40.000000"
+                        }
+                    ]
+                },
+                {
+                    "nodeName": "finalize_setup",
+                    "nodeType": "Rigging::Module::Internal::finalize_setup",
+                    "terminalStates": [
+                        {
+                            "name": "Core::Graph::terminal::diagnostic",
+                            "enabled": "true"
+                        },
+                        {
+                            "name": "Core::Graph::terminal::final",
+                            "enabled": "true"
+                        },
+                        {
+                            "name": "Core::Graph::terminal::proxy",
+                            "enabled": "true"
+                        }
+                    ],
+                    "metadata": [
+                        {
+                            "metaName": "DisplayMode",
+                            "metaType": "string",
+                            "metaValue": "2"
+                        },
+                        {
+                            "metaName": "LayoutPos",
+                            "metaType": "string",
+                            "metaValue": "-1806.78 -734.436"
+                        },
+                        {
+                            "metaName": "zValue",
+                            "metaType": "string",
+                            "metaValue": "39.000000"
+                        }
+                    ]
+                }
+            ],
+            "connections": [
+                {
+                    "source": "user_setup.setup_outputs",
+                    "target": "finalize_setup.setup_outputs"
+                },
+                {
+                    "source": "user_animation.animation_outputs",
+                    "target": "finalize_animation.animation_outputs"
+                },
+                {
+                    "source": "prepare_module.module",
+                    "target": "finalize_setup.module"
+                },
+                {
+                    "source": "prepare_module.setup_inputs",
+                    "target": "user_setup.setup_inputs"
+                },
+                {
+                    "source": "prepare_animation.out_module",
+                    "target": "finalize_animation.module"
+                },
+                {
+                    "source": "prepare_animation.animation_inputs",
+                    "target": "user_animation.animation_inputs"
+                },
+                {
+                    "source": "finalize_animation.out_module",
+                    "target": "finalize_module.module"
+                },
+                {
+                    "source": "finalize_module.outputs",
+                    "target": ".outputs"
+                },
+                {
+                    "source": "finalize_setup.out_module",
+                    "target": "prepare_animation.module"
+                },
+                {
+                    "source": ".inputs",
+                    "target": "prepare_module.inputs"
+                },
+                {
+                    "source": ".parents",
+                    "target": "prepare_module.parents"
+                },
+                {
+                    "source": ".name",
+                    "target": "prepare_module.name"
+                },
+                {
+                    "source": ".state",
+                    "target": "prepare_module.state"
+                },
+                {
+                    "source": ".profile_evaluation",
+                    "target": "prepare_module.profile_evaluation"
+                },
+                {
+                    "source": ".edit_mode",
+                    "target": "prepare_module.edit_mode"
+                },
+                {
+                    "source": ".display_pins",
+                    "target": "finalize_module.display_pins"
+                },
+                {
+                    "source": ".display_controls",
+                    "target": "finalize_module.display_controls"
+                },
+                {
+                    "source": ".display_joints",
+                    "target": "finalize_module.display_joints"
+                },
+                {
+                    "source": ".display_transforms",
+                    "target": "finalize_module.display_transforms"
+                },
+                {
+                    "source": ".axes_shape",
+                    "target": "finalize_module.axes_shape"
+                },
+                {
+                    "source": ".axes_scale",
+                    "target": "finalize_module.axes_scale"
+                }
+            ],
+            "values": [
+                {
+                    "valueName": "prepare_module.parents",
+                    "valueType": "array<Rigging::Module::Outputs>",
+                    "value": []
+                },
+                {
+                    "valueName": "prepare_module.name",
+                    "valueType": "string",
+                    "value": "module_name"
+                },
+                {
+                    "valueName": "prepare_module.state",
+                    "valueType": "int",
+                    "value": "0L"
+                },
+                {
+                    "valueName": "prepare_module.profile_evaluation",
+                    "valueType": "bool",
+                    "value": "false"
+                },
+                {
+                    "valueName": "prepare_module.edit_mode",
+                    "valueType": "bool",
+                    "value": "false"
+                },
+                {
+                    "valueName": "finalize_module.display_pins",
+                    "valueType": "bool",
+                    "value": "true"
+                },
+                {
+                    "valueName": "finalize_module.display_controls",
+                    "valueType": "bool",
+                    "value": "true"
+                },
+                {
+                    "valueName": "finalize_module.display_joints",
+                    "valueType": "bool",
+                    "value": "true"
+                },
+                {
+                    "valueName": "finalize_module.display_transforms",
+                    "valueType": "bool",
+                    "value": "true"
+                },
+                {
+                    "valueName": "finalize_module.axes_shape",
+                    "valueType": "Geometry::StrandShapes",
+                    "value": "Ribbon"
+                },
+                {
+                    "valueName": "finalize_module.axes_scale",
+                    "valueType": "float",
+                    "value": "1f"
+                },
+                {
+                    "valueName": "finalize_setup.setup_outputs",
+                    "valueType": "Object",
+                    "value": {}
+                }
+            ],
+            "reservedNodeNames": [
+                {
+                    "name": "user_setup_inputs"
+                },
+                {
+                    "name": "outputs_output"
+                },
+                {
+                    "name": "Diagnostics_inputs"
+                },
+                {
+                    "name": "General_inputs"
+                },
+                {
+                    "name": "User_animation_inputs"
+                }
+            ],
+            "libraryDependencies": {
+                "Amino": "3.2.0.8",
+                "bif": "3.2.0.8",
+                "rigging": "3.2.0.8"
+            }
+        }
+    ]
+}

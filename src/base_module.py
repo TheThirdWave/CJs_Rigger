@@ -3,95 +3,108 @@ from . import constants
 
 class BaseModule(ABC):
 
+    def __init__(self, name, prefix):
+        self._componentType = None
+        self._name = name
+        self._prefix = prefix
+        self._parent = None
+        self._children = []
+        self._controls = {}
+        self._componentVars = {}
+        self._inputAttrs = []
+        self._outputAttrs = []
+        self._bindGeometry = []
+        self._baseGroups = {}
+        self._bindPositionData = {}
+        self._dirty = True
+
     @property
-    @abstractmethod
+    def componentType(self):
+        return self._componentType
+
+    @componentType.setter
+    def componentType(self, ct):
+        self._componentType = ct
+
+    @property
     def name(self):
-        return None
+        return self._name
 
     @name.setter
-    @abstractmethod
     def name(self, n):
-        pass
+        self._name = n
 
     @property
-    @abstractmethod
-    def children(self):
-        return []
-
-    @children.setter
-    @abstractmethod
-    def children(self, c):
-        pass
-
-    @property
-    @abstractmethod
-    def parent(self):
-        return None
-
-    @parent.setter
-    @abstractmethod
-    def parent(self, p):
-        pass
-
-    @property
-    @abstractmethod
-    def controls(self):
-        return {}
-
-    @controls.setter
-    @abstractmethod
-    def controls(self, c):
-        pass
-
-    @property
-    @abstractmethod
-    def componentVars(self):
-        return {}
-
-    @componentVars.setter
-    @abstractmethod
-    def componentVars(self, c):
-        pass
-
-    @property
-    @abstractmethod
     def prefix(self):
-        return None
+        return self._prefix
 
     @prefix.setter
-    @abstractmethod
     def prefix(self, p):
-        pass
+        self._prefix = p
 
     @property
-    @abstractmethod
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, p):
+        self._parent = p
+
+    @property
+    def children(self):
+        return self._children
+
+    @children.setter
+    def children(self, c):
+        self._children = c
+
+    @property
+    def controls(self):
+        return self._controls
+
+    @controls.setter
+    def controls(self, c):
+        self._controls = c
+
+    @property
+    def componentVars(self):
+        return self._componentVars
+
+    @componentVars.setter
+    def componentVars(self, cv):
+        self._componentVars = cv
+
+    @property
     def inputAttrs(self):
-        return []
+        return self._inputAttrs
 
     @inputAttrs.setter
-    @abstractmethod
     def inputAttrs(self, i):
-        pass
+        self._inputAttrs = i
 
     @property
-    @abstractmethod
     def outputAttrs(self):
-        return []
+        return self._outputAttrs
 
     @outputAttrs.setter
-    @abstractmethod
     def outputAttrs(self, o):
-        pass
+        self._outputAttrs = o
 
     @property
-    @abstractmethod
-    def geomData(self):
-        return []
+    def bindGeometry(self):
+        return self._bindGeometry
 
-    @geomData.setter
-    @abstractmethod
-    def geomData(self, gd):
-        pass
+    @bindGeometry.setter
+    def bindGeometry(self, gd):
+        self._bindGeometry = gd
+
+    @property
+    def dirty(self):
+        return self._dirty
+
+    @dirty.setter
+    def dirty(self, d):
+        self._dirty = d
 
     @classmethod
     def loadFromDict(cls, name, data, default_attrs):
@@ -100,7 +113,8 @@ class BaseModule(ABC):
         inst.controls = data['controls']
         inst.componentVars = data['componentVars']
         inst.inputAttrs = data['inputAttrs']
-        inst.geomData = data['bindGeometry']
+        inst.bindGeometry = data['bindGeometry']
+        inst.componentType = data['componentType']
 
         # Add default attributes if they haven't been overridden.
         for default in default_attrs['inputAttrs']:
@@ -131,11 +145,9 @@ class BaseModule(ABC):
 
         return inst
     
-    @abstractmethod
     def createBindJoints(self):
         pass
 
-    @abstractmethod
     def createControlRig(self):
         pass
 

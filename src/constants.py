@@ -10,10 +10,18 @@ TEMPLATES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '
 BLUEPRINTS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'blueprints'))
 POSITIONS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'positions'))
 CONTROLS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'controls'))
-SKIN_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'skin'))
+DEFAULTS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'defaults'))
+ANIM_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'anim'))
+SKIN_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'weights'))
+POSTSCRIPTS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'postscripts'))
 DEFAULT_ATTRS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'defaults', 'default_attrs.yaml'))
 CURVE_TEMPLATES_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'defaults', 'curve_data.json'))
 PREV_RIG_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'previous_rig_paths.json'))
+
+BIFROST_CRIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'crig_bifrost'))
+BIFROST_MODULES_PATH = os.path.abspath(os.path.join(BIFROST_CRIG_PATH, 'modules'))
+BIFROST_CONFIG_PATH = os.path.abspath(os.path.join(BIFROST_CRIG_PATH, 'bifrost_lib_config.json'))
+BIFROST_DEFAULT_ATTRS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'defaults', 'bifrost_default_attrs.yaml'))
 
 # Is this overcomplicated for a single switch statement in "maya_controller.py"? Yes. But I miss C
 # (Also it feels weird for the valid inputs for the "connectionType" field in the component dict to not be stated somewhere)
@@ -35,6 +43,7 @@ class AttrConnectionTypes(NamedTuple):
     parent: str
     parentOffset: str
     parentOffsetTranslate: str
+    parentOffsetRotate: str
     localParentOffset: str
     blendParent: str
     spaceSwitch: str
@@ -48,6 +57,7 @@ ATTR_CONNECTION_TYPES = AttrConnectionTypes(
     'parent',
     'parentoffset',
     'parentoffsettranslate',
+    'parentoffsetrotate',
     'localparentoffset',
     'blendparent',
     'spaceswitch'
@@ -59,6 +69,13 @@ class BaseRigGroups(NamedTuple):
     rig: str
     deform: str
 DEFAULT_GROUPS = BaseRigGroups('geometry_GRP', 'rig_GRP', 'deform_GRP')
+
+# The different types of postscripts the controller can load
+class PostscriptTypes(NamedTuple):
+    controlGeneration: str
+    skinBind: str
+    deletion: str
+POSTSCRIPT_TYPES = PostscriptTypes('controlGeneration', 'skinBind', 'deletion')
 
 # This is a list of the modules that are compatible with the "joint to vertex" tool I made
 # to quickly snap groups of joints to a vertex/bunch of vertices
@@ -108,6 +125,11 @@ POSITION_SAVE_ATTRS = {
     'radius'
 }
 
+EMPTY_DEFAULT_ATTRS = {
+    'inputAttrs': [],
+    'outputAttrs': []
+}
+
 # My brother told me to call it this.
 SAVE_ATTR_LIST_ATTR = 'theJuice'
 
@@ -127,6 +149,15 @@ class DefaultComponentAttributes(NamedTuple):
     outInverseWorld: str
 DEFAULT_ATTRS = DefaultComponentAttributes('IN_WORLD','IN_INV_WORLD', 'SPACE_SWITCH', 'END_OUT_WORLD','END_OUT_INV_WORLD')
 
+# Ditto but the bifrost version
+class BifrostDefaultComponentAttributes(NamedTuple):
+    inControl: str
+    inJoint: str
+    outControl: str
+    outJoint: str
+    spaceSwitch: str
+DEFAULT_BIFROST_ATTRS = BifrostDefaultComponentAttributes('IN_CTL_CRV', 'IN_BND_JNT', 'OUT_CTL_CRV', 'OUT_BND_JNT', 'SPACE_SWITCH')
+
 # I'm going to save anything to do with the logic or controls of the components in a big .json file.  The root
 # dictionary keys are going to be the different types of data I'm saving out.  I'm keeping the expected keys
 # here because it feels weird to just have them for all intents and purposes defined in maya_controller.py
@@ -139,3 +170,12 @@ CONTROL_DATA_KEYS = ControlDataKeys('curves', 'drivenKeys', 'attributes')
 # So this is going to actually get loaded by the controller on initialization.  I feel like this is violating
 # the spirit of this file, but it really is the most convenient way to go about this.
 DEFAULT_CURVE_TEMPLATES = {}
+
+# This is a mapping of the crig bifrost modules to their bifrost compound node types.
+# I could just hardcode these values in the crig classes but I've been using this weird
+# pseudo data-driven system so far and I figure I should keep it consistent.
+BIFROST_NODE_MAPPINGS = {
+    'RootModule': 'Rigging::Module::crig_root_module'
+}
+BIFROST_NODE_NAMESPACE = 'Rigging::CRIG'
+BIFROST_DEFAULT_MODULE = 'bifrost_base_module.py'

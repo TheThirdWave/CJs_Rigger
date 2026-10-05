@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import yaml
+yaml.Dumper.ignore_aliases = lambda *args : True
 import inspect
 import copy
 import importlib.util
@@ -9,6 +10,7 @@ from abc import ABC, abstractmethod
 
 from . import constants
 from . import graph_utils
+from . import base_module
 
 class BaseController(ABC):
 
@@ -47,6 +49,16 @@ class BaseController(ABC):
 
     @property
     @abstractmethod
+    def displayComponents(self):
+        return []
+
+    @displayComponents.setter
+    @abstractmethod
+    def displayComponents(self, m):
+        pass
+
+    @property
+    @abstractmethod
     def components(self):
         return []
 
@@ -63,6 +75,16 @@ class BaseController(ABC):
     @loadedBlueprints.setter
     @abstractmethod
     def loadedBlueprints(self, m):
+        pass
+
+    @property
+    @abstractmethod
+    def displayGraph(self):
+        return None
+    
+    @displayGraph.setter
+    @abstractmethod
+    def displayGraph(self, m):
         pass
 
     @property
@@ -127,8 +149,24 @@ class BaseController(ABC):
     def bindSkin(self):
         pass
 
+    def delete(self):
+        self.runPostScripts(constants.POSTSCRIPT_TYPES.deletion)
+
+    def buildDisplayGraph(self):
+        self.displayGraph = graph_utils.ComponentGraph.buildFromList(self.displayComponents)
+
     def buildComponentGraph(self):
         self.componentGraph = graph_utils.ComponentGraph.buildFromList(self.components)
+
+    @abstractmethod
+    def mirrorComponentGraph(self):
+        pass
+
+    def loadDisplayComponents(self, template_path):
+        templates = self.loadYaml(template_path)
+        default_attrs = constants.EMPTY_DEFAULT_ATTRS
+        for name, data in templates.items():
+            self.displayComponents.append(base_module.BaseModule.loadFromDict(name, data, default_attrs))
 
     def importModules(self, template_path):
         self.components = []
@@ -257,9 +295,12 @@ class BaseController(ABC):
                 component.children.extend(new_children)
 
 
-    def runPostGenerationScripts(self):
-        for script in self.postScripts:
-            exec(open(script).read())
+    def runPostScripts(self, postscript_key):
+        for script in self.postScripts[postscript_key]:
+            try:
+                exec(open(script).read())
+            except:
+                constants.RIGGER_LOG.warning('Deletion script failed: {}'.format(script))
 
 
     def importBindJointPositions(self, positions_path):
@@ -272,10 +313,24 @@ class BaseController(ABC):
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
         self.controlsData = self.loadJSON(control_data_path)
 
-    def importPostScripts(self, postscripts_path):
+    def importPostScripts(self, postscripts_path, scripts_key):
         if not self.components:
             constants.RIGGER_LOG.warning('No modules loaded, please load a template first!')
-        self.postScripts = self.loadLSV(postscripts_path)
+        self.postScripts[scripts_key] = self.loadLSV(postscripts_path)
+
+    def saveTemplateData(self, template_path):
+        out_components = {}
+        for node in self.displayGraph.components:
+            component = node.component
+            out_components[component.name] = {}
+            for key, value in component.__dict__.items():
+                if key == '_name' or value == None:
+                    continue
+                if '_' in key:
+                    out_components[component.name][key.replace('_', '')] = value
+                else:
+                    out_components[component.name][key] = value
+        self.saveYaml(template_path, out_components)
 
     @abstractmethod
     def saveBindJointPositions(self, positions_path):
@@ -283,6 +338,10 @@ class BaseController(ABC):
 
     @abstractmethod
     def saveControlData(self, control_data_path):
+        return
+    
+    @abstractmethod
+    def saveBindSkinData(self, bind_path):
         return
 
     def loadJSON(self, path):
@@ -294,9 +353,12 @@ class BaseController(ABC):
         with open(path, 'w') as file:
             json.dump(data, file, indent = 4)
 
+    def toYaml(self, data):
+        return yaml.safe_dump(data, default_flow_style=False, indent=4)
+
     def saveYaml(self, path, data):
         with open(path, 'w') as file:
-            yaml.safe_dump(data, file, default_flow_style=False, indent=4)
+            yaml.dump(data, file, default_flow_style=False, indent=4)
 
     def loadYaml(self, path):
         templates = None
@@ -315,3 +377,9 @@ class BaseController(ABC):
         if cName == checkNodeData.name and checkNodeData.prefix in cPrefix:
             return True
         return False
+
+    def getComponent(self, prefix, name):
+        for component in self.components:
+            if self.isComponent(name, prefix, component):
+                return component
+        return None

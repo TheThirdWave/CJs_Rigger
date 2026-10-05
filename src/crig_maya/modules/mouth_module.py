@@ -30,25 +30,25 @@ class MouthModule(maya_base_module.MayaBaseModule):
             num_controls = 5
 
         if 'numUpper' in self.componentVars:
-            num_upper = self.componentVars['numUpper']
+            self.num_upper = self.componentVars['numUpper']
         else:
-            num_upper = 0
+            self.num_upper = 0
         self.joint_dict['upperBackJoints'] = []
-        for idx in range(num_upper):
+        for idx in range(self.num_upper):
             self.joint_dict['upperBackJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_upper_back_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
         self.joint_dict['upperFrontJoints'] = []
-        for idx in range(num_upper):
+        for idx in range(self.num_upper):
             self.joint_dict['upperFrontJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_upper_front_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
 
         if 'numLower' in self.componentVars:
-            num_lower = self.componentVars['numLower']
+            self.num_lower = self.componentVars['numLower']
         else:
-            num_lower = 0
+            self.num_lower = 0
         self.joint_dict['lowerBackJoints'] = []
-        for idx in range(num_lower):
+        for idx in range(self.num_lower):
             self.joint_dict['lowerBackJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_lower_back_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
         self.joint_dict['lowerFrontJoints'] = []
-        for idx in range(num_lower):
+        for idx in range(self.num_lower):
             self.joint_dict['lowerFrontJoints'].append(cmds.joint(self.joint_dict['baseJoint'], name='{0}_{1}_lower_front_{2}_BND_JNT'.format(self.prefix, self.name, idx), position=(0, 0, 0)))
 
         self.left_control_place_joint = cmds.joint(self.baseGroups['deform_group'], name='{0}_{1}_left_PLC_JNT'.format(self.prefix, self.name), position=(0, 0, 0))
@@ -115,7 +115,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
         right_objects['controlPlaceGroup'] = right_place_group
         long_upper_objects = [right_objects] + upper_objects + [left_objects]
 
-        # Create the ribbons that will copy the jaw weighting.
+        # Create the curves that will create the ribbons that will copy the jaw weighting.
         for object in upper_objects:
             object['frontJointPosition'] = cmds.xform(object['frontJoint'], query=True, worldSpace=True, translation=True)
         upper_curve_1 = cmds.curve(name='{0}_{1}_upper_1_DEF_CRV'.format(self.prefix, self.name), point=[x['frontJointPosition'] for x in upper_objects], degree=1)
@@ -125,12 +125,7 @@ class MouthModule(maya_base_module.MayaBaseModule):
         python_utils.renameCurveShape(long_upper_curve, long_upper_curve.replace('CRV', 'CRVShape'))
         upper_curve_2 = cmds.curve(name='{0}_{1}_upper_2_DEF_CRV'.format(self.prefix, self.name), point=[x['backJointPosition'] for x in upper_objects], degree=1)
         python_utils.renameCurveShape(upper_curve_2, upper_curve_2.replace('CRV', 'CRVShape'))
-        upper_base_ribbon = cmds.loft(upper_curve_1, upper_curve_2, constructionHistory=False, degree=1, name='{0}_{1}_upper_base_DEF_RBN'.format(self.prefix, self.name))[0]
-        cmds.parent(upper_base_ribbon, logic_group)
-        cmds.xform(upper_base_ribbon, centerPivots=True)
-        cmds.delete(upper_curve_1)
-        cmds.parent(upper_curve_2, logic_group)
-        cmds.parent(long_upper_curve, logic_group)
+
 
         for object in lower_objects:
             object['frontJointPosition'] = cmds.xform(object['frontJoint'], query=True, worldSpace=True, translation=True)
@@ -139,6 +134,25 @@ class MouthModule(maya_base_module.MayaBaseModule):
             object['backJointPosition'] = cmds.xform(object['backJoint'], query=True, worldSpace=True, translation=True)
         lower_curve_2 = cmds.curve(name='{0}_{1}_lower_2_DEF_CRV'.format(self.prefix, self.name), point=[x['backJointPosition'] for x in lower_objects], degree=1)
         python_utils.renameCurveShape(lower_curve_2, lower_curve_2.replace('CRV', 'CRVShape'))
+
+        # In case the upper and lower lips have different numbers of vertices, we rebuild the rougher curve to have the same density as the finer.
+        if self.num_upper != self.num_lower:
+            if self.num_upper > self.num_lower:
+                cmds.rebuildCurve(lower_curve_1, constructionHistory=False, degree=1, spans=self.num_upper-1, keepTangents=False)
+                cmds.rebuildCurve(lower_curve_2, constructionHistory=False, degree=1, spans=self.num_upper-1, keepTangents=False)
+            elif self.num_lower > self.num_upper:
+                cmds.rebuildCurve(upper_curve_1, constructionHistory=False, degree=1, spans=self.num_lower-1, keepTangents=False)
+                cmds.rebuildCurve(upper_curve_2, constructionHistory=False, degree=1, spans=self.num_lower-1, keepTangents=False)
+
+
+        # Create the actual ribbons
+        upper_base_ribbon = cmds.loft(upper_curve_1, upper_curve_2, constructionHistory=False, degree=1, name='{0}_{1}_upper_base_DEF_RBN'.format(self.prefix, self.name))[0]
+        cmds.parent(upper_base_ribbon, logic_group)
+        cmds.xform(upper_base_ribbon, centerPivots=True)
+        cmds.delete(upper_curve_1)
+        cmds.parent(upper_curve_2, logic_group)
+        cmds.parent(long_upper_curve, logic_group)
+
 
         lower_base_ribbon = cmds.loft(lower_curve_1, lower_curve_2, constructionHistory=False, degree=1, name='{0}_{1}_lower_base_DEF_RBN'.format(self.prefix, self.name))[0]
         cmds.parent(lower_base_ribbon, logic_group)
@@ -477,9 +491,11 @@ class MouthModule(maya_base_module.MayaBaseModule):
             object['superFineFrontRibbonJoint'] = parent_joint
             object['proxyGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'PRX_GRP'), empty=True)
             cmds.matchTransform(object['proxyGroup'], object['backRibbonJoint'])
-            mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], upper_base_ribbon)
+            mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], upper_base_ribbon, ['rotate', 'translate'])
             object['staticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
             cmds.matchTransform(object['staticGroup'], object['proxyGroup'])
+            object['otherStaticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', '1_STAT_GRP'), empty=True)
+            cmds.matchTransform(object['otherStaticGroup'], object['zeroBackRibbonJoint'])
             mult_matrix2, mult_matrix2, quat_to_euler = python_utils.createRotDiffNodes('{0}.worldMatrix[0]'.format(object['staticGroup']), '{0}.worldInverseMatrix[0]'.format(object['proxyGroup']), ['Z'])
             invert_mult = cmds.createNode('multDoubleLinear', name=object['backJoint'].replace('BND_JNT', 'JAW_MDL'))
             cmds.connectAttr('{0}.outputRotateZ'.format(quat_to_euler), '{0}.input1'.format(invert_mult))
@@ -509,9 +525,11 @@ class MouthModule(maya_base_module.MayaBaseModule):
             object['superFineFrontRibbonJoint'] = parent_joint
             object['proxyGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'PRX_GRP'), empty=True)
             cmds.matchTransform(object['proxyGroup'], object['backRibbonJoint'])
-            mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], lower_base_ribbon)
+            mult_matrix, matrix_decompose, fourByFour, pOSurface = python_utils.pinTransformToSurface(object['proxyGroup'], lower_base_ribbon, ['rotate', 'translate'])
             object['staticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
             cmds.matchTransform(object['staticGroup'], object['proxyGroup'])
+            object['otherStaticGroup'] = cmds.group(parent=ribbon_joints_group, name=object['backJoint'].replace('BND_JNT', 'STAT_GRP'), empty=True)
+            cmds.matchTransform(object['otherStaticGroup'], object['zeroBackRibbonJoint'])
             mult_matrix2, mult_matrix2, quat_to_euler = python_utils.createRotDiffNodes('{0}.worldMatrix[0]'.format(object['staticGroup']), '{0}.worldInverseMatrix[0]'.format(object['proxyGroup']), ['Z'])
             invert_mult = cmds.createNode('multDoubleLinear', name=object['backJoint'].replace('BND_JNT', 'JAW_MDL'))
             cmds.connectAttr('{0}.outputRotateZ'.format(quat_to_euler), '{0}.input1'.format(invert_mult))
@@ -573,13 +591,17 @@ class MouthModule(maya_base_module.MayaBaseModule):
             transformFunc2.setTranslation(transformFunc1.translation(om2.MSpace.kWorld) + jointControlDiffVec, om2.MSpace.kWorld)
             transformFunc1.setObject(python_utils.getDagPath(object['tweakControl']))
             transformFunc2.setRotation(transformFunc1.rotation(om2.MSpace.kWorld, asQuaternion=True), om2.MSpace.kWorld)
+            cmds.matchTransform(object['tweakControlPlace'], object['staticGroup'], rotation=True, position=False, scale=False)
             cmds.parent(object['tweakControlPlace'], upper_tweak_control_group)
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['tweakControl'])
             control_zero_group = cmds.group(name='{0}_{1}_{2}_PAR_GRP'.format(prefix, component_name, joint_name), parent=object['tweakControlPlace'], empty=True)
             cmds.matchTransform(control_zero_group, object['tweakControl'])
             cmds.parent(object['tweakControl'], control_zero_group)
             object['tweakControlPar'] = control_zero_group
-            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
+            if self.separateControls:
+                python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
+            else:
+                python_utils.mirrorOffset(object['otherStaticGroup'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroBackRibbonJoint'], object['superFineBackRibbonJoint'], liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroFrontRibbonJoint'], object['superFineFrontRibbonJoint'], liveParent=True, liveTParent=True)
             if (i > 0 and i < (len(upper_objects) - 1)):
@@ -598,16 +620,20 @@ class MouthModule(maya_base_module.MayaBaseModule):
             transformFunc2.setTranslation(transformFunc1.translation(om2.MSpace.kWorld) + jointControlDiffVec + (frontBackDiffVec/2), om2.MSpace.kWorld)
             transformFunc1.setObject(python_utils.getDagPath(object['tweakControl']))
             transformFunc2.setRotation(transformFunc1.rotation(om2.MSpace.kWorld, asQuaternion=True), om2.MSpace.kWorld)
+            cmds.matchTransform(object['tweakControlPlace'], object['staticGroup'], rotation=True, position=False, scale=False)
             cmds.parent(object['tweakControlPlace'], lower_tweak_control_group)
             prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(object['tweakControl'])
             control_zero_group = cmds.group(name='{0}_{1}_{2}_PAR_GRP'.format(prefix, component_name, joint_name), parent=object['tweakControlPlace'], empty=True)
             cmds.matchTransform(control_zero_group, object['tweakControl'])
             cmds.parent(object['tweakControl'], control_zero_group)
             object['tweakControlPar'] = control_zero_group
-            python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
+            if self.separateControls:
+                python_utils.mirrorOffset(object['backRibbonJoint'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
+            else:
+                python_utils.mirrorOffset(object['otherStaticGroup'], object['zeroBackRibbonJoint'], object['tweakControlPlace'], control_zero_group, liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroBackRibbonJoint'], object['superFineBackRibbonJoint'], liveParent=True, liveTParent=True)
             python_utils.mirrorOffset(control_zero_group, object['tweakControl'], object['zeroFrontRibbonJoint'], object['superFineFrontRibbonJoint'], liveParent=True, liveTParent=True)
-            if (i > 0 and i < (len(upper_objects) - 1)):
+            if (i > 0 and i < (len(lower_objects) - 1)):
                 cmds.connectAttr('{0}.TweakControls'.format(left_control),'{0}.visibility'.format(object['tweakControl']))
             i +=1
 

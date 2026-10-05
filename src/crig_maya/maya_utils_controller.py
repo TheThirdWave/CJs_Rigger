@@ -302,3 +302,24 @@ class UtilsController(utils_controller.UtilsController):
         cmds.connectAttr('{0}.worldMatrix[0]'.format(par_control), '{0}.inputMatrix'.format(matrix_decompose))
         cmds.connectAttr('{0}.outputTranslate'.format(matrix_decompose), '{0}.falloffCenter'.format(softmod))
         cmds.connectAttr('{0}.falloffRadius'.format(def_control), '{0}.falloffRadius'.format(softmod))
+
+    def loadAnim(self, anim_data):
+        for node, attrs in anim_data.items():
+            if cmds.ls(node):
+                for attr, keyData in attrs.items():
+                    for i in range(0, len(keyData['keyframes']), 2):
+                        cmds.setKeyframe(attr, time=keyData['keyframes'][i], value=keyData['keyframes'][i + 1])
+                    index_num = 0
+                    for i in range(0, len(keyData['keytangents']), 4):
+                        cmds.keyTangent(attr, absolute=True, inAngle=keyData['keytangents'][i], outAngle=keyData['keytangents'][i+1], inTangentType=keyData['keytangents'][i+2], outTangentType=keyData['keytangents'][i+3], index=(index_num, index_num))
+                        index_num += 1
+                    cmds.setInfinity(attr, preInfinite=keyData['infinites'][0].lower(), postInfinite=keyData['infinites'][1].lower())
+
+    def getAnimData(self):
+        all_controls = cmds.ls('*CTL_CRV')
+        controls_anim = {}
+        for control in all_controls:
+            keys = python_utils.getAnimKeys(control)
+            if keys:
+                controls_anim[control] = keys
+        return controls_anim

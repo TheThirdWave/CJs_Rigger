@@ -2,6 +2,7 @@ from . import maya_base_module
 from ..utilities import python_utils
 from ... import constants
 import maya.cmds as cmds
+import maya.api.OpenMaya as om2
 
 class SingleChainIK(maya_base_module.MayaBaseModule):
 
@@ -21,25 +22,28 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
         # Create some groups for organization.
         joints_group = cmds.group(name='{0}_{1}_ik_HOLD_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'], empty=True)
         controls_group = cmds.group(name='{0}_{1}_ctl_HOLD_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'], empty=True)
+        cmds.matchTransform(controls_group, self.start_joint)
         msc_group = cmds.group(name='{0}_{1}_msc_HOLD_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'], empty=True)
         cmds.inheritTransform(msc_group, off=True)
 
         # Create ik joints.
-        start_ik_joint = python_utils.duplicateBindJoint(self.start_joint, joints_group, 'IK')
-        end_ik_joint = python_utils.duplicateBindJoint(self.end_joint, start_ik_joint, 'IK')
+        start_ik_joint = python_utils.duplicateBindJointNew(self.start_joint, joints_group, 'IK')
+        end_ik_joint = python_utils.duplicateBindJointNew(self.end_joint, start_ik_joint, 'IK')
 
         # Set joint orients, zero out joint orientation and transfer to rotation.
-        cmds.select(self.start_joint)
-        python_utils.setOrientJoint(start_ik_joint, 'yzx', 'zup')
-        python_utils.setOrientJoint(end_ik_joint, 'none', 'zup')
+        #cmds.select(self.start_joint)
+        #python_utils.setOrientJoint(start_ik_joint, 'yzx', 'zup')
+        #python_utils.zeroJointOrient(start_ik_joint)
+        #python_utils.setOrientJoint(end_ik_joint, 'none', 'zup')
+        #python_utils.zeroJointOrient(end_ik_joint)
 
         # Make a parent group that will hold the starting joint orient and negate along the secondary axis to mirror controls.
-        orient_group = cmds.group(name='{0}_{1}_orient_PAR_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'], empty=True)
-        cmds.matchTransform(orient_group, start_ik_joint)
-        cmds.parent(joints_group, orient_group)
-        cmds.parent(controls_group, orient_group)
-        if self.prefix == 'R':
-            cmds.setAttr('{0}.scaleX'.format(orient_group), -1)
+        #orient_group = cmds.group(name='{0}_{1}_orient_PAR_GRP'.format(self.prefix, self.name), parent=self.baseGroups['placement_group'], empty=True)
+        #cmds.matchTransform(orient_group, start_ik_joint)
+        #cmds.parent(joints_group, orient_group)
+        #cmds.parent(controls_group, orient_group)
+        #if self.prefix == 'R':
+            #cmds.setAttr('{0}.scaleX'.format(orient_group), -1)
         
 
         # Create controls.
@@ -56,6 +60,10 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
         cmds.addAttr(longName='rotlock', defaultValue=0.0, minValue=0.0, maxValue=1.0, keyable=True, hidden=False)
 
         mult_matrix, matrix_decompose = python_utils.constrainTransformByMatrix(base_control, end_ik_joint, connectAttrs=['rotate'])
+        decompose, recompose = python_utils.decomposeAndRecompose('{0}.worldInverseMatrix[0]'.format(start_ik_joint), '{0}.matrixIn[3]'.format(mult_matrix), ['scale'])
+        cmds.disconnectAttr('{0}.outputMatrix'.format(recompose), '{0}.matrixIn[3]'.format(mult_matrix))
+        cmds.setAttr('{0}.matrixIn[3]'.format(mult_matrix), cmds.getAttr('{0}.outputMatrix'.format(recompose)), type='matrix')
+        cmds.delete(decompose)
         blend_color = cmds.shadingNode('blendColors', name='{0}_BLND_BLNDC'.format(matrix_decompose), asUtility=True)
         cmds.setAttr('{0}.color1'.format(blend_color), *cmds.getAttr('{0}.outputRotate'.format(matrix_decompose))[0])
         cmds.connectAttr('{0}.outputRotate'.format(matrix_decompose), '{0}.color2'.format(blend_color))
@@ -63,14 +71,19 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
         cmds.connectAttr('{0}.output'.format(blend_color), '{0}.rotate'.format(end_ik_joint), force=True)
 
         # Create single solver ik system.
-        ik_handle, ik_effector = cmds.ikHandle( name='{0}_{1}_base_IKS_HDL'.format(self.prefix, self.name),
-                                                startJoint=start_ik_joint,
-                                                endEffector=end_ik_joint,
-                                                solver='ikSCsolver' )
-        ik_effector = cmds.rename(ik_effector, '{0}_{1}_base_IKS_EFF'.format(self.prefix, self.name))
+        # Try an aim constraint.
+        joint_transform = om2.MFnTransform(python_utils.getDagPath(controls_group))
+        up_vec = om2.MVector.kZaxisVector.rotateBy(joint_transform.rotation(om2.MSpace.kWorld, asQuaternion=True))
+        cmds.aimConstraint(base_control, start_ik_joint, aimVector=[0.0, 1.0, 0.0] , upVector=[0.0, 0.0, 1.0], worldUpVector=up_vec.normal(), maintainOffset=False)
+        #ik_handle, ik_effector = cmds.ikHandle( name='{0}_{1}_base_IKS_HDL'.format(self.prefix, self.name),
+                                                #startJoint=start_ik_joint,
+                                                #endEffector=end_ik_joint,
+                                                #solver='ikRPsolver' )
+        #cmds.setAttr('{0}.poleVector'.format(ik_handle), 0, 0, 1)
+        #ik_effector = cmds.rename(ik_effector, '{0}_{1}_base_IKS_EFF'.format(self.prefix, self.name))
         # Parent ik to control.
-        cmds.matchTransform(ik_handle, base_control)
-        cmds.parent(ik_handle, base_control)
+        #cmds.matchTransform(ik_handle, base_control)
+        #cmds.parent(ik_handle, base_control)
 
         # Create various locators for measurement reasons.
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(start_ik_joint)
@@ -81,7 +94,7 @@ class SingleChainIK(maya_base_module.MayaBaseModule):
 
         prefix, component_name, joint_name, node_purpose, node_type = python_utils.getNodeNameParts(end_ik_joint)
         base_end_locator = cmds.spaceLocator(name='{0}_{1}_{2}_{3}'.format(prefix, component_name, joint_name, 'base_LEN_LOC'))[0]
-        cmds.parent(base_end_locator, orient_group)
+        cmds.parent(base_end_locator, self.baseGroups['placement_group'])
         cmds.matchTransform(base_end_locator, end_ik_joint)
 
         # Create various locators for measurement reasons.

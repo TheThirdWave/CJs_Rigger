@@ -2,15 +2,15 @@ So there are some things you gotta do after the rig has been generated to get it
 very rough running list of the things that I can think of:
 
 -For the mouth, you have to skin the jaw so you get good deformation when the mouth is open, then copy
- the blendshape weights to the "dense" curves in the jaw component (in order to do THAT, you have to first
- attach a skincluster to each curve that has the same influences as the skincluster for the jaw/mouth blendshape)
- You should only have to do this once, because the dense curves should save out their weights with everything else
+ the blendshape weights to the upper and lower "base_DEF_RBN" ribbons in the mouth component (in order to do THAT, you have to first
+ attach a skincluster to each ribbon that has the same influences as the skincluster for the jaw/mouth blendshape)
+ You should only have to do this once, because the ribbons should save out their weights with everything else
  when you click the "save skin data" button and after that the "Bind Skin" button should generate the skincluster
- just like it would for the skinned meshes.
+ just like it would for the skinned meshes.  You need to do the same thing for the "long_upper_DEF_CRV"
  
  Only after you set up the curve weights should you start skinning the individual lip joints, so the process goes like:
 
- Skin the jaw joint to the mesh -> copy the mesh weights to the dense curves in the mouth component -> save out weights -> skin the rest of the mouth joints
+ Skin the jaw joint to the mesh -> copy the mesh weights to the ribbons in the mouth component -> save out weights -> skin the rest of the mouth joints
 
 -Also for the mouth component, there's a proximityWrap node attached to the "upper_DEF_RBN" NURBS ribbon, you'll probably have to adjust the parameters of that
  to get better deformations.

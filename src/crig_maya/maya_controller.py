@@ -11,12 +11,18 @@ class MayaController(base_controller.BaseController):
         super().__init__(uistate)
         self._modulePath = constants.MAYA_MODULES_PATH
         self._dccPath = constants.MAYA_CRIG_PATH
+        self._displayComponents = []
         self._components = []
         self._loadedBlueprints = {}
+        self._displayGraph = None
         self._componentGraph = None
         self._bindPositionData = {}
         self._controlsData = {}
-        self.postScripts = []
+        self.postScripts = {
+            constants.POSTSCRIPT_TYPES.controlGeneration: [],
+            constants.POSTSCRIPT_TYPES.skinBind: [],
+            constants.POSTSCRIPT_TYPES.deletion: []
+        }
         self._utils = python_utils
 
     @property
@@ -36,6 +42,14 @@ class MayaController(base_controller.BaseController):
         self._dccPath = dcc
 
     @property
+    def displayComponents(self):
+        return self._displayComponents
+
+    @displayComponents.setter
+    def displayComponents(self, dc):
+        self._displayComponents = dc
+
+    @property
     def components(self):
         return self._components
 
@@ -50,6 +64,14 @@ class MayaController(base_controller.BaseController):
     @loadedBlueprints.setter
     def loadedBlueprints(self, lb):
         self._loadedBlueprints = lb
+
+    @property
+    def displayGraph(self):
+        return self._displayGraph
+    
+    @displayGraph.setter
+    def displayGraph(self, cg):
+        self._displayGraph = cg
 
     @property
     def componentGraph(self):
@@ -90,6 +112,20 @@ class MayaController(base_controller.BaseController):
     @utils.setter
     def utils(self, u):
         self._utils = u
+
+    def delete(self):
+        for component in self.components:
+            to_delete = cmds.ls('{0}_{1}*'.format(component.prefix, component.name))
+            # We might try to delete something we already deleted so we just ignore the failures.
+            for node in to_delete:
+                try:
+                    cmds.delete(node)
+                except:
+                    continue
+        super().delete()
+
+    def mirrorComponentGraph(self):
+        return
 
     def generateLocs(self):
         # First, have the modules generate their bind/location joints.
@@ -163,7 +199,7 @@ class MayaController(base_controller.BaseController):
         iter.breadthFirstIteration(self.componentGraph, self.refreshCopiedAttrs)
 
         # Run post generation scripts.
-        self.runPostGenerationScripts()
+        self.runPostScripts(constants.POSTSCRIPT_TYPES.controlGeneration)
 
 
 
@@ -177,6 +213,7 @@ class MayaController(base_controller.BaseController):
     # Loads skin data from the bind_skin .json file and binds it to the bind joints
     def bindSkin(self, skin_data_path):
         self.loadSmoothBind(skin_data_path)
+        self.runPostScripts(constants.POSTSCRIPT_TYPES.skinBind)
 
 
     def handleParentConnections(self):
@@ -211,7 +248,7 @@ class MayaController(base_controller.BaseController):
 
     def handleSpecialBindOps(self):
         for component in self.components:
-            for bind in component.geomData:
+            for bind in component.bindGeometry:
                 if bind['bindType'] == 'offsetParentMatrix':
                     self.offsetParentMatrixBind(component, bind)
                 elif bind['bindType'] == 'keepChildPositions':
@@ -286,6 +323,9 @@ class MayaController(base_controller.BaseController):
             bind_joints = []
             for vertex, touple in data.items():
                 [bind_joints.append(x[0]) for x in touple if x[0] not in bind_joints and cmds.ls(x[0])]
+
+            if 'ShapeDeformed' in shape:
+                shape = shape.replace('ShapeDeformed', 'Shape')
 
             try:
                 skinCluster = mel.eval('findRelatedSkinCluster ' + shape)
@@ -364,10 +404,13 @@ class MayaController(base_controller.BaseController):
 
         bindDict = {}
         for transform in geo_transforms:
-            shape = cmds.listRelatives(transform, shapes=True, fullPath=True)[0]
-            skinClusters = [x for x in cmds.listHistory(shape) if cmds.nodeType(x) == "skinCluster" ]
-            if skinClusters:
-                bindDict[shape] = self.getVertexWeights(shape, skinClusters[0])
+            shapes = cmds.listRelatives(transform, shapes=True, fullPath=True)
+            for shape in shapes:
+                history = cmds.listHistory(shape)
+                skinClusters = [x for x in history if cmds.nodeType(x) == "skinCluster" ]
+                if skinClusters:
+                    bindDict[shape] = self.getVertexWeights(shape, skinClusters[0])
+                    break
 
         self.bindSkinPath = bind_path
         self.saveJSON(bind_path, bindDict)
@@ -701,6 +744,10 @@ class MayaController(base_controller.BaseController):
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
                         python_utils.constrainByMatrix(new_attr, final_attr_path, True, False, ['translate'])
+                    if lower_connection_type == constants.ATTR_CONNECTION_TYPES.parentOffsetRotate:
+                        new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
+                        final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])
+                        python_utils.constrainByMatrix(new_attr, final_attr_path, True, False, ['rotate'])
                     if lower_connection_type == constants.ATTR_CONNECTION_TYPES.localParentOffset:
                         new_attr = '{0}.{1}'.format(parent_group, attr['attrName'])
                         final_attr_path = '{0}_{1}_{2}'.format(component.prefix, component.name, attr['internalAttr'])

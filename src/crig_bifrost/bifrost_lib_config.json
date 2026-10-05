@@ -1,0 +1,18 @@
+{
+  "AminoConfigurations": [
+    {
+      "libraryName": "crig_compounds",
+      "libraryVersion": "0.0.1",
+      "jsonLibs": [
+        {
+          "path": "modules",
+          "files": [ ]
+        },
+        {
+          "path": "utilities",
+          "files": [ ]
+        }
+      ]
+    }
+  ]
+}

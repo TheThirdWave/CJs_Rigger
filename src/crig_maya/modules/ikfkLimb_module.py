@@ -132,7 +132,10 @@ class IKFKLimb(maya_base_module.MayaBaseModule):
         # First we set the current start/mid joint rotations as the "preferred angle"s, otherwise the ik will keep the bend stiff.
         cmds.setAttr('{0}.preferredAngle'.format(start_ik_joint), *cmds.getAttr('{0}.rotate'.format(start_ik_joint))[0])
         cmds.setAttr('{0}.preferredAngle'.format(middle_ik_joint), *cmds.getAttr('{0}.rotate'.format(middle_ik_joint))[0])
-        two_bone_solver = cmds.createNode('ik2Bsolver')
+        if not cmds.ls('ik2Bsolver*'):
+            two_bone_solver = cmds.createNode('ik2Bsolver')
+        else:
+            two_bone_solver = cmds.ls('ik2Bsolver*')[0]
         ik_handle, ik_effector = cmds.ikHandle( name='{0}_{1}_base_IKRP_HDL'.format(self.prefix, self.name),
                                                 startJoint=start_ik_joint,
                                                 endEffector=end_ik_joint,

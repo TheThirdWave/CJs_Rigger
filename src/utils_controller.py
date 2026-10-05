@@ -26,3 +26,11 @@ class UtilsController(ABC):
     @abstractmethod
     def appendSoftModDeformer(self):
         pass
+
+    @abstractmethod
+    def loadAnim(self, anim_data):
+        pass
+
+    @abstractmethod
+    def getAnimData(self):
+        pass

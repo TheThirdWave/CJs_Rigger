@@ -33,7 +33,16 @@ class UtilityModule(maya_base_module.MayaBaseModule):
                     # If it ain't actually an attr we ignore it (yes this is silly)
                     continue
                 if nodeAttr not in cmds.listAttr(base_control):
-                    cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True, hidden=False)
+                    if 'defaultVal' in attr:
+                        cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True, hidden=False, defaultValue=attr['defaultVal'])
+                    else:
+                        cmds.addAttr(base_control, longName=nodeAttr, attributeType=attr['attrType'], keyable=True, hidden=False)
+                    if 'proxy' in attr and attr['proxy']:
+                        cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], usedAsProxy=True)
+                    elif 'parent' in attr and attr['parent']:
+                        cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'], parent=attr['parent'])
+                    else:
+                        cmds.addAttr(longName=attr['attrName'], attributeType=attr['attrType'])
                     if attr['attrType'] == 'enum' and 'enumVals' in attr:
                         python_utils.addEnumNames(base_control, nodeAttr, attr['enumVals'])
 
